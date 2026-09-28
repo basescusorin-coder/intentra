@@ -5,98 +5,91 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>INTENTRA — AI Intent Verification</title>
-<meta name="description" content="INTENTRA verifies whether AI agents actually fulfilled the user's original intent.">
+<meta name="description" content="Verify whether AI agents actually fulfilled the user's intent.">
 
 <style>
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
   min-height: 100vh;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
   background:
-    radial-gradient(circle at 50% 0%, #12233f 0%, #070d19 38%, #030711 75%);
-  color: #ffffff;
+    radial-gradient(circle at 50% 0%, #142743 0%, #070d19 38%, #020610 78%);
+  color: white;
 }
 
 .container {
   width: min(900px, 92%);
   margin: auto;
-  padding: 45px 0 60px;
+  padding: 42px 0 60px;
 }
 
-.logo {
-  text-align: center;
-  margin-bottom: 42px;
-}
+.logo { text-align: center; margin-bottom: 35px; }
 
 .logo-mark {
-  width: 74px;
-  height: 74px;
-  margin: 0 auto 14px;
-  border-radius: 22px;
+  width: 70px;
+  height: 70px;
+  margin: auto auto 12px;
+  border-radius: 21px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 34px;
   font-weight: 900;
   color: #06101e;
-  background: linear-gradient(135deg, #8be1ff, #4ea8ff);
-  box-shadow: 0 0 40px rgba(76, 180, 255, .28);
+  background: linear-gradient(135deg,#8be1ff,#4ea8ff);
+  box-shadow: 0 0 40px rgba(76,180,255,.25);
 }
 
 h1 {
   margin: 0;
-  font-size: clamp(48px, 10vw, 78px);
+  font-size: clamp(48px,10vw,76px);
   letter-spacing: 4px;
-  font-weight: 800;
 }
 
 .subtitle {
-  margin-top: 8px;
   color: #7dd3fc;
-  font-size: 19px;
+  margin-top: 7px;
+  font-size: 18px;
 }
 
 .tagline {
-  text-align: center;
   max-width: 650px;
-  margin: -20px auto 35px;
+  margin: 18px auto 35px;
+  text-align: center;
   color: #aebbd0;
-  line-height: 1.6;
+  line-height: 1.55;
 }
 
 .card {
-  background: rgba(13, 23, 42, .88);
-  border: 1px solid #263a59;
+  background: rgba(13,23,42,.9);
+  border: 1px solid #293d5c;
   border-radius: 22px;
   padding: 24px;
   margin-bottom: 20px;
-  box-shadow: 0 18px 45px rgba(0,0,0,.22);
 }
 
 .card-title {
-  font-size: 20px;
-  font-weight: 750;
-  margin-bottom: 12px;
+  font-size: 21px;
+  font-weight: 800;
+  margin-bottom: 8px;
 }
 
-.card-help {
-  color: #8fa2bd;
-  font-size: 14px;
+.help {
+  color: #91a3bd;
   margin-bottom: 14px;
+  font-size: 14px;
 }
 
 textarea {
   width: 100%;
-  min-height: 155px;
+  min-height: 150px;
   resize: vertical;
-  border-radius: 15px;
-  border: 1px solid #334967;
   background: #030817;
-  color: #ffffff;
+  border: 1px solid #344c6d;
+  border-radius: 15px;
+  color: white;
   padding: 16px;
   font: inherit;
   font-size: 16px;
@@ -104,8 +97,8 @@ textarea {
 }
 
 textarea:focus {
-  border-color: #60bfff;
-  box-shadow: 0 0 0 3px rgba(96,191,255,.12);
+  border-color: #66c5ff;
+  box-shadow: 0 0 0 3px rgba(102,197,255,.1);
 }
 
 button {
@@ -113,66 +106,85 @@ button {
   border: 0;
   border-radius: 17px;
   padding: 19px;
-  margin-top: 4px;
-  background: linear-gradient(90deg, #60bfff, #7dd3fc);
-  color: #04101e;
+  background: linear-gradient(90deg,#58b9f3,#7dd3fc);
+  color: #03101e;
   font-size: 20px;
-  font-weight: 850;
+  font-weight: 900;
   cursor: pointer;
-}
-
-button:active {
-  transform: scale(.99);
 }
 
 .result {
   display: none;
-  margin-top: 22px;
-  border-radius: 20px;
-  padding: 24px;
+  margin-top: 24px;
+}
+
+.verdict {
+  border-radius: 22px;
+  padding: 25px;
   background: #0d172a;
-  border: 1px solid #263a59;
-}
-
-.score {
-  font-size: 48px;
-  font-weight: 850;
-  color: #7dd3fc;
-  margin: 8px 0;
-}
-
-.status {
-  font-size: 19px;
-  font-weight: 700;
-  margin-bottom: 12px;
-}
-
-.explanation {
-  color: #b7c4d8;
-  line-height: 1.6;
+  border: 1px solid #293d5c;
+  margin-bottom: 18px;
 }
 
 .badge {
   display: inline-block;
   padding: 7px 12px;
   border-radius: 999px;
-  background: rgba(96,191,255,.12);
-  border: 1px solid #315477;
   color: #8bd8ff;
-  font-size: 13px;
-  margin-bottom: 8px;
+  background: rgba(96,191,255,.1);
+  border: 1px solid #315477;
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+
+.score {
+  margin: 13px 0 4px;
+  font-size: 49px;
+  font-weight: 900;
+  color: #7dd3fc;
+}
+
+.status {
+  font-size: 23px;
+  font-weight: 850;
+}
+
+.section {
+  padding: 20px;
+  margin-top: 14px;
+  border-radius: 17px;
+  background: #091221;
+  border: 1px solid #243752;
+}
+
+.section h3 {
+  margin: 0 0 12px;
+  font-size: 17px;
+}
+
+.item {
+  margin: 9px 0;
+  line-height: 1.5;
+  color: #c5d1e2;
+}
+
+.ok { color: #77e6aa; }
+.warning { color: #ffd36b; }
+.fail { color: #ff8080; }
+
+.explanation {
+  line-height: 1.6;
+  color: #b8c5d8;
 }
 
 footer {
   text-align: center;
-  color: #62708a;
+  color: #65748c;
   margin-top: 38px;
   font-size: 14px;
 }
 
-footer strong {
-  color: #91a4bf;
-}
+footer strong { color: #93a7c2; }
 </style>
 </head>
 
@@ -187,37 +199,56 @@ footer strong {
   </div>
 
   <div class="tagline">
-    Verify whether an AI agent delivered what the user actually requested —
-    not merely whether its output looks convincing.
+    Verify whether an AI agent actually followed the user's request,
+    including explicit constraints and prohibited outcomes.
   </div>
 
   <div class="card">
     <div class="card-title">1. User Request</div>
-    <div class="card-help">
+    <div class="help">
       Enter the original instruction given to the AI agent.
     </div>
 
     <textarea id="request"
-      placeholder="Example: Find the cheapest direct flight and do not include flights with stopovers."></textarea>
+    placeholder="Example: Find the cheapest direct flight from Zurich to Bucharest. Do not include flights with stopovers."></textarea>
   </div>
 
   <div class="card">
     <div class="card-title">2. AI Result</div>
-    <div class="card-help">
+    <div class="help">
       Paste the result produced by the AI agent.
     </div>
 
     <textarea id="response"
-      placeholder="Paste the AI agent's result here..."></textarea>
+    placeholder="Paste the AI agent's result here..."></textarea>
   </div>
 
   <button onclick="verifyIntent()">VERIFY INTENT</button>
 
   <div id="result" class="result">
-    <div class="badge">INTENTRA ANALYSIS</div>
-    <div id="score" class="score"></div>
-    <div id="status" class="status"></div>
-    <div id="explanation" class="explanation"></div>
+
+    <div class="verdict">
+      <span class="badge">INTENTRA ANALYSIS</span>
+
+      <div id="score" class="score"></div>
+      <div id="status" class="status"></div>
+
+      <div class="section">
+        <h3>Critical Constraints</h3>
+        <div id="constraints"></div>
+      </div>
+
+      <div class="section">
+        <h3>Violations Detected</h3>
+        <div id="violations"></div>
+      </div>
+
+      <div class="section">
+        <h3>Explanation</h3>
+        <div id="explanation" class="explanation"></div>
+      </div>
+    </div>
+
   </div>
 
   <footer>
@@ -227,27 +258,157 @@ footer strong {
 </div>
 
 <script>
+
+function normalize(text) {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s'-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function containsAny(text, words) {
+  return words.some(word => text.includes(word));
+}
+
 function verifyIntent() {
 
-  const request = document.getElementById("request").value.trim();
-  const response = document.getElementById("response").value.trim();
+  const requestOriginal =
+    document.getElementById("request").value.trim();
 
-  if (!request || !response) {
+  const responseOriginal =
+    document.getElementById("response").value.trim();
+
+  if (!requestOriginal || !responseOriginal) {
     alert("Please enter both the User Request and the AI Result.");
     return;
   }
 
-  const requestWords =
-    request.toLowerCase().match(/[a-z0-9]+/g) || [];
+  const request = normalize(requestOriginal);
+  const response = normalize(responseOriginal);
 
-  const responseWords =
-    response.toLowerCase().match(/[a-z0-9]+/g) || [];
+  let constraints = [];
+  let violations = [];
+  let criticalViolation = false;
+
+  /*
+   * DIRECT / NO-STOPOVER CONSTRAINT
+   */
+
+  const wantsDirect =
+    containsAny(request, [
+      "direct flight",
+      "nonstop",
+      "non stop",
+      "non-stop",
+      "without stopover",
+      "without stopovers",
+      "no stopover",
+      "no stopovers"
+    ]);
+
+  if (wantsDirect) {
+
+    constraints.push(
+      "Flight must be direct / without stopovers."
+    );
+
+    const responseHasStop =
+      /\b(one|two|three|1|2|3)\s+(stop|stops|stopover|stopovers)\b/.test(response) ||
+      containsAny(response, [
+        "with a stop",
+        "with one stop",
+        "with two stops",
+        "stop in ",
+        "stopover in ",
+        "layover",
+        "connection in ",
+        "connecting flight"
+      ]);
+
+    if (responseHasStop) {
+
+      violations.push(
+        "The user required a direct flight, but the AI result contains a stop or connection."
+      );
+
+      criticalViolation = true;
+    }
+  }
+
+  /*
+   * PRICE / CHEAPEST CONSTRAINT
+   */
+
+  const wantsCheapest =
+    containsAny(request, [
+      "cheapest",
+      "lowest price",
+      "least expensive"
+    ]);
+
+  if (wantsCheapest) {
+    constraints.push(
+      "The result should satisfy the user's lowest-price requirement."
+    );
+  }
+
+  /*
+   * EXPLICIT NEGATIVE REQUIREMENTS
+   */
+
+  const negativePatterns = [
+    /do not include ([a-z0-9\s-]+)/,
+    /don't include ([a-z0-9\s-]+)/,
+    /without ([a-z0-9\s-]+)/,
+    /exclude ([a-z0-9\s-]+)/
+  ];
+
+  negativePatterns.forEach(pattern => {
+
+    const match = request.match(pattern);
+
+    if (match && match[1]) {
+
+      const phrase = match[1].trim();
+
+      if (
+        phrase.length > 2 &&
+        !phrase.includes("stopover")
+      ) {
+
+        constraints.push(
+          'Excluded by user: "' + phrase + '".'
+        );
+
+        if (response.includes(phrase)) {
+
+          violations.push(
+            'The AI result contains something the user explicitly excluded: "' +
+            phrase + '".'
+          );
+
+          criticalViolation = true;
+        }
+      }
+    }
+  });
+
+  /*
+   * GENERAL KEYWORD ALIGNMENT
+   */
 
   const ignored = new Set([
     "the","a","an","and","or","to","of","in","on",
     "for","is","are","be","with","that","this",
-    "it","i","you","my","me"
+    "it","i","you","my","me","do","not","from"
   ]);
+
+  const requestWords =
+    request.match(/[a-z0-9]+/g) || [];
+
+  const responseWords =
+    response.match(/[a-z0-9]+/g) || [];
 
   const important = [...new Set(
     requestWords.filter(word =>
@@ -267,37 +428,112 @@ function verifyIntent() {
     ? Math.round((matches / important.length) * 100)
     : 50;
 
-  score = Math.max(10, Math.min(score, 100));
+  /*
+   * CRITICAL VIOLATION OVERRIDES
+   * ordinary keyword similarity.
+   */
 
-  let status;
-  let explanation;
-
-  if (score >= 75) {
-    status = "Strong intent alignment";
-    explanation =
-      "The AI result appears to address most of the important elements found in the original request.";
-  } else if (score >= 45) {
-    status = "Partial intent alignment";
-    explanation =
-      "The AI result addresses part of the request, but some important requirements may be missing.";
-  } else {
-    status = "Weak intent alignment";
-    explanation =
-      "The AI result appears to miss several important elements of the user's original request.";
+  if (criticalViolation) {
+    score = Math.min(score, 25);
   }
 
+  let status = "";
+  let explanation = "";
+
+  if (criticalViolation) {
+
+    status = "❌ Intent Not Fulfilled";
+
+    explanation =
+      "The AI result violates at least one explicit mandatory constraint in the user's request. " +
+      "Keyword similarity cannot compensate for violating a critical requirement.";
+
+  } else if (score >= 75) {
+
+    status = "✓ Intent Appears Fulfilled";
+
+    explanation =
+      "No explicit contradiction was detected and the result has strong textual alignment with the request.";
+
+  } else if (score >= 45) {
+
+    status = "⚠ Partially Fulfilled";
+
+    explanation =
+      "The result addresses part of the request, but some requested information or requirements may be missing.";
+
+  } else {
+
+    status = "❌ Weak Intent Alignment";
+
+    explanation =
+      "The result has limited alignment with the important elements of the user's request.";
+  }
+
+  /*
+   * OUTPUT
+   */
+
   document.getElementById("score").textContent =
-    score + "% Match";
+    score + "%";
 
   document.getElementById("status").textContent =
     status;
+
+  const constraintsBox =
+    document.getElementById("constraints");
+
+  if (constraints.length === 0) {
+
+    constraintsBox.innerHTML =
+      '<div class="item">No explicit critical constraint was automatically identified.</div>';
+
+  } else {
+
+    constraintsBox.innerHTML =
+      constraints.map(c =>
+        '<div class="item">• ' + escapeHTML(c) + '</div>'
+      ).join("");
+  }
+
+  const violationsBox =
+    document.getElementById("violations");
+
+  if (violations.length === 0) {
+
+    violationsBox.innerHTML =
+      '<div class="item ok">✓ No explicit contradiction detected.</div>';
+
+  } else {
+
+    violationsBox.innerHTML =
+      violations.map(v =>
+        '<div class="item fail">✕ ' + escapeHTML(v) + '</div>'
+      ).join("");
+  }
 
   document.getElementById("explanation").textContent =
     explanation;
 
   document.getElementById("result").style.display =
     "block";
+
+  document.getElementById("result").scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
 }
+
+function escapeHTML(value) {
+
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 </script>
 
 </body>
