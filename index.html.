@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>INTENTRA — AI Intent Verification</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #050914;
+  color: white;
+}
+
+.container {
+  max-width: 850px;
+  margin: auto;
+  padding: 35px 20px;
+}
+
+h1 {
+  text-align: center;
+  font-size: 48px;
+  margin-bottom: 5px;
+}
+
+.subtitle {
+  text-align: center;
+  color: #7dd3fc;
+  margin-bottom: 40px;
+}
+
+.card {
+  background: #0d1526;
+  border: 1px solid #24324a;
+  border-radius: 18px;
+  padding: 22px;
+  margin-bottom: 20px;
+}
+
+label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+textarea {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 130px;
+  padding: 15px;
+  border-radius: 12px;
+  border: 1px solid #334155;
+  background: #020617;
+  color: white;
+  font-size: 16px;
+}
+
+button {
+  width: 100%;
+  padding: 17px;
+  border: 0;
+  border-radius: 12px;
+  background: #38bdf8;
+  color: #001018;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.result {
+  display: none;
+  margin-top: 25px;
+}
+
+.score {
+  font-size: 42px;
+  font-weight: bold;
+  color: #38bdf8;
+}
+
+.small {
+  color: #94a3b8;
+}
+
+footer {
+  text-align: center;
+  color: #64748b;
+  margin-top: 40px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>INTENTRA</h1>
+<div class="subtitle">AI Intent Verification Platform</div>
+
+<div class="card">
+<label>User Request</label>
+<textarea id="request"
+placeholder="Describe what the user asked the AI agent to do..."></textarea>
+</div>
+
+<div class="card">
+<label>AI Result</label>
+<textarea id="result"
+placeholder="Paste the result produced by the AI agent..."></textarea>
+</div>
+
+<button onclick="verifyIntent()">VERIFY INTENT</button>
+
+<div id="report" class="card result">
+<div class="small">INTENTRA Verification Report</div>
+
+<p>Intent Match</p>
+<div id="score" class="score">--%</div>
+
+<p id="status"></p>
+
+<hr>
+
+<p class="small">
+Prototype verification engine — results are heuristic and intended
+for demonstration purposes.
+</p>
+</div>
+
+<footer>
+INTENTRA • Verify the intent, not just the output.
+</footer>
+
+</div>
+
+<script>
+function verifyIntent() {
+
+  const request =
+    document.getElementById("request").value.toLowerCase();
+
+  const result =
+    document.getElementById("result").value.toLowerCase();
+
+  if (!request.trim() || !result.trim()) {
+    alert("Please enter both the user request and the AI result.");
+    return;
+  }
+
+  const words = request
+    .replace(/[^\w\s]/g, "")
+    .split(/\s+/)
+    .filter(word => word.length > 3);
+
+  const uniqueWords = [...new Set(words)];
+
+  let matches = 0;
+
+  uniqueWords.forEach(word => {
+    if (result.includes(word)) matches++;
+  });
+
+  let score = uniqueWords.length
+    ? Math.round((matches / uniqueWords.length) * 100)
+    : 0;
+
+  score = Math.min(score, 100);
+
+  let status;
+
+  if (score >= 75) {
+    status = "Strong alignment with the user's stated intent.";
+  } else if (score >= 45) {
+    status = "Partial alignment. Human review may be required.";
+  } else {
+    status = "Low alignment. The result may not satisfy the original intent.";
+  }
+
+  document.getElementById("score").innerText = score + "%";
+  document.getElementById("status").innerText = status;
+  document.getElementById("report").style.display = "block";
+}
+</script>
+
+</body>
+</html>
