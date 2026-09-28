@@ -3,91 +3,175 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>INTENTRA — AI Intent Verification</title>
+<meta name="description" content="INTENTRA verifies whether AI agents actually fulfilled the user's original intent.">
 
 <style>
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
-  background: #050914;
-  color: white;
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+  background:
+    radial-gradient(circle at 50% 0%, #12233f 0%, #070d19 38%, #030711 75%);
+  color: #ffffff;
 }
 
 .container {
-  max-width: 850px;
+  width: min(900px, 92%);
   margin: auto;
-  padding: 35px 20px;
+  padding: 45px 0 60px;
+}
+
+.logo {
+  text-align: center;
+  margin-bottom: 42px;
+}
+
+.logo-mark {
+  width: 74px;
+  height: 74px;
+  margin: 0 auto 14px;
+  border-radius: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 34px;
+  font-weight: 900;
+  color: #06101e;
+  background: linear-gradient(135deg, #8be1ff, #4ea8ff);
+  box-shadow: 0 0 40px rgba(76, 180, 255, .28);
 }
 
 h1 {
-  text-align: center;
-  font-size: 48px;
-  margin-bottom: 5px;
+  margin: 0;
+  font-size: clamp(48px, 10vw, 78px);
+  letter-spacing: 4px;
+  font-weight: 800;
 }
 
 .subtitle {
-  text-align: center;
+  margin-top: 8px;
   color: #7dd3fc;
-  margin-bottom: 40px;
+  font-size: 19px;
+}
+
+.tagline {
+  text-align: center;
+  max-width: 650px;
+  margin: -20px auto 35px;
+  color: #aebbd0;
+  line-height: 1.6;
 }
 
 .card {
-  background: #0d1526;
-  border: 1px solid #24324a;
-  border-radius: 18px;
-  padding: 22px;
+  background: rgba(13, 23, 42, .88);
+  border: 1px solid #263a59;
+  border-radius: 22px;
+  padding: 24px;
   margin-bottom: 20px;
+  box-shadow: 0 18px 45px rgba(0,0,0,.22);
 }
 
-label {
-  display: block;
-  font-weight: bold;
-  margin-bottom: 10px;
+.card-title {
+  font-size: 20px;
+  font-weight: 750;
+  margin-bottom: 12px;
+}
+
+.card-help {
+  color: #8fa2bd;
+  font-size: 14px;
+  margin-bottom: 14px;
 }
 
 textarea {
-  box-sizing: border-box;
   width: 100%;
-  min-height: 130px;
-  padding: 15px;
-  border-radius: 12px;
-  border: 1px solid #334155;
-  background: #020617;
-  color: white;
+  min-height: 155px;
+  resize: vertical;
+  border-radius: 15px;
+  border: 1px solid #334967;
+  background: #030817;
+  color: #ffffff;
+  padding: 16px;
+  font: inherit;
   font-size: 16px;
+  outline: none;
+}
+
+textarea:focus {
+  border-color: #60bfff;
+  box-shadow: 0 0 0 3px rgba(96,191,255,.12);
 }
 
 button {
   width: 100%;
-  padding: 17px;
   border: 0;
-  border-radius: 12px;
-  background: #38bdf8;
-  color: #001018;
-  font-size: 18px;
-  font-weight: bold;
+  border-radius: 17px;
+  padding: 19px;
+  margin-top: 4px;
+  background: linear-gradient(90deg, #60bfff, #7dd3fc);
+  color: #04101e;
+  font-size: 20px;
+  font-weight: 850;
   cursor: pointer;
+}
+
+button:active {
+  transform: scale(.99);
 }
 
 .result {
   display: none;
-  margin-top: 25px;
+  margin-top: 22px;
+  border-radius: 20px;
+  padding: 24px;
+  background: #0d172a;
+  border: 1px solid #263a59;
 }
 
 .score {
-  font-size: 42px;
-  font-weight: bold;
-  color: #38bdf8;
+  font-size: 48px;
+  font-weight: 850;
+  color: #7dd3fc;
+  margin: 8px 0;
 }
 
-.small {
-  color: #94a3b8;
+.status {
+  font-size: 19px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.explanation {
+  color: #b7c4d8;
+  line-height: 1.6;
+}
+
+.badge {
+  display: inline-block;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(96,191,255,.12);
+  border: 1px solid #315477;
+  color: #8bd8ff;
+  font-size: 13px;
+  margin-bottom: 8px;
 }
 
 footer {
   text-align: center;
-  color: #64748b;
-  margin-top: 40px;
+  color: #62708a;
+  margin-top: 38px;
+  font-size: 14px;
+}
+
+footer strong {
+  color: #91a4bf;
 }
 </style>
 </head>
@@ -96,91 +180,123 @@ footer {
 
 <div class="container">
 
-<h1>INTENTRA</h1>
-<div class="subtitle">AI Intent Verification Platform</div>
+  <div class="logo">
+    <div class="logo-mark">✓</div>
+    <h1>INTENTRA</h1>
+    <div class="subtitle">AI Intent Verification Platform</div>
+  </div>
 
-<div class="card">
-<label>User Request</label>
-<textarea id="request"
-placeholder="Describe what the user asked the AI agent to do..."></textarea>
-</div>
+  <div class="tagline">
+    Verify whether an AI agent delivered what the user actually requested —
+    not merely whether its output looks convincing.
+  </div>
 
-<div class="card">
-<label>AI Result</label>
-<textarea id="result"
-placeholder="Paste the result produced by the AI agent..."></textarea>
-</div>
+  <div class="card">
+    <div class="card-title">1. User Request</div>
+    <div class="card-help">
+      Enter the original instruction given to the AI agent.
+    </div>
 
-<button onclick="verifyIntent()">VERIFY INTENT</button>
+    <textarea id="request"
+      placeholder="Example: Find the cheapest direct flight and do not include flights with stopovers."></textarea>
+  </div>
 
-<div id="report" class="card result">
-<div class="small">INTENTRA Verification Report</div>
+  <div class="card">
+    <div class="card-title">2. AI Result</div>
+    <div class="card-help">
+      Paste the result produced by the AI agent.
+    </div>
 
-<p>Intent Match</p>
-<div id="score" class="score">--%</div>
+    <textarea id="response"
+      placeholder="Paste the AI agent's result here..."></textarea>
+  </div>
 
-<p id="status"></p>
+  <button onclick="verifyIntent()">VERIFY INTENT</button>
 
-<hr>
+  <div id="result" class="result">
+    <div class="badge">INTENTRA ANALYSIS</div>
+    <div id="score" class="score"></div>
+    <div id="status" class="status"></div>
+    <div id="explanation" class="explanation"></div>
+  </div>
 
-<p class="small">
-Prototype verification engine — results are heuristic and intended
-for demonstration purposes.
-</p>
-</div>
-
-<footer>
-INTENTRA • Verify the intent, not just the output.
-</footer>
+  <footer>
+    <strong>INTENTRA</strong> · Verify the intent, not just the output.
+  </footer>
 
 </div>
 
 <script>
 function verifyIntent() {
 
-  const request =
-    document.getElementById("request").value.toLowerCase();
+  const request = document.getElementById("request").value.trim();
+  const response = document.getElementById("response").value.trim();
 
-  const result =
-    document.getElementById("result").value.toLowerCase();
-
-  if (!request.trim() || !result.trim()) {
-    alert("Please enter both the user request and the AI result.");
+  if (!request || !response) {
+    alert("Please enter both the User Request and the AI Result.");
     return;
   }
 
-  const words = request
-    .replace(/[^\w\s]/g, "")
-    .split(/\s+/)
-    .filter(word => word.length > 3);
+  const requestWords =
+    request.toLowerCase().match(/[a-z0-9]+/g) || [];
 
-  const uniqueWords = [...new Set(words)];
+  const responseWords =
+    response.toLowerCase().match(/[a-z0-9]+/g) || [];
+
+  const ignored = new Set([
+    "the","a","an","and","or","to","of","in","on",
+    "for","is","are","be","with","that","this",
+    "it","i","you","my","me"
+  ]);
+
+  const important = [...new Set(
+    requestWords.filter(word =>
+      word.length > 2 && !ignored.has(word)
+    )
+  )];
 
   let matches = 0;
 
-  uniqueWords.forEach(word => {
-    if (result.includes(word)) matches++;
+  important.forEach(word => {
+    if (responseWords.includes(word)) {
+      matches++;
+    }
   });
 
-  let score = uniqueWords.length
-    ? Math.round((matches / uniqueWords.length) * 100)
-    : 0;
+  let score = important.length
+    ? Math.round((matches / important.length) * 100)
+    : 50;
 
-  score = Math.min(score, 100);
+  score = Math.max(10, Math.min(score, 100));
 
   let status;
+  let explanation;
 
   if (score >= 75) {
-    status = "Strong alignment with the user's stated intent.";
+    status = "Strong intent alignment";
+    explanation =
+      "The AI result appears to address most of the important elements found in the original request.";
   } else if (score >= 45) {
-    status = "Partial alignment. Human review may be required.";
+    status = "Partial intent alignment";
+    explanation =
+      "The AI result addresses part of the request, but some important requirements may be missing.";
   } else {
-    status = "Low alignment. The result may not satisfy the original intent.";
+    status = "Weak intent alignment";
+    explanation =
+      "The AI result appears to miss several important elements of the user's original request.";
   }
 
-  document.getElementById("score").innerText = score + "%";
-  document.getElementById("status").innerText = status;
-  document.getElementById("report").style.display = "block";
+  document.getElementById("score").textContent =
+    score + "% Match";
+
+  document.getElementById("status").textContent =
+    status;
+
+  document.getElementById("explanation").textContent =
+    explanation;
+
+  document.getElementById("result").style.display =
+    "block";
 }
 </script>
 
