@@ -271,8 +271,7 @@ function containsAny(text, words) {
   return words.some(word => text.includes(word));
 }
 
-function verifyIntent() {
-
+async function verifyIntent() {
   const requestOriginal =
     document.getElementById("request").value.trim();
 
@@ -284,244 +283,69 @@ function verifyIntent() {
     return;
   }
 
-  const request = normalize(requestOriginal);
-  const response = normalize(responseOriginal);
+  const button = document.querySelector("button");
+  const oldText = button.textContent;
+  button.textContent = "VERIFYING...";
+  button.disabled = true;
 
-  let constraints = [];
-  let violations = [];
-  let criticalViolation = false;
-
-  /*
-   * DIRECT / NO-STOPOVER CONSTRAINT
-   */
-
-  const wantsDirect =
-    containsAny(request, [
-      "direct flight",
-      "nonstop",
-      "non stop",
-      "non-stop",
-      "without stopover",
-      "without stopovers",
-      "no stopover",
-      "no stopovers"
-    ]);
-
-  if (wantsDirect) {
-
-    constraints.push(
-      "Flight must be direct / without stopovers."
-    );
-
-    const responseHasStop =
-      /\b(one|two|three|1|2|3)\s+(stop|stops|stopover|stopovers)\b/.test(response) ||
-      containsAny(response, [
-        "with a stop",
-        "with one stop",
-        "with two stops",
-        "stop in ",
-        "stopover in ",
-        "layover",
-        "connection in ",
-        "connecting flight"
-      ]);
-
-    if (responseHasStop) {
-
-      violations.push(
-        "The user required a direct flight, but the AI result contains a stop or connection."
-      );
-
-      criticalViolation = true;
-    }
-  }
-
-  /*
-   * PRICE / CHEAPEST CONSTRAINT
-   */
-
-  const wantsCheapest =
-    containsAny(request, [
-      "cheapest",
-      "lowest price",
-      "least expensive"
-    ]);
-
-  if (wantsCheapest) {
-    constraints.push(
-      "The result should satisfy the user's lowest-price requirement."
-    );
-  }
-
-  /*
-   * EXPLICIT NEGATIVE REQUIREMENTS
-   */
-
-  const negativePatterns = [
-    /do not include ([a-z0-9\s-]+)/,
-    /don't include ([a-z0-9\s-]+)/,
-    /without ([a-z0-9\s-]+)/,
-    /exclude ([a-z0-9\s-]+)/
-  ];
-
-  negativePatterns.forEach(pattern => {
-
-    const match = request.match(pattern);
-
-    if (match && match[1]) {
-
-      const phrase = match[1].trim();
-
-      if (
-        phrase.length > 2 &&
-        !phrase.includes("stopover")
-      ) {
-
-        constraints.push(
-          'Excluded by user: "' + phrase + '".'
-        );
-
-        if (response.includes(phrase)) {
-
-          violations.push(
-            'The AI result contains something the user explicitly excluded: "' +
-            phrase + '".'
-          );
-
-          criticalViolation = true;
-        }
+  try {
+    const res = await fetch(
+      "https://intentra-ai.basescusorin.workers.dev",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          userRequest: requestOriginal,
+          aiResult: responseOriginal
+        })
       }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || "Verification failed.");
     }
-  });
 
-  /*
-   * GENERAL KEYWORD ALIGNMENT
-   */
+    document.getElementById("score").textContent =
+      data.score + "%";
 
-  const ignored = new Set([
-    "the","a","an","and","or","to","of","in","on",
-    "for","is","are","be","with","that","this",
-    "it","i","you","my","me","do","not","from"
-  ]);
+    document.getElementById("status").textContent =
+      data.status;
 
-  const requestWords =
-    request.match(/[a-z0-9]+/g) || [];
+    document.getElementById("constraints").innerHTML =
+      (data.constraints || []).length
+        ? data.constraints.map(c =>
+            '<div class="item">• ' + escapeHTML(c) + '</div>'
+          ).join("")
+        : '<div class="item">No critical constraints detected.</div>';
 
-  const responseWords =
-    response.match(/[a-z0-9]+/g) || [];
+    document.getElementById("violations").innerHTML =
+      (data.violations || []).length
+        ? data.violations.map(v =>
+            '<div class="item fail">✕ ' + escapeHTML(v) + '</div>'
+          ).join("")
+        : '<div class="item ok">✓ No explicit contradiction detected.</div>';
 
-  const important = [...new Set(
-    requestWords.filter(word =>
-      word.length > 2 && !ignored.has(word)
-    )
-  )];
+    document.getElementById("explanation").textContent =
+      data.explanation || "";
 
-  let matches = 0;
+    document.getElementById("result").style.display = "block";
 
-  important.forEach(word => {
-    if (responseWords.includes(word)) {
-      matches++;
-    }
-  });
+    document.getElementById("result").scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
 
-  let score = important.length
-    ? Math.round((matches / important.length) * 100)
-    : 50;
-
-  /*
-   * CRITICAL VIOLATION OVERRIDES
-   * ordinary keyword similarity.
-   */
-
-  if (criticalViolation) {
-    score = Math.min(score, 25);
+  } catch (error) {
+    alert("INTENTRA connection error: " + error.message);
+  } finally {
+    button.textContent = oldText;
+    button.disabled = false;
   }
-
-  let status = "";
-  let explanation = "";
-
-  if (criticalViolation) {
-
-    status = "❌ Intent Not Fulfilled";
-
-    explanation =
-      "The AI result violates at least one explicit mandatory constraint in the user's request. " +
-      "Keyword similarity cannot compensate for violating a critical requirement.";
-
-  } else if (score >= 75) {
-
-    status = "✓ Intent Appears Fulfilled";
-
-    explanation =
-      "No explicit contradiction was detected and the result has strong textual alignment with the request.";
-
-  } else if (score >= 45) {
-
-    status = "⚠ Partially Fulfilled";
-
-    explanation =
-      "The result addresses part of the request, but some requested information or requirements may be missing.";
-
-  } else {
-
-    status = "❌ Weak Intent Alignment";
-
-    explanation =
-      "The result has limited alignment with the important elements of the user's request.";
-  }
-
-  /*
-   * OUTPUT
-   */
-
-  document.getElementById("score").textContent =
-    score + "%";
-
-  document.getElementById("status").textContent =
-    status;
-
-  const constraintsBox =
-    document.getElementById("constraints");
-
-  if (constraints.length === 0) {
-
-    constraintsBox.innerHTML =
-      '<div class="item">No explicit critical constraint was automatically identified.</div>';
-
-  } else {
-
-    constraintsBox.innerHTML =
-      constraints.map(c =>
-        '<div class="item">• ' + escapeHTML(c) + '</div>'
-      ).join("");
-  }
-
-  const violationsBox =
-    document.getElementById("violations");
-
-  if (violations.length === 0) {
-
-    violationsBox.innerHTML =
-      '<div class="item ok">✓ No explicit contradiction detected.</div>';
-
-  } else {
-
-    violationsBox.innerHTML =
-      violations.map(v =>
-        '<div class="item fail">✕ ' + escapeHTML(v) + '</div>'
-      ).join("");
-  }
-
-  document.getElementById("explanation").textContent =
-    explanation;
-
-  document.getElementById("result").style.display =
-    "block";
-
-  document.getElementById("result").scrollIntoView({
-    behavior: "smooth",
-    block: "start"
-  });
+}
 }
 
 function escapeHTML(value) {
