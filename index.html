@@ -214,33 +214,61 @@
       output.textContent = `${field.value.length.toLocaleString()} / ${MAX_CHARS.toLocaleString()}`;
     }
 
+    function normalizeForRules(text) {
+      return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    }
+
+    function numberValue(value) {
+      const numbers = { zero: 0, no: 0, none: 0, one: 1, a: 1, an: 1, unu: 1, una: 1, un: 1, o: 1, two: 2, doua: 2, trei: 3, three: 3, patru: 4, four: 4, cinci: 5, five: 5, sase: 6, six: 6, sapte: 7, seven: 7, opt: 8, eight: 8, noua: 9, nine: 9, zece: 10, ten: 10 };
+      return /^\d+$/.test(value) ? Number(value) : numbers[value];
+    }
+
+    const STOP_WORDS = "stops?|stopovers?|layovers?|connections?|transfers?|escal(?:a|e)?|oprir(?:e|i)|schimb(?:are|ari)|transferuri";
+    const STOP_TERMS = new RegExp(`\\b(?:${STOP_WORDS})\\b`, "i");
+
     function extractConstraints(request) {
       const found = [];
-      const noStops = /\b(?:direct(?:\s+(?:flight|route|connection))?|non[ -]?stop|no\s+(?:stops?|stopovers?|layovers?|connections?|transfers?)|without\s+(?:any\s+)?(?:stops?|stopovers?|layovers?|connections?|transfers?)|(?:do\s+not|don't|must\s+not)\s+(?:include\s+)?(?:any\s+)?(?:stops?|stopovers?|layovers?|connections?|transfers?)|f(?:ă|a)r(?:ă|a)\s+escal(?:ă|a))\b/i.test(request);
-      if (noStops) found.push({ type: "no-stops", text: "Travel must be direct, with no stopovers or connections." });
+      const text = normalizeForRules(request);
+      const explicitNoStops = new RegExp(`\\b(?:non[ -]?stop|no\\s+(?:any\\s+)?(?:${STOP_WORDS})|without\\s+(?:any\\s+)?(?:${STOP_WORDS})|(?:do\\s+not|don't|must\\s+not)\\s+(?:include\\s+)?(?:any\\s+)?(?:${STOP_WORDS})|fara\\s+(?:nicio?\\s+)?(?:${STOP_WORDS})|nu\\s+(?:include|vreau|accept|doresc)\\s+(?:deloc\\s+)?(?:${STOP_WORDS}))\\b`, "i").test(text);
+      const directTravel = /\b(?:direct(?:\s+(?:flight|route|trip|connection))?|non[ -]?stop)\b/.test(text) && /\b(?:flight|trip|travel|route|zbor|calator|bucuresti|zurich|vienna|bucharest)\b/.test(text);
+      if (explicitNoStops || directTravel) {
+        found.push({ type: "no-stops", text: "Travel must be direct, with no stopovers or connections." });
+      }
 
-      const maxStops = request.match(/\b(?:at\s+most|no\s+more\s+than|maximum\s+of?|max\.?|up\s+to)\s+(\d+)\s+(?:stops?|stopovers?|layovers?|connections?|transfers?)\b/i);
-      if (maxStops) found.push({ type: "max-stops", value: Number(maxStops[1]), text: `No more than ${maxStops[1]} stop${maxStops[1] === "1" ? "" : "s"} is allowed.` });
+      const maxStops = text.match(new RegExp(`\\b(?:at\\s+most|no\\s+more\\s+than|maximum(?:\\s+of)?|max\\.?|up\\s+to|cel\\s+mult|nu\\s+mai\\s+mult\\s+de|maxim(?:um)?(?:\\s+de)?)\\s+(\\d+|zero|no|none|one|two|three|four|five|six|seven|eight|nine|ten|unu|una|un|o|doua|trei|patru|cinci|sase|sapte|opt|noua|zece)\\s+(?:${STOP_WORDS})\\b`, "i"));
+      if (maxStops) {
+        const value = numberValue(maxStops[1]);
+        if (Number.isInteger(value)) found.push({ type: "max-stops", value, text: `No more than ${value} stop${value === 1 ? "" : "s"} is allowed.` });
+      }
 
       return found;
     }
 
+    function extractStopCounts(text) {
+      const normalized = normalizeForRules(text);
+      const counts = [];
+      const countPattern = new RegExp(`\\b(\\d+|zero|one|two|three|four|five|six|seven|eight|nine|ten|unu|una|un|o|doua|trei|patru|cinci|sase|sapte|opt|noua|zece)\\s*(?:-|\\s)\\s*(?:${STOP_WORDS})\\b`, "gi");
+      for (const match of normalized.matchAll(countPattern)) {
+        const value = numberValue(match[1]);
+        if (Number.isInteger(value)) counts.push(value);
+      }
+      return counts;
+    }
+
     function detectLocalViolations(constraints, aiResult) {
       const violations = [];
-      const text = aiResult.toLowerCase();
+      const text = normalizeForRules(aiResult);
+      const explicitStopClaims = /\b(?:connecting flight|indirect flight|via\s+[\p{L}-]+|through\s+[\p{L}-]+|(?:stop|stopover|layover|connection|transfer)\s+(?:in|at)\s+[\p{L}-]+|(?:cu|via)\s+(?:o\s+)?(?:escala|oprire|schimbare)|(?:escala|oprire|schimbare)\s+(?:in|la)\s+[\p{L}-]+)\b/iu.test(text);
+      const countedStops = extractStopCounts(aiResult);
+      const positiveStop = explicitStopClaims || countedStops.some(count => count > 0) || /\b(?:one|two|three)[ -]stop\b/i.test(text);
+
       for (const constraint of constraints) {
-        if (constraint.type === "no-stops") {
-          const positiveStop = /\b(?:\d+|one|two|three|a|an)\s+(?:stops?|stopovers?|layovers?|connections?|transfers?)\b|\b(?:with|via|through)\s+(?:one\s+)?(?:a\s+)?(?:stop|stopover|layover|connection|transfer)\b|\b(?:stop(?:s|over)? in|stopping at|transfer(?:s|ring)? in|layover in|connection in)\s+[\p{L}-]+|\b(?:connecting flight|one[ -]stop|two[ -]stop|indirect flight|cu escal[ăa]|o escal[ăa]|escal[ăa])\b/iu;
-          const statesNoStops = /\b(?:no|without|zero)\s+(?:stops?|stopovers?|layovers?|connections?|transfers?)\b|\bnon[ -]?stop\b|\bdirect(?:\s+(?:flight|route))?\b|\bf(?:ă|a)r(?:ă|a)\s+escal(?:ă|a)\b/i;
-          if (positiveStop.test(text) && !statesNoStops.test(text)) {
-            violations.push("The result describes a stop, transfer, or connection even though the request requires a direct trip.");
-          }
+        if (constraint.type === "no-stops" && positiveStop) {
+          violations.push("The result describes a stop, transfer, or connection even though the request requires a direct trip.");
         }
-        if (constraint.type === "max-stops") {
-          const countMatch = text.match(/\b(\d+)\s+(?:stops?|stopovers?|layovers?|connections?|transfers?)\b/);
-          if (countMatch && Number(countMatch[1]) > constraint.value) {
-            violations.push(`The result has ${countMatch[1]} stops, above the allowed maximum of ${constraint.value}.`);
-          }
+        if (constraint.type === "max-stops" && countedStops.some(count => count > constraint.value)) {
+          const actual = Math.max(...countedStops);
+          violations.push(`The result mentions ${actual} stops, above the allowed maximum of ${constraint.value}.`);
         }
       }
       return violations;
