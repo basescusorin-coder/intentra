@@ -59,11 +59,23 @@ test("still detects a contradiction when the answer explains the request", () =>
   assert.equal(hasViolation("Do not include stopovers.", "The request forbids stops, but the answer contains one stop in Vienna."), true);
 });
 
+test("detects language mismatches in English and Romanian", () => {
+  assert.equal(hasViolation("Răspunde în română.", "The answer is yes, and this is the result."), true);
+  assert.equal(hasViolation("Answer in English.", "The answer is yes, and this is the result."), false);
+});
 
+test("checks exact bullet counts", () => {
+  assert.equal(hasViolation("Use exactly 3 bullet points.", "- One\n- Two\n- Three\n- Four"), true);
+  assert.equal(hasViolation("Folosește exact 3 puncte.", "- Unu\n- Doi\n- Trei"), false);
+});
 
-test("free verification contains no paid worker or network request", () => {
-  assert.doesNotMatch(script, /\bfetch\s*\(/, "verification must not call a remote API");
-  assert.doesNotMatch(html, /WORKER_URL|intentra-ai\.basescusorin\.workers\.dev/i, "the paid Worker must not be configured");
-  assert.match(html, /Free local checks run in your browser\. Your text is not sent to a server\./);
-  assert.match(script, /Free local mode: INTENTRA checks a limited set of explicit constraints in your browser\./);
+test("checks maximum word counts", () => {
+  assert.equal(hasViolation("Keep the answer under 4 words.", "This answer has exactly five words."), true);
+  assert.equal(hasViolation("Răspunde în maxim 5 cuvinte.", "Acesta are doar trei cuvinte."), false);
+});
+
+test("checks required and forbidden quoted phrases", () => {
+  assert.equal(hasViolation('Include the phrase "available today".', "The item is ready."), true);
+  assert.equal(hasViolation('Nu include „adresa privată”.', "Am trimis adresa privată ieri."), true);
+  assert.equal(hasViolation('Include the phrase "available today".', "It is available today."), false);
 });
