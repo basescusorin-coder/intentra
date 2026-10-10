@@ -1,260 +1,358 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>INTENTRA — AI Intent Verification</title>
-
-<style>
-* { box-sizing: border-box; }
-
-body {
-  margin: 0;
-  min-height: 100vh;
-  font-family: Arial, sans-serif;
-  color: white;
-  background: radial-gradient(circle at top, #142743, #070d19 45%, #020610);
-}
-
-.container {
-  width: min(900px, 92%);
-  margin: auto;
-  padding: 50px 0;
-}
-
-h1 {
-  text-align: center;
-  font-size: 42px;
-  margin-bottom: 5px;
-}
-
-.subtitle {
-  text-align: center;
-  color: #8beeff;
-  margin-bottom: 35px;
-}
-
-.card {
-  background: rgba(15, 45, 80, .65);
-  border: 1px solid #168cb0;
-  border-radius: 18px;
-  padding: 22px;
-  margin-bottom: 18px;
-}
-
-label {
-  display: block;
-  font-weight: bold;
-  font-size: 18px;
-  margin-bottom: 10px;
-}
-
-textarea {
-  width: 100%;
-  min-height: 130px;
-  padding: 15px;
-  resize: vertical;
-  border-radius: 12px;
-  border: 1px solid #25cbea;
-  background: #09172a;
-  color: white;
-  font-size: 16px;
-}
-
-button {
-  width: 100%;
-  padding: 17px;
-  border: 0;
-  border-radius: 12px;
-  background: #53e5e7;
-  color: #06131c;
-  font-weight: bold;
-  font-size: 17px;
-  cursor: pointer;
-}
-
-button:disabled {
-  opacity: .6;
-  cursor: wait;
-}
-
-#result {
-  display: none;
-  margin-top: 22px;
-  padding: 22px;
-  border-radius: 16px;
-  background: #0a192b;
-  border: 1px solid #28c9e8;
-}
-
-#verdict {
-  font-size: 25px;
-  font-weight: bold;
-}
-
-#score {
-  margin-top: 8px;
-  font-size: 20px;
-}
-
-#error {
-  color: #ff8b8b;
-}
-
-footer {
-  text-align: center;
-  margin-top: 25px;
-  color: #8ba1b8;
-}
-</style>
-</head>
-
-<body>
-
-<div class="container">
-
-  <h1>INTENTRA</h1>
-  <div class="subtitle">AI Intent Verification Platform</div>
-
-  <div class="card">
-    <label for="userRequest">1. User Request</label>
-    <textarea id="userRequest"
-      placeholder="Enter the original instruction given to the AI agent."></textarea>
-  </div>
-
-  <div class="card">
-    <label for="aiResult">2. AI Result</label>
-    <textarea id="aiResult"
-      placeholder="Paste the result produced by the AI agent."></textarea>
-  </div>
-
-  <button id="verifyButton" onclick="verifyIntent()">
-    VERIFY INTENT
-  </button>
-
-  <div id="result">
-    <div id="verdict"></div>
-    <div id="score"></div>
-    <p id="summary"></p>
-
-    <div id="violationsBox">
-      <strong>Critical violations</strong>
-      <ul id="violations"></ul>
-    </div>
-
-    <div id="error"></div>
-  </div>
-
-  <footer>INTENTRA · Verify the intent, not just the output.</footer>
-
-</div>
-
-<script>
-const WORKER_URL =
-  "https://intentra-ai.basescusorin.workers.dev/";
-
-async function verifyIntent() {
-
-  const userRequest =
-    document.getElementById("userRequest").value.trim();
-
-  const aiResult =
-    document.getElementById("aiResult").value.trim();
-
-  const button =
-    document.getElementById("verifyButton");
-
-  const result =
-    document.getElementById("result");
-
-  const error =
-    document.getElementById("error");
-
-  if (!userRequest || !aiResult) {
-    alert("Please complete both fields.");
-    return;
-  }
-
-  result.style.display = "block";
-  error.textContent = "";
-
-  button.disabled = true;
-  button.textContent = "VERIFYING...";
-
-  try {
-
-    const response = await fetch(WORKER_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        userRequest: userRequest,
-        aiResult: aiResult
-      })
-    });
-
-    const data = await response.json();
-
-    if (!response.ok || !data.ok) {
-      throw new Error(
-        data.details || data.error || "Verification failed"
-      );
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Check whether an AI result follows the original request and its critical constraints.">
+  <meta name="theme-color" content="#07111e">
+  <title>INTENTRA — Verify the intent</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #07111e;
+      --panel: #0d1a2a;
+      --panel-raised: #102238;
+      --line: #243a50;
+      --text: #f4f8fc;
+      --muted: #a9bbcc;
+      --accent: #63e4d0;
+      --accent-strong: #a2f6e8;
+      --danger: #ff8d96;
+      --warning: #ffd47f;
+      --success: #91e5ae;
     }
 
-    const v = data.verification;
+    * { box-sizing: border-box; }
+    html { min-width: 320px; scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(ellipse at 50% -18%, rgba(39, 113, 137, .27), transparent 49%),
+        linear-gradient(160deg, #091727 0%, var(--bg) 58%, #050b13 100%);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
 
-    document.getElementById("verdict").textContent =
-      v.verdict === "fulfilled"
-        ? "✅ Intent fulfilled"
-        : v.verdict === "partial"
-        ? "⚠️ Intent partially fulfilled"
-        : "❌ Intent not fulfilled";
+    button, textarea { font: inherit; }
+    button:focus-visible, textarea:focus-visible {
+      outline: 3px solid rgba(99, 228, 208, .55);
+      outline-offset: 3px;
+    }
 
-    document.getElementById("score").textContent =
-      "Intent score: " + v.score + "%";
+    .shell { width: min(1080px, calc(100% - 40px)); margin: 0 auto; padding: 32px 0 42px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 54px; }
+    .brand { display: inline-flex; align-items: center; gap: 11px; color: var(--text); text-decoration: none; font-weight: 800; letter-spacing: .13em; }
+    .brand-mark {
+      display: grid; width: 38px; height: 38px; place-items: center; border: 1px solid rgba(99, 228, 208, .55);
+      border-radius: 12px; color: var(--accent); background: rgba(99, 228, 208, .08); font-size: 20px;
+    }
+    .top-note { color: var(--muted); font-size: 13px; }
+    .hero { max-width: 760px; margin: 0 auto 34px; text-align: center; }
+    .eyebrow { color: var(--accent); font-size: 12px; font-weight: 750; letter-spacing: .18em; text-transform: uppercase; }
+    h1 { margin: 10px 0 12px; font-size: clamp(38px, 6vw, 62px); line-height: 1.04; letter-spacing: -.045em; }
+    .hero p { max-width: 650px; margin: 0 auto; color: var(--muted); font-size: clamp(15px, 2vw, 18px); }
 
-    document.getElementById("summary").textContent =
-      v.summary || "";
+    .workspace { padding: 22px; border: 1px solid rgba(126, 162, 193, .24); border-radius: 24px; background: rgba(11, 25, 41, .84); box-shadow: 0 24px 80px rgba(0, 0, 0, .24); }
+    .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .input-card { min-width: 0; padding: 18px; border: 1px solid var(--line); border-radius: 17px; background: rgba(16, 34, 56, .64); }
+    .field-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 11px; }
+    label { display: flex; align-items: center; gap: 9px; font-size: 15px; font-weight: 750; }
+    .step { display: inline-grid; width: 25px; height: 25px; place-items: center; border-radius: 8px; color: var(--accent-strong); background: rgba(99, 228, 208, .12); font-size: 12px; }
+    .char-count { color: #8197ab; font-size: 12px; font-variant-numeric: tabular-nums; }
+    textarea {
+      display: block; width: 100%; min-height: 190px; padding: 15px; resize: vertical;
+      border: 1px solid #2a4159; border-radius: 12px; color: var(--text); background: #081421;
+      font-size: 15px; line-height: 1.55;
+    }
+    textarea::placeholder { color: #71869b; }
+    textarea:focus { border-color: var(--accent); }
+    .field-hint { margin: 9px 0 0; color: #8da2b5; font-size: 12px; }
+    .actions { display: flex; align-items: center; gap: 14px; margin-top: 18px; }
+    .verify-button {
+      display: inline-flex; min-height: 52px; align-items: center; justify-content: center; gap: 10px;
+      padding: 0 24px; border: 0; border-radius: 13px; color: #06201e; background: var(--accent);
+      font-weight: 850; letter-spacing: .025em; cursor: pointer; transition: transform .15s ease, background .15s ease;
+    }
+    .verify-button:hover:not(:disabled) { transform: translateY(-1px); background: var(--accent-strong); }
+    .verify-button:disabled { cursor: progress; opacity: .74; }
+    .privacy-note { margin: 0; color: #93a8ba; font-size: 12px; }
+    .form-error { min-height: 20px; margin: 9px 0 0; color: var(--danger); font-size: 13px; }
 
-    const list =
-      document.getElementById("violations");
+    .result { display: none; margin-top: 20px; padding: 20px; border: 1px solid var(--line); border-radius: 17px; background: #091624; }
+    .result.is-visible { display: block; }
+    .result-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
+    .result-title { margin: 0; font-size: 20px; }
+    .result-badge { display: inline-flex; align-items: center; min-height: 27px; padding: 4px 10px; border: 1px solid #35516a; border-radius: 999px; color: var(--muted); font-size: 11px; font-weight: 750; letter-spacing: .05em; text-transform: uppercase; }
+    .result-badge.ai { border-color: rgba(99, 228, 208, .36); color: var(--accent-strong); }
+    .result-badge.local { border-color: rgba(255, 212, 127, .38); color: var(--warning); }
+    .score-row { display: flex; align-items: baseline; gap: 10px; margin: 16px 0 8px; }
+    .score { color: var(--accent-strong); font-size: 35px; font-weight: 850; letter-spacing: -.04em; }
+    .verdict { font-size: 17px; font-weight: 750; }
+    .summary { margin: 0; color: #c3d0dc; }
+    .result-section { margin-top: 18px; }
+    .result-section h3 { margin: 0 0 9px; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; }
+    .constraint-list, .violation-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+    .constraint-item, .violation-item { display: flex; align-items: flex-start; gap: 9px; padding: 10px 12px; border-radius: 10px; color: #c8d5e0; background: rgba(24, 45, 65, .62); font-size: 14px; }
+    .constraint-item::before { content: "✓"; color: var(--success); font-weight: 800; }
+    .violation-item { border: 1px solid rgba(255, 141, 150, .16); background: rgba(88, 34, 44, .24); }
+    .violation-item::before { content: "!"; color: var(--danger); font-weight: 900; }
+    .warning-copy { margin: 14px 0 0; color: var(--warning); font-size: 13px; }
+    .error-copy { margin: 13px 0 0; padding: 11px 12px; border-radius: 10px; color: #ffd1d4; background: rgba(113, 37, 49, .28); font-size: 13px; overflow-wrap: anywhere; }
+    .empty-state { margin: 0; color: var(--muted); font-size: 14px; }
+    footer { margin: 26px 8px 0; color: #8195a8; text-align: center; font-size: 12px; }
+    footer strong { color: #b1c1ce; }
 
-    list.innerHTML = "";
+    @media (max-width: 720px) {
+      .shell { width: min(100% - 28px, 560px); padding: 20px 0 30px; }
+      .topbar { margin-bottom: 36px; }
+      .top-note { max-width: 145px; text-align: right; }
+      .hero { margin-bottom: 23px; }
+      .workspace { padding: 13px; border-radius: 19px; }
+      .input-grid { grid-template-columns: 1fr; gap: 12px; }
+      .input-card { padding: 14px; }
+      textarea { min-height: 145px; font-size: 16px; }
+      .actions { align-items: stretch; flex-direction: column; gap: 9px; }
+      .verify-button { width: 100%; }
+      .privacy-note { text-align: center; }
+      .result { padding: 15px; }
+    }
+    @media (max-width: 380px) {
+      .shell { width: calc(100% - 22px); }
+      h1 { font-size: 36px; }
+      .top-note { font-size: 11px; }
+      .result-head { flex-direction: column; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="INTENTRA home">
+        <span class="brand-mark" aria-hidden="true">✓</span><span>INTENTRA</span>
+      </a>
+      <span class="top-note">An independent check for AI outputs</span>
+    </header>
 
-    const violations =
-      Array.isArray(v.critical_violations)
-        ? v.critical_violations
-        : [];
+    <section class="hero" id="top" aria-labelledby="page-title">
+      <div class="eyebrow">Intent verification</div>
+      <h1 id="page-title">Did the AI do what was asked?</h1>
+      <p>Compare the original request with the AI result. INTENTRA checks the meaning, the must-haves, and the things that must not happen.</p>
+    </section>
 
-    document.getElementById("violationsBox").style.display =
-      violations.length ? "block" : "none";
+    <section class="workspace" aria-label="Intent verification form">
+      <div class="input-grid">
+        <div class="input-card">
+          <div class="field-heading">
+            <label for="userRequest"><span class="step">01</span> Original request</label>
+            <span class="char-count" id="requestCount">0 / 12000</span>
+          </div>
+          <textarea id="userRequest" maxlength="12000" placeholder="Example: Find a direct flight from Zurich to Bucharest. Do not include stopovers." aria-describedby="requestHint"></textarea>
+          <p class="field-hint" id="requestHint">Paste the instruction exactly as it was given.</p>
+        </div>
+        <div class="input-card">
+          <div class="field-heading">
+            <label for="aiResult"><span class="step">02</span> AI result</label>
+            <span class="char-count" id="resultCount">0 / 12000</span>
+          </div>
+          <textarea id="aiResult" maxlength="12000" placeholder="Paste the answer or outcome produced by the AI." aria-describedby="resultHint"></textarea>
+          <p class="field-hint" id="resultHint">Include the final answer and relevant actions.</p>
+        </div>
+      </div>
 
-    violations.forEach(function(item) {
-      const li = document.createElement("li");
-      li.textContent = item;
-      list.appendChild(li);
-    });
+      <p class="form-error" id="formError" role="alert"></p>
+      <div class="actions">
+        <button class="verify-button" id="verifyButton" type="button">
+          <span aria-hidden="true">✦</span><span id="buttonText">Verify intent</span>
+        </button>
+        <p class="privacy-note">The two text fields are sent to INTENTRA’s verification service.</p>
+      </div>
 
-  } catch (err) {
+      <section class="result" id="result" aria-live="polite" aria-busy="false" aria-labelledby="resultTitle">
+        <div class="result-head">
+          <h2 class="result-title" id="resultTitle">Verification result</h2>
+          <span class="result-badge" id="modeBadge">Waiting</span>
+        </div>
+        <div class="score-row" id="scoreRow" hidden>
+          <span class="score" id="score"></span><span class="verdict" id="verdict"></span>
+        </div>
+        <p class="summary" id="summary"></p>
+        <div class="result-section" id="explanationSection" hidden>
+          <h3>Explanation</h3>
+          <p class="summary" id="explanation"></p>
+        </div>
+        <div class="result-section" id="constraintsSection" hidden>
+          <h3>Critical constraints found</h3>
+          <ul class="constraint-list" id="constraints"></ul>
+        </div>
+        <div class="result-section" id="violationsSection" hidden>
+          <h3>Possible violations</h3>
+          <ul class="violation-list" id="violations"></ul>
+        </div>
+        <p class="warning-copy" id="localWarning" hidden></p>
+        <p class="error-copy" id="serviceError" hidden></p>
+      </section>
+    </section>
 
-    document.getElementById("verdict").textContent =
-      "Verification error";
+    <footer><strong>INTENTRA</strong> · Verify the intent, not just the output.</footer>
+  </main>
 
-    document.getElementById("score").textContent = "";
-    document.getElementById("summary").textContent = "";
-    document.getElementById("violations").innerHTML = "";
+  <script>
+    "use strict";
+    const WORKER_URL = "https://intentra-ai.basescusorin.workers.dev/";
+    const MAX_CHARS = 12000;
+    const requestField = document.getElementById("userRequest");
+    const resultField = document.getElementById("aiResult");
+    const verifyButton = document.getElementById("verifyButton");
+    const resultPanel = document.getElementById("result");
 
-    error.textContent = err.message;
+    function updateCount(field, output) {
+      output.textContent = `${field.value.length.toLocaleString()} / ${MAX_CHARS.toLocaleString()}`;
+    }
 
-  } finally {
+    function extractConstraints(request) {
+      const found = [];
+      const noStops = /\b(?:direct(?:\s+(?:flight|route|connection))?|non[ -]?stop|no\s+(?:stops?|stopovers?|layovers?|connections?|transfers?)|without\s+(?:any\s+)?(?:stops?|stopovers?|layovers?|connections?|transfers?)|(?:do\s+not|don't|must\s+not)\s+(?:include\s+)?(?:any\s+)?(?:stops?|stopovers?|layovers?|connections?|transfers?)|f(?:ă|a)r(?:ă|a)\s+escal(?:ă|a))\b/i.test(request);
+      if (noStops) found.push({ type: "no-stops", text: "Travel must be direct, with no stopovers or connections." });
 
-    button.disabled = false;
-    button.textContent = "VERIFY INTENT";
+      const maxStops = request.match(/\b(?:at\s+most|no\s+more\s+than|maximum\s+of?|max\.?|up\s+to)\s+(\d+)\s+(?:stops?|stopovers?|layovers?|connections?|transfers?)\b/i);
+      if (maxStops) found.push({ type: "max-stops", value: Number(maxStops[1]), text: `No more than ${maxStops[1]} stop${maxStops[1] === "1" ? "" : "s"} is allowed.` });
 
-  }
-}
-</script>
+      return found;
+    }
 
+    function detectLocalViolations(constraints, aiResult) {
+      const violations = [];
+      const text = aiResult.toLowerCase();
+      for (const constraint of constraints) {
+        if (constraint.type === "no-stops") {
+          const positiveStop = /\b(?:\d+|one|two|three|a|an)\s+(?:stops?|stopovers?|layovers?|connections?|transfers?)\b|\b(?:with|via|through)\s+(?:one\s+)?(?:a\s+)?(?:stop|stopover|layover|connection|transfer)\b|\b(?:stop(?:s|over)? in|stopping at|transfer(?:s|ring)? in|layover in|connection in)\s+[\p{L}-]+|\b(?:connecting flight|one[ -]stop|two[ -]stop|indirect flight|cu escal[ăa]|o escal[ăa]|escal[ăa])\b/iu;
+          const statesNoStops = /\b(?:no|without|zero)\s+(?:stops?|stopovers?|layovers?|connections?|transfers?)\b|\bnon[ -]?stop\b|\bdirect(?:\s+(?:flight|route))?\b|\bf(?:ă|a)r(?:ă|a)\s+escal(?:ă|a)\b/i;
+          if (positiveStop.test(text) && !statesNoStops.test(text)) {
+            violations.push("The result describes a stop, transfer, or connection even though the request requires a direct trip.");
+          }
+        }
+        if (constraint.type === "max-stops") {
+          const countMatch = text.match(/\b(\d+)\s+(?:stops?|stopovers?|layovers?|connections?|transfers?)\b/);
+          if (countMatch && Number(countMatch[1]) > constraint.value) {
+            violations.push(`The result has ${countMatch[1]} stops, above the allowed maximum of ${constraint.value}.`);
+          }
+        }
+      }
+      return violations;
+    }
+
+    function addItems(list, items, className) {
+      list.replaceChildren();
+      for (const item of items) {
+        const li = document.createElement("li");
+        li.className = className;
+        li.textContent = typeof item === "string" ? item : item.text;
+        list.appendChild(li);
+      }
+    }
+
+    function setLoading(loading) {
+      verifyButton.disabled = loading;
+      document.getElementById("buttonText").textContent = loading ? "Checking…" : "Verify intent";
+      resultPanel.setAttribute("aria-busy", String(loading));
+    }
+
+    function showLocalResult(constraints, localViolations, errorMessage) {
+      document.getElementById("modeBadge").textContent = "Local checks only";
+      document.getElementById("modeBadge").className = "result-badge local";
+      document.getElementById("scoreRow").hidden = true;
+      document.getElementById("summary").textContent = localViolations.length
+        ? "A rule-based check found a possible contradiction in an explicit constraint."
+        : "The local check did not find a contradiction in the constraints it recognizes. This is not a complete AI semantic verdict.";
+      document.getElementById("explanationSection").hidden = true;
+      document.getElementById("explanation").textContent = "";
+      document.getElementById("constraintsSection").hidden = constraints.length === 0;
+      addItems(document.getElementById("constraints"), constraints, "constraint-item");
+      document.getElementById("violationsSection").hidden = localViolations.length === 0;
+      addItems(document.getElementById("violations"), localViolations, "violation-item");
+      document.getElementById("localWarning").hidden = false;
+      document.getElementById("localWarning").textContent = "AI analysis was unavailable. Local checks cover a limited set of explicit constraints and can miss meaning or context.";
+      const serviceError = document.getElementById("serviceError");
+      serviceError.hidden = !errorMessage;
+      serviceError.textContent = errorMessage ? `AI service: ${errorMessage}` : "";
+    }
+
+    function showAiResult(verification, constraints, localViolations) {
+      const verdictMap = { fulfilled: "Intent fulfilled", partial: "Partially fulfilled", not_fulfilled: "Intent not fulfilled", failed: "Intent not fulfilled" };
+      const score = Number(verification.score);
+      document.getElementById("modeBadge").textContent = "AI + rule checks";
+      document.getElementById("modeBadge").className = "result-badge ai";
+      document.getElementById("scoreRow").hidden = !Number.isFinite(score);
+      document.getElementById("score").textContent = Number.isFinite(score) ? `${Math.max(0, Math.min(100, score))}%` : "";
+      document.getElementById("verdict").textContent = verdictMap[verification.verdict] || "Intent not fulfilled";
+      document.getElementById("summary").textContent = verification.summary || verification.explanation || "The AI verification is complete.";
+      const explanation = verification.explanation && verification.explanation !== verification.summary ? verification.explanation : "";
+      document.getElementById("explanationSection").hidden = !explanation;
+      document.getElementById("explanation").textContent = explanation;
+      const aiViolations = Array.isArray(verification.critical_violations) ? verification.critical_violations : (Array.isArray(verification.violations) ? verification.violations : []);
+      const combined = [...aiViolations, ...localViolations].filter((item, index, all) => all.findIndex(other => String(other).toLowerCase() === String(item).toLowerCase()) === index);
+      const aiConstraints = Array.isArray(verification.critical_constraints) ? verification.critical_constraints : (Array.isArray(verification.constraints) ? verification.constraints : []);
+      const allConstraints = [...constraints, ...aiConstraints.map(item => ({ text: String(item) }))].filter((item, index, all) => all.findIndex(other => other.text.toLowerCase() === item.text.toLowerCase()) === index);
+      document.getElementById("constraintsSection").hidden = allConstraints.length === 0;
+      addItems(document.getElementById("constraints"), allConstraints, "constraint-item");
+      document.getElementById("violationsSection").hidden = combined.length === 0;
+      addItems(document.getElementById("violations"), combined, "violation-item");
+      document.getElementById("localWarning").hidden = localViolations.length === 0;
+      document.getElementById("localWarning").textContent = localViolations.length ? "The rule-based pre-check also found a possible contradiction. Review it alongside the AI analysis." : "";
+      document.getElementById("serviceError").hidden = true;
+      document.getElementById("serviceError").textContent = "";
+    }
+
+    async function verifyIntent() {
+      const userRequest = requestField.value.trim();
+      const aiResult = resultField.value.trim();
+      const formError = document.getElementById("formError");
+      formError.textContent = "";
+      if (!userRequest || !aiResult) {
+        formError.textContent = "Enter both the original request and the AI result.";
+        (!userRequest ? requestField : resultField).focus();
+        return;
+      }
+
+      const constraints = extractConstraints(userRequest);
+      const localViolations = detectLocalViolations(constraints, aiResult);
+      resultPanel.classList.add("is-visible");
+      document.getElementById("resultTitle").textContent = "Verification result";
+      document.getElementById("localWarning").hidden = true;
+      document.getElementById("serviceError").hidden = true;
+      setLoading(true);
+
+      try {
+        const response = await fetch(WORKER_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userRequest, aiResult })
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload.ok === false) {
+          throw new Error(payload.details || payload.error || `Request failed (${response.status})`);
+        }
+        const verification = payload.verification || payload;
+        if (!verification || typeof verification !== "object") throw new Error("The service returned an unreadable response.");
+        showAiResult(verification, constraints, localViolations);
+      } catch (error) {
+        showLocalResult(constraints, localViolations, error instanceof Error ? error.message : "Unknown error");
+      } finally {
+        setLoading(false);
+        resultPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+    }
+
+    requestField.addEventListener("input", () => updateCount(requestField, document.getElementById("requestCount")));
+    resultField.addEventListener("input", () => updateCount(resultField, document.getElementById("resultCount")));
+    verifyButton.addEventListener("click", verifyIntent);
+    updateCount(requestField, document.getElementById("requestCount"));
+    updateCount(resultField, document.getElementById("resultCount"));
+  </script>
 </body>
 </html>
