@@ -58,3 +58,11 @@ test("recognizes Romanian direct-trip constraints and stop counts", () => {
 test("still detects a contradiction when the answer explains the request", () => {
   assert.equal(hasViolation("Do not include stopovers.", "The request forbids stops, but the answer contains one stop in Vienna."), true);
 });
+
+
+test("free verification contains no paid worker or network request", () => {
+  assert.doesNotMatch(script, /\\bfetch\\s*\\(/, "verification must not call a remote API");
+  assert.doesNotMatch(html, /WORKER_URL|intentra-ai\\.basescusorin\\.workers\\.dev/i, "the paid Worker must not be configured");
+  assert.match(html, /Free local checks run in your browser\\. Your text is not sent to a server\\./);
+  assert.match(script, /Free local mode: INTENTRA checks a limited set of explicit constraints in your browser\\./);
+});
