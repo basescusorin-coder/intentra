@@ -173,7 +173,7 @@
         <button class="verify-button" id="verifyButton" type="button">
           <span aria-hidden="true">✦</span><span id="buttonText">Verify intent</span>
         </button>
-        <p class="privacy-note">The two text fields are sent to INTENTRA’s verification service.</p>
+        <p class="privacy-note">Free local checks run in your browser. Your text is not sent to a server.</p>
       </div>
 
       <section class="result" id="result" aria-live="polite" aria-busy="false" aria-labelledby="resultTitle">
@@ -207,7 +207,6 @@
 
   <script>
     "use strict";
-    const WORKER_URL = "https://intentra-ai.basescusorin.workers.dev/";
     const MAX_CHARS = 12000;
     const requestField = document.getElementById("userRequest");
     const resultField = document.getElementById("aiResult");
@@ -308,7 +307,7 @@
       document.getElementById("violationsSection").hidden = localViolations.length === 0;
       addItems(document.getElementById("violations"), localViolations, "violation-item");
       document.getElementById("localWarning").hidden = false;
-      document.getElementById("localWarning").textContent = "AI analysis was unavailable. Local checks cover a limited set of explicit constraints and can miss meaning or context.";
+      document.getElementById("localWarning").textContent = "Free local mode: INTENTRA checks a limited set of explicit constraints in your browser. It sends no text to a paid AI service and can miss broader meaning or context.";
       const serviceError = document.getElementById("serviceError");
       serviceError.hidden = !errorMessage;
       serviceError.textContent = errorMessage ? `AI service: ${errorMessage}` : "";
@@ -340,7 +339,7 @@
       document.getElementById("serviceError").textContent = "";
     }
 
-    async function verifyIntent() {
+    function verifyIntent() {
       const userRequest = requestField.value.trim();
       const aiResult = resultField.value.trim();
       const formError = document.getElementById("formError");
@@ -354,30 +353,10 @@
       const constraints = extractConstraints(userRequest);
       const localViolations = detectLocalViolations(constraints, aiResult);
       resultPanel.classList.add("is-visible");
-      document.getElementById("resultTitle").textContent = "Verification result";
-      document.getElementById("localWarning").hidden = true;
-      document.getElementById("serviceError").hidden = true;
-      setLoading(true);
-
-      try {
-        const response = await fetch(WORKER_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userRequest, aiResult })
-        });
-        const payload = await response.json().catch(() => ({}));
-        if (!response.ok || payload.ok === false) {
-          throw new Error(payload.details || payload.error || `Request failed (${response.status})`);
-        }
-        const verification = payload.verification || payload;
-        if (!verification || typeof verification !== "object") throw new Error("The service returned an unreadable response.");
-        showAiResult(verification, constraints, localViolations);
-      } catch (error) {
-        showLocalResult(constraints, localViolations, error instanceof Error ? error.message : "Unknown error");
-      } finally {
-        setLoading(false);
-        resultPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      }
+      document.getElementById("resultTitle").textContent = "Free local verification";
+      setLoading(false);
+      showLocalResult(constraints, localViolations, "");
+      resultPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
 
     requestField.addEventListener("input", () => updateCount(requestField, document.getElementById("requestCount")));
