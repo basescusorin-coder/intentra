@@ -152,7 +152,7 @@
     <section class="hero" id="top" aria-labelledby="page-title">
       <div class="eyebrow">AI intent verification platform</div>
       <h1 id="page-title">Verify the intent,<br><span>not just the output.</span></h1>
-      <p>Compare an original request with an AI answer. Free local checks can flag a limited set of explicit contradictions; they do not provide a complete semantic AI verdict.</p>
+      <p>Compare an original request with an AI answer. Free local checks can flag some clear rules about travel, language, list counts, required phrases, and word limits. They are not a complete semantic AI verdict.</p>
     </section>
 
     <section class="workspace" aria-label="Intent verification form">
@@ -162,7 +162,7 @@
             <label for="userRequest"><span class="step">01</span> Original request</label>
             <span class="char-count" id="requestCount">0 / 12000</span>
           </div>
-          <textarea id="userRequest" maxlength="12000" placeholder="Example: Find a direct flight from Zurich to Bucharest. Do not include stopovers." aria-describedby="requestHint"></textarea>
+          <textarea id="userRequest" maxlength="12000" placeholder="Example: Reply in Romanian, use exactly 3 bullet points, and keep it under 50 words." aria-describedby="requestHint"></textarea>
           <p class="field-hint" id="requestHint">Paste the instruction exactly as it was given.</p>
         </div>
         <div class="input-card">
@@ -235,6 +235,14 @@
 
     const STOP_WORDS = "stops?|stopovers?|layovers?|connections?|transfers?|escal(?:a|e)?|oprir(?:e|i)|schimb(?:are|ari)|transferuri";
     const STOP_TERMS = new RegExp(`\\b(?:${STOP_WORDS})\\b`, "i");
+    const LANGUAGE_NAMES = { english: "English", romanian: "Romanian", german: "German", french: "French", spanish: "Spanish", italian: "Italian", engleza: "English", romana: "Romanian", germana: "German", franceza: "French", spaniola: "Spanish", italiana: "Italian" };
+
+    function parseNumber(value) {
+      const numbers = { zero: 0, no: 0, none: 0, one: 1, unu: 1, una: 1, un: 1, o: 1, two: 2, doi: 2, doua: 2, three: 3, trei: 3, four: 4, patru: 4, five: 5, cinci: 5, six: 6, sase: 6, seven: 7, sapte: 7, eight: 8, opt: 8, nine: 9, noua: 9, ten: 10, zece: 10 };
+      const normalized = normalizeForRules(value);
+      return /^\d+$/.test(normalized) ? Number(normalized) : numbers[normalized];
+    }
+
 
     function extractConstraints(request) {
       const found = [];
@@ -250,6 +258,28 @@
         const value = numberValue(maxStops[1]);
         if (Number.isInteger(value)) found.push({ type: "max-stops", value, text: `No more than ${value} stop${value === 1 ? "" : "s"} is allowed.` });
       }
+
+      const language = text.match(/\b(?:answer|respond|reply|write)\s+(?:only\s+)?(?:in\s+)?(english|romanian|german|french|spanish|italian)\b|\b(?:raspunde|scrie|redacteaza|vorbeste)\s+(?:numai\s+)?(?:in\s+)?(engleza|romana|germana|franceza|spaniola|italiana)\b/);
+      if (language) {
+        const name = language[1] || language[2];
+        found.push({ type: "language", value: LANGUAGE_NAMES[name], text: `The answer should be in ${LANGUAGE_NAMES[name]}.` });
+      }
+
+      const exactItems = text.match(/\b(?:exactly|precisely|exact)\s+(\d+|zero|one|two|three|four|five|six|seven|eight|nine|ten)\s+(bullet\s+points?|points?|items?|steps?|options?|examples?)\b|\b(?:exact|exactly)\s+(\d+|zero|one|two|three|four|five|six|seven|eight|nine|ten|unu|una|un|o|doi|doua|trei|patru|cinci|sase|sapte|opt|noua|zece)\s+(puncte|elemente|pasi|optiuni|exemple)\b/);
+      if (exactItems) {
+        const value = parseNumber(exactItems[1] || exactItems[3]);
+        const label = exactItems[2] || exactItems[4];
+        if (Number.isInteger(value)) found.push({ type: "exact-items", value, label, text: `The answer should contain exactly ${value} ${label}.` });
+      }
+
+      const maxWords = text.match(/\b(?:under|fewer than|less than|at most|no more than|maximum(?:\s+of)?|max\.?)\s+(\d+)\s+words?\b|\b(?:sub|maxim(?:um)?|cel\s+mult|nu\s+mai\s+mult\s+de)\s+(\d+)\s+cuvinte\b/);
+      if (maxWords) found.push({ type: "max-words", value: Number(maxWords[1] || maxWords[2]), text: `The answer should be no longer than ${Number(maxWords[1] || maxWords[2])} words.` });
+
+      const requiredPhrase = text.match(/\b(?:include|use|say|contain)\s+(?:the\s+)?(?:exact\s+)?phrase\s+["“„']([^"”„']+)["”„']|\b(?:include|foloseste|scrie|mentioneaza)\s+(?:exact\s+)?(?:expresia|fraza)\s+["“„']([^"”„']+)["”„']/);
+      if (requiredPhrase) found.push({ type: "required-phrase", value: requiredPhrase[1] || requiredPhrase[2], text: `The answer must include the phrase “${requiredPhrase[1] || requiredPhrase[2]}”.` });
+
+      const forbiddenPhrase = text.match(/\b(?:do\s+not\s+(?:mention|include)|don't\s+(?:mention|include)|avoid\s+(?:mentioning|including))\s+["“„']([^"”„']+)["”„']|\b(?:nu\s+mentiona|nu\s+include|evita)\s+["“„']([^"”„']+)["”']/);
+      if (forbiddenPhrase) found.push({ type: "forbidden-phrase", value: forbiddenPhrase[1] || forbiddenPhrase[2], text: `The answer must not include “${forbiddenPhrase[1] || forbiddenPhrase[2]}”.` });
 
       return found;
     }
@@ -271,6 +301,18 @@
       const explicitStopClaims = /\b(?:connecting flight|indirect flight|via\s+[\p{L}-]+|through\s+[\p{L}-]+|(?:stop|stopover|layover|connection|transfer)\s+(?:in|at)\s+[\p{L}-]+|(?:cu|via)\s+(?:o\s+)?(?:escala|oprire|schimbare)|(?:escala|oprire|schimbare)\s+(?:in|la)\s+[\p{L}-]+)\b/iu.test(text);
       const countedStops = extractStopCounts(aiResult);
       const positiveStop = explicitStopClaims || countedStops.some(count => count > 0) || /\b(?:one|two|three)[ -]stop\b/i.test(text);
+      const listLines = aiResult.split(/\r?\n/).filter(line => /^\s*(?:[-*+]\s+|\d+[.)]\s+|(?:step|pasul?)\s+\d+\s*[:.)-]\s*)/iu.test(line));
+      const wordCount = aiResult.trim().match(/\b[\p{L}\p{N}]+(?:['’][\p{L}]+)?\b/gu)?.length || 0;
+      const languageMarkers = {
+        English: /\b(?:the|and|is|are|with|this|that|answer|because|from|for|you|we|it)\b/giu,
+        Romanian: /\b(?:si|este|sunt|pentru|care|raspuns|da|nu|acesta|aceasta|din|gasesc|am|vreau|zbor|fara|escala|buna|ziua)\b/giu,
+        German: /\b(?:und|ist|sind|mit|nicht|eine|der|die|das|antwort|ich|wir)\b/giu,
+        French: /\b(?:et|est|sont|avec|pas|une|le|la|les|reponse|je|nous)\b/giu,
+        Spanish: /\b(?:y|es|son|con|no|una|el|la|los|respuesta|que|para)\b/giu,
+        Italian: /\b(?:e|sono|con|non|una|il|la|risposta|che|per)\b/giu
+      };
+      const languageScores = Object.entries(languageMarkers).map(([name, pattern]) => [name, [...text.matchAll(pattern)].length]).sort((a, b) => b[1] - a[1]);
+      const answerLanguage = languageScores[0][1] >= 2 && languageScores[0][1] > languageScores[1][1] ? languageScores[0][0] : null;
 
       for (const constraint of constraints) {
         if (constraint.type === "no-stops" && positiveStop) {
@@ -280,6 +322,11 @@
           const actual = Math.max(...countedStops);
           violations.push(`The result mentions ${actual} stops, above the allowed maximum of ${constraint.value}.`);
         }
+        if (constraint.type === "language" && answerLanguage && answerLanguage !== constraint.value) violations.push(`The request requires ${constraint.value}, but the answer appears to be in ${answerLanguage}.`);
+        if (constraint.type === "exact-items" && listLines.length !== constraint.value) violations.push(`The request requires exactly ${constraint.value} list items, but the answer contains ${listLines.length}.`);
+        if (constraint.type === "max-words" && wordCount > constraint.value) violations.push(`The answer contains ${wordCount} words, above the ${constraint.value}-word limit.`);
+        if (constraint.type === "required-phrase" && !text.includes(normalizeForRules(constraint.value))) violations.push(`The answer is missing the required phrase “${constraint.value}”.`);
+        if (constraint.type === "forbidden-phrase" && text.includes(normalizeForRules(constraint.value))) violations.push(`The answer includes the forbidden phrase “${constraint.value}”.`);
       }
       return violations;
     }
