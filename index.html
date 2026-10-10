@@ -90,6 +90,12 @@
     .verify-button:disabled { cursor: progress; opacity: .74; }
     .privacy-note { margin: 0; color: #93a8ba; font-size: 12px; }
     .form-error { min-height: 20px; margin: 9px 0 0; color: var(--danger); font-size: 13px; }
+    .quick-examples { margin: 0 0 17px; padding: 15px; border: 1px solid rgba(75, 132, 220, .3); border-radius: 14px; background: rgba(4, 17, 43, .48); }
+    .quick-examples h2 { margin: 0 0 4px; font-size: 15px; }
+    .quick-examples p { margin: 0; color: var(--muted); font-size: 12px; }
+    .example-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin: 11px 0 8px; }
+    .example-button { min-height: 38px; padding: 7px 12px; border: 1px solid #31588f; border-radius: 999px; color: var(--text); background: rgba(16, 45, 93, .62); cursor: pointer; }
+    .example-button:hover { border-color: var(--accent); color: var(--accent-strong); }
 
     .result { display: none; margin-top: 20px; padding: 20px; border: 1px solid rgba(73, 139, 232, .42); border-radius: 17px; background: rgba(4, 17, 43, .84); }
     .result.is-visible { display: block; }
@@ -152,7 +158,7 @@
     <section class="hero" id="top" aria-labelledby="page-title">
       <div class="eyebrow">AI intent verification platform</div>
       <h1 id="page-title">Verify the intent,<br><span>not just the output.</span></h1>
-      <p>Compare an original request with an AI answer. Free local checks can flag some clear rules about travel, language, list counts, required phrases, and word limits. They are not a complete semantic AI verdict.</p>
+      <p>Check whether an AI followed your instructions for shopping, trips, housing, services, work, writing, and more. Free local checks catch clear requirements such as budgets, language, item counts, required phrases, and word limits. They do not search live offers or make bookings.</p>
     </section>
 
     <section class="workspace" aria-label="Intent verification form">
@@ -175,6 +181,11 @@
         </div>
       </div>
 
+      <div class="quick-examples" aria-labelledby="examplesTitle">
+        <h2 id="examplesTitle">Try a free example</h2>
+        <p>Shopping, hotels, restaurants, housing, and writing. These are sample answers, not live search results.</p>
+        <div class="example-buttons" id="exampleButtons"></div>
+      </div>
       <p class="form-error" id="formError" role="alert"></p>
       <div class="actions">
         <button class="verify-button" id="verifyButton" type="button">
@@ -244,6 +255,14 @@
     }
 
 
+    function parseMoney(value) {
+      const normalized = value
+        .replace(/['’\s]/g, "")
+        .replace(/[.,](?=\d{3}(?:\D|$))/g, "")
+        .replace(",", ".");
+      return Number(normalized);
+    }
+
     function extractConstraints(request) {
       const found = [];
       const text = normalizeForRules(request);
@@ -275,6 +294,14 @@
       const maxWords = text.match(/\b(?:under|fewer than|less than|at most|no more than|maximum(?:\s+of)?|max\.?)\s+(\d+)\s+words?\b|\b(?:sub|maxim(?:um)?|cel\s+mult|nu\s+mai\s+mult\s+de)\s+(\d+)\s+cuvinte\b/);
       if (maxWords) found.push({ type: "max-words", value: Number(maxWords[1] || maxWords[2]), text: `The answer should be no longer than ${Number(maxWords[1] || maxWords[2])} words.` });
 
+      const priceCap = text.match(/\b(?:under|below|less than|at most|no more than|maximum(?:\s+of)?|max\.?|up to|sub|maxim(?:um)?|cel\s+mult|nu\s+mai\s+mult\s+de|pana\s+la)\s+(?:(chf|eur|usd|€|\$)\s*)?((?:\d{1,3}(?:['’ ,.]\d{3})+|\d+)(?:[.,]\d{1,2})?)(?:\s*(chf|eur|usd|€|\$))?\b/i);
+      if (priceCap && (priceCap[1] || priceCap[3])) {
+        const amount = parseMoney(priceCap[2]);
+        const rawCurrency = (priceCap[1] || priceCap[3]).toUpperCase();
+        const currency = rawCurrency === "€" ? "EUR" : rawCurrency === "$" ? "USD" : rawCurrency;
+        if (Number.isFinite(amount)) found.push({ type: "max-price", value: amount, currency, text: "The price should not exceed " + currency + " " + amount + "." });
+      }
+
       const requiredPhrase = text.match(/\b(?:include|use|say|contain)\s+(?:the\s+)?(?:exact\s+)?phrase\s+["“„']([^"”„']+)["”„']|\b(?:include|foloseste|scrie|mentioneaza)\s+(?:exact\s+)?(?:expresia|fraza)\s+["“„']([^"”„']+)["”„']/);
       if (requiredPhrase) found.push({ type: "required-phrase", value: requiredPhrase[1] || requiredPhrase[2], text: `The answer must include the phrase “${requiredPhrase[1] || requiredPhrase[2]}”.` });
 
@@ -303,6 +330,10 @@
       const positiveStop = explicitStopClaims || countedStops.some(count => count > 0) || /\b(?:one|two|three)[ -]stop\b/i.test(text);
       const listLines = aiResult.split(/\r?\n/).filter(line => /^\s*(?:[-*+]\s+|\d+[.)]\s+|(?:step|pasul?)\s+\d+\s*[:.)-]\s*)/iu.test(line));
       const wordCount = aiResult.trim().match(/\b[\p{L}\p{N}]+(?:['’][\p{L}]+)?\b/gu)?.length || 0;
+      const prices = [...text.matchAll(/\b(chf|eur|usd|€|\$)\s*((?:\d{1,3}(?:['’ ,.]\d{3})+|\d+)(?:[.,]\d{1,2})?)\b|\b((?:\d{1,3}(?:['’ ,.]\d{3})+|\d+)(?:[.,]\d{1,2})?)\s*(chf|eur|usd|€|\$)\b/giu)].map(match => {
+        const rawCurrency = (match[1] || match[4]).toUpperCase();
+        return { currency: rawCurrency === "€" ? "EUR" : rawCurrency === "$" ? "USD" : rawCurrency, value: parseMoney(match[2] || match[3]) };
+      });
       const languageMarkers = {
         English: /\b(?:the|and|is|are|with|this|that|answer|because|from|for|you|we|it)\b/giu,
         Romanian: /\b(?:si|este|sunt|pentru|care|raspuns|da|nu|acesta|aceasta|din|gasesc|am|vreau|zbor|fara|escala|buna|ziua)\b/giu,
@@ -325,6 +356,14 @@
         if (constraint.type === "language" && answerLanguage && answerLanguage !== constraint.value) violations.push(`The request requires ${constraint.value}, but the answer appears to be in ${answerLanguage}.`);
         if (constraint.type === "exact-items" && listLines.length !== constraint.value) violations.push(`The request requires exactly ${constraint.value} list items, but the answer contains ${listLines.length}.`);
         if (constraint.type === "max-words" && wordCount > constraint.value) violations.push(`The answer contains ${wordCount} words, above the ${constraint.value}-word limit.`);
+        if (constraint.type === "max-price") {
+          const comparablePrices = prices.filter(price => price.currency === constraint.currency);
+          if (!comparablePrices.length) violations.push("The answer does not provide a " + constraint.currency + " price, so the " + constraint.currency + " " + constraint.value + " budget cannot be checked.");
+          else if (comparablePrices.some(price => price.value > constraint.value)) {
+            const actual = Math.max(...comparablePrices.map(price => price.value));
+            violations.push("The answer lists a price of " + constraint.currency + " " + actual + ", above the " + constraint.currency + " " + constraint.value + " limit.");
+          }
+        }
         if (constraint.type === "required-phrase" && !text.includes(normalizeForRules(constraint.value))) violations.push(`The answer is missing the required phrase “${constraint.value}”.`);
         if (constraint.type === "forbidden-phrase" && text.includes(normalizeForRules(constraint.value))) violations.push(`The answer includes the forbidden phrase “${constraint.value}”.`);
       }
@@ -412,6 +451,29 @@
       showLocalResult(constraints, localViolations, "");
       resultPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
+
+    const EXAMPLES = [
+      { label: "Shopping", request: "Compare exactly 3 options for laptops under CHF 900.", result: "Here are three options:\n- Laptop A — CHF 850\n- Laptop B — CHF 920\n- Laptop C — CHF 875" },
+      { label: "Hotels", request: "Find exactly 2 hotel options below EUR 150 per night.", result: "Two options:\n- Hotel A — EUR 125 per night\n- Hotel B — EUR 175 per night" },
+      { label: "Restaurants", request: "Găsește exact 3 opțiuni de restaurante sub 30 CHF de persoană. Răspunde în română.", result: "Am găsit restaurantele pentru tine:\n- Restaurantul A — CHF 25 de persoană\n- Restaurantul B — CHF 36 de persoană\n- Restaurantul C — CHF 28 de persoană" },
+      { label: "Housing", request: "List exactly 3 apartment options under CHF 1800 per month.", result: "Available apartments:\n- Apartment A — CHF 1650 per month\n- Apartment B — CHF 1950 per month\n- Apartment C — CHF 1700 per month" },
+      { label: "Writing", request: "Write a short email. Include the exact phrase \"Thank you\" and do not mention \"refund\".", result: "Hello, we will issue a refund. Please wait." }
+    ];
+    const exampleButtons = document.getElementById("exampleButtons");
+    EXAMPLES.forEach(example => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "example-button";
+      button.textContent = example.label;
+      button.addEventListener("click", () => {
+        requestField.value = example.request;
+        resultField.value = example.result;
+        updateCount(requestField, document.getElementById("requestCount"));
+        updateCount(resultField, document.getElementById("resultCount"));
+        verifyIntent();
+      });
+      exampleButtons.appendChild(button);
+    });
 
     requestField.addEventListener("input", () => updateCount(requestField, document.getElementById("requestCount")));
     resultField.addEventListener("input", () => updateCount(resultField, document.getElementById("resultCount")));
