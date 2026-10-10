@@ -257,8 +257,8 @@
 
     function parseMoney(value) {
       const normalized = value
-        .replace(/['’\s](?=\d{3}(?:\D|$))/g, "")
-        .replace(/,(?=\d{3}(?:\D|$))/g, "")
+        .replace(/['’\s]/g, "")
+        .replace(/[.,](?=\d{3}(?:\D|$))/g, "")
         .replace(",", ".");
       return Number(normalized);
     }
