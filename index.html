@@ -85,7 +85,7 @@ const tags=document.createElement("div");tags.className="req-tags";
 found.forEach(([type,value])=>{const span=document.createElement("span");span.className="req-tag";span.textContent=t[type]+": "+value;tags.appendChild(span)});el.appendChild(tags);
 }
 function inferCategory(q){
-const text=q.toLocaleLowerCase();
+const text=" "+q.toLocaleLowerCase();
 const patterns=[
 ["housing",/\\b(apartament|apartamente|garsonier|chirie|inchiri|închiri|wohnung|miete|haus|house|rent|flat|studio|imobil|locuinț|locuint)/iu],
 ["jobs",/\\b(job|jobs|angaj|serviciu|muncă|munca|arbeits|stelle|arbeit|employment|vacanc|recrut|salari|salary)/iu],
