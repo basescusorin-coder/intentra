@@ -144,6 +144,10 @@
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
     }
+
+    .lang-switch { display:flex;gap:5px;flex-wrap:wrap; }
+    .lang-switch button { background:#10244b;color:white;border:1px solid #385b8e;border-radius:8px;padding:7px;cursor:pointer; }
+    .lang-switch button[aria-pressed="true"] {background:#32cfff;color:#07111e;}
   </style>
 </head>
 <body>
@@ -481,5 +485,37 @@
     updateCount(requestField, document.getElementById("requestCount"));
     updateCount(resultField, document.getElementById("resultCount"));
   </script>
+
+  <script>
+  (() => {
+    const translations = {
+      ro: ['Verifică cerința','Cererea originală','Răspunsul AI','Verifică cerința','Încearcă un exemplu gratuit','Verificare locală gratuită','Cerințe importante identificate','Posibile încălcări','Verificările gratuite rulează în browser. Textul nu este trimis la server.','O verificare bazată pe reguli a identificat o posibilă contradicție.'],
+      de: ['Vorgabe prüfen','Ursprüngliche Anfrage','KI-Antwort','Vorgabe prüfen','Kostenloses Beispiel ausprobieren','Kostenlose lokale Prüfung','Erkannte wichtige Vorgaben','Mögliche Verstöße','Kostenlose Prüfungen laufen im Browser. Der Text wird nicht an einen Server gesendet.','Eine regelbasierte Prüfung hat einen möglichen Widerspruch gefunden.'],
+      en: ['Verify the intent','Original request','AI result','Verify intent','Try a free example','Free local verification','Critical constraints found','Possible violations','Free local checks run in your browser. Your text is not sent to a server.','A rule-based check found a possible contradiction in an explicit constraint.']
+    };
+    const selectors = ['#page-title','label[for="userRequest"]','label[for="aiResult"]','#buttonText','.quick-examples h2','#resultTitle','#constraintsSection h3','#violationsSection h3','.privacy-note','#summary'];
+    const switcher=document.createElement('div'); switcher.className='lang-switch';
+    [['ro','🇷🇴 RO'],['de','🇩🇪 DE'],['en','🇬🇧 EN']].forEach(([lang,label])=>{
+      const b=document.createElement('button');b.type='button';b.dataset.lang=lang;b.textContent=label;
+      b.addEventListener('click',()=>{localStorage.setItem('intentra-lang',lang);render();});
+      switcher.appendChild(b);
+    });
+    document.querySelector('.topbar').appendChild(switcher);
+    function render(){
+      const lang=localStorage.getItem('intentra-lang')||'en', t=translations[lang]||translations.en;
+      document.documentElement.lang=lang;
+      selectors.forEach((sel,i)=>{
+        const el=document.querySelector(sel);if(!el)return;
+        if(i===9 && !el.textContent.includes('rule-based check') && !el.textContent.includes('regelbasierte') && !el.textContent.includes('bazată pe reguli'))return;
+        if(i===1||i===2){const node=[...el.childNodes].find(n=>n.nodeType===3);if(node)node.textContent=' '+t[i];}
+        else el.textContent=t[i];
+      });
+      document.querySelectorAll('.lang-switch button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.lang===lang)));
+    }
+    render();
+    document.getElementById('verifyButton').addEventListener('click',()=>setTimeout(render,0));
+    document.querySelectorAll('.example-button').forEach(b=>b.addEventListener('click',()=>setTimeout(render,0)));
+  })();
+  <\/script>
 </body>
 </html>
