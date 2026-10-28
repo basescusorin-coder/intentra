@@ -85,14 +85,14 @@ const tags=document.createElement("div");tags.className="req-tags";
 found.forEach(([type,value])=>{const span=document.createElement("span");span.className="req-tag";span.textContent=t[type]+": "+value;tags.appendChild(span)});el.appendChild(tags);
 }
 function inferCategory(q){
-const text=" "+q.toLocaleLowerCase();
-const patterns=[
-["housing",/\\b(apartament|apartamente|garsonier|chirie|inchiri|închiri|wohnung|miete|haus|house|rent|flat|studio|imobil|locuinț|locuint)/iu],
-["jobs",/\\b(job|jobs|angaj|serviciu|muncă|munca|arbeits|stelle|arbeit|employment|vacanc|recrut|salari|salary)/iu],
-["auto",/\\b(mașin|masin|autoturism|automobil|mercedes|bmw|audi|volkswagen|toyota|hyundai|ford|tesla|auto|cars?|fahrzeug|occasion)/iu],
-["products",/\\b(televiz|telefon|laptop|frigider|mobil|sofa|canapea|produ|product|handy|smartphone|computer|möbel|möbl|tv\\b)/iu]
-];
-return patterns.find(([key,re])=>re.test(text))?.[0]||"products";
+const t=q.toLocaleLowerCase();
+const groups={
+housing:["apartament","garsonier","chirie","inchiri","închiri","wohnung","miete","haus","house","rent","flat","studio","imobil","locuin"],
+jobs:["job","angaj","serviciu","muncă","munca","arbeit","stelle","employment","vacanc","recrut","salari","salary"],
+auto:["mașin","masin","autoturism","automobil","mercedes","bmw","audi","volkswagen","toyota","hyundai","ford","tesla","auto","car ","cars","fahrzeug","occasion"],
+products:["televiz","telefon","laptop","frigider","mobil","sofa","canapea","produs","product","handy","smartphone","computer","möbel","tv "]
+};
+return Object.keys(groups).find(k=>groups[k].some(word=>t.includes(word)))||"products";
 }
 function showResults(){
 const q=$("query").value.trim(),t=i18n[lang];if(!q){$("error").textContent=t.error;$("results").hidden=true;searched=false;return}
