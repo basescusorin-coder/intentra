@@ -488,33 +488,83 @@
 
   <script>
   (() => {
-    const translations = {
-      ro: ['Verifică cerința','Cererea originală','Răspunsul AI','Verifică cerința','Încearcă un exemplu gratuit','Verificare locală gratuită','Cerințe importante identificate','Posibile încălcări','Verificările gratuite rulează în browser. Textul nu este trimis la server.','O verificare bazată pe reguli a identificat o posibilă contradicție.'],
-      de: ['Vorgabe prüfen','Ursprüngliche Anfrage','KI-Antwort','Vorgabe prüfen','Kostenloses Beispiel ausprobieren','Kostenlose lokale Prüfung','Erkannte wichtige Vorgaben','Mögliche Verstöße','Kostenlose Prüfungen laufen im Browser. Der Text wird nicht an einen Server gesendet.','Eine regelbasierte Prüfung hat einen möglichen Widerspruch gefunden.'],
-      en: ['Verify the intent','Original request','AI result','Verify intent','Try a free example','Free local verification','Critical constraints found','Possible violations','Free local checks run in your browser. Your text is not sent to a server.','A rule-based check found a possible contradiction in an explicit constraint.']
+    const dict={
+      ro:{
+        'An independent check for AI outputs':'Verificare independentă a răspunsurilor AI',
+        'AI intent verification platform':'Platformă de verificare a cerințelor AI',
+        'Verify the intent,':'Verifică cerința,',
+        'not just the output.':'nu doar răspunsul.',
+        'Check whether an AI followed your instructions for shopping, trips, housing, services, work, writing, and more. Free local checks catch clear requirements such as budgets, language, item counts, required phrases, and word limits. They do not search live offers or make bookings.':'Verifică dacă un AI ți-a respectat cerințele pentru cumpărături, călătorii, locuințe, servicii și texte. Verificările gratuite identifică unele limite de preț, cerințe de limbă, număr de elemente și lungime. Nu caută oferte în timp real și nu fac rezervări.',
+        'Original request':'Cererea originală','AI result':'Răspunsul AI',
+        'Paste the instruction exactly as it was given.':'Introdu cererea exact cum ai formulat-o.',
+        'Include the final answer and relevant actions.':'Introdu răspunsul final și acțiunile relevante.',
+        'Try a free example':'Încearcă un exemplu gratuit',
+        'Shopping, hotels, restaurants, housing, and writing. These are sample answers, not live search results.':'Cumpărături, hoteluri, restaurante, locuințe și texte. Sunt exemple, nu rezultate în timp real.',
+        'Verify intent':'Verifică cerința',
+        'Free local checks run in your browser. Your text is not sent to a server.':'Verificările gratuite rulează în browser. Textul tău nu este trimis la server.',
+        'Free local verification':'Verificare locală gratuită','Local checks only':'Doar verificări locale',
+        'Critical constraints found':'Cerințe importante identificate','Possible violations':'Posibile încălcări',
+        'A rule-based check found a possible contradiction in an explicit constraint.':'Verificarea bazată pe reguli a găsit o posibilă contradicție cu o cerință explicită.',
+        'Shopping':'Cumpărături','Hotels':'Hoteluri','Restaurants':'Restaurante','Housing':'Locuințe','Writing':'Texte'
+      },
+      de:{
+        'An independent check for AI outputs':'Unabhängige Prüfung von KI-Antworten',
+        'AI intent verification platform':'Plattform zur Prüfung von KI-Vorgaben',
+        'Verify the intent,':'Prüfe die Vorgabe,','not just the output.':'nicht nur die Antwort.',
+        'Check whether an AI followed your instructions for shopping, trips, housing, services, work, writing, and more. Free local checks catch clear requirements such as budgets, language, item counts, required phrases, and word limits. They do not search live offers or make bookings.':'Prüfe, ob eine KI deine Vorgaben für Einkäufe, Reisen, Wohnen, Dienstleistungen und Texte befolgt hat. Kostenlose Prüfungen erkennen bestimmte Preis-, Sprach-, Mengen- und Längenvorgaben. Sie suchen keine Live-Angebote und buchen nichts.',
+        'Original request':'Ursprüngliche Anfrage','AI result':'KI-Antwort',
+        'Paste the instruction exactly as it was given.':'Füge die ursprüngliche Anweisung unverändert ein.',
+        'Include the final answer and relevant actions.':'Füge die endgültige Antwort und relevante Aktionen ein.',
+        'Try a free example':'Kostenloses Beispiel ausprobieren',
+        'Shopping, hotels, restaurants, housing, and writing. These are sample answers, not live search results.':'Einkaufen, Hotels, Restaurants, Wohnen und Texte. Dies sind Beispiele, keine Live-Suchergebnisse.',
+        'Verify intent':'Vorgabe prüfen',
+        'Free local checks run in your browser. Your text is not sent to a server.':'Kostenlose Prüfungen laufen im Browser. Dein Text wird nicht an einen Server gesendet.',
+        'Free local verification':'Kostenlose lokale Prüfung','Local checks only':'Nur lokale Prüfungen',
+        'Critical constraints found':'Erkannte wichtige Vorgaben','Possible violations':'Mögliche Verstöße',
+        'A rule-based check found a possible contradiction in an explicit constraint.':'Die regelbasierte Prüfung hat einen möglichen Widerspruch zu einer ausdrücklichen Vorgabe gefunden.',
+        'Shopping':'Einkaufen','Hotels':'Hotels','Restaurants':'Restaurants','Housing':'Wohnen','Writing':'Texte'
+      }
     };
-    const selectors = ['#page-title','label[for="userRequest"]','label[for="aiResult"]','#buttonText','.quick-examples h2','#resultTitle','#constraintsSection h3','#violationsSection h3','.privacy-note','#summary'];
-    const switcher=document.createElement('div'); switcher.className='lang-switch';
+    const selectors=['.top-note','.eyebrow','.hero p','label[for="userRequest"]','label[for="aiResult"]','#requestHint','#resultHint','#examplesTitle','.quick-examples p','#buttonText','.privacy-note','.result-title','.result-badge','.result-section h3'];
+    const original=new WeakMap();
+    const switcher=document.createElement('nav');switcher.className='lang-switch';switcher.setAttribute('aria-label','Language / Limbă / Sprache');
+    const getLang=()=>{try{return localStorage.getItem('intentra-lang')||'en'}catch(e){return 'en'}};
+    const setLang=l=>{try{localStorage.setItem('intentra-lang',l)}catch(e){}};
     [['ro','🇷🇴 RO'],['de','🇩🇪 DE'],['en','🇬🇧 EN']].forEach(([lang,label])=>{
       const b=document.createElement('button');b.type='button';b.dataset.lang=lang;b.textContent=label;
-      b.addEventListener('click',()=>{localStorage.setItem('intentra-lang',lang);render();});
-      switcher.appendChild(b);
+      b.addEventListener('click',()=>{setLang(lang);render()});switcher.appendChild(b);
     });
-    document.querySelector('.topbar').appendChild(switcher);
+    document.querySelector('.topbar')?.appendChild(switcher);
+    function translateText(text,lang){
+      const trim=text.trim();const en=dict.ro;
+      const key=Object.keys(en).find(k=>k===trim||en[k]===trim||dict.de[k]===trim);
+      return key?(dict[lang]?.[key]||key):text;
+    }
     function render(){
-      const lang=localStorage.getItem('intentra-lang')||'en', t=translations[lang]||translations.en;
-      document.documentElement.lang=lang;
-      selectors.forEach((sel,i)=>{
-        const el=document.querySelector(sel);if(!el)return;
-        if(i===9 && !el.textContent.includes('rule-based check') && !el.textContent.includes('regelbasierte') && !el.textContent.includes('bazată pe reguli'))return;
-        if(i===1||i===2){const node=[...el.childNodes].find(n=>n.nodeType===3);if(node)node.textContent=' '+t[i];}
-        else el.textContent=t[i];
+      const lang=getLang();document.documentElement.lang=lang;
+      const h=document.getElementById('page-title');
+      if(h)h.innerHTML=lang==='ro'?'Verifică cerința,<br><span>nu doar răspunsul.</span>':lang==='de'?'Prüfe die Vorgabe,<br><span>nicht nur die Antwort.</span>':'Verify the intent,<br><span>not just the output.</span>';
+      selectors.forEach(sel=>document.querySelectorAll(sel).forEach(el=>{
+        if(el.id==='summary')return;
+        [...el.childNodes].filter(n=>n.nodeType===3&&n.textContent.trim()).forEach(n=>{
+          if(!original.has(n))original.set(n,n.textContent.trim());
+          const base=original.get(n);n.textContent=' '+translateText(base,lang)+' ';
+        });
+      }));
+      document.querySelectorAll('.example-button').forEach((b,i)=>{
+        const en=['Shopping','Hotels','Restaurants','Housing','Writing'][i];
+        if(en)b.textContent=dict[lang]?.[en]||en;
       });
+      const placeholders={
+        userRequest:{en:'Example: Reply in Romanian, use exactly 3 bullet points, and keep it under 50 words.',ro:'Exemplu: Răspunde în română, cu exact 3 puncte și maximum 50 de cuvinte.',de:'Beispiel: Antworte auf Deutsch mit genau 3 Punkten und höchstens 50 Wörtern.'},
+        aiResult:{en:'Paste the answer or outcome produced by the AI.',ro:'Introdu răspunsul produs de AI.',de:'Füge die Antwort der KI ein.'}
+      };
+      Object.entries(placeholders).forEach(([id,values])=>{const el=document.getElementById(id);if(el)el.placeholder=values[lang]||values.en});
       document.querySelectorAll('.lang-switch button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.lang===lang)));
     }
     render();
-    document.getElementById('verifyButton').addEventListener('click',()=>setTimeout(render,0));
-    document.querySelectorAll('.example-button').forEach(b=>b.addEventListener('click',()=>setTimeout(render,0)));
+    document.getElementById('verifyButton')?.addEventListener('click',()=>setTimeout(render,0));
+    document.getElementById('exampleButtons')?.addEventListener('click',()=>setTimeout(render,0));
   })();
   </script>
 </body>
