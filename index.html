@@ -67,13 +67,13 @@ if(searched)showResults();
 }
 function extractRequirements(q){
 const found=[];
-const money=q.match(/(?:sub|under|max(?:imum)?|până la|cel mult|unter|bis zu|maximum|buget(?:ul)?(?: de)?|budget(?: of)?)[^\\n,.]{0,30}?(\\d{1,3}(?:[ .']\\d{3})+|\\d{3,6})\\s*(CHF|EUR|€|lei|RON|USD)?|(?:CHF|EUR|€|RON|USD)\\s*(\\d{1,3}(?:[ .']\\d{3})+|\\d{3,6})/i);
+const money=q.match(/(?:sub|under|max(?:imum)?|până la|cel mult|unter|bis zu|maximum|buget(?:ul)?(?: de)?|budget(?: of)?)[^\n,.]{0,30}?(\d{1,3}(?:[ .']\d{3})+|\d{3,6})\s*(CHF|EUR|€|lei|RON|USD)?|(?:CHF|EUR|€|RON|USD)\s*(\d{1,3}(?:[ .']\d{3})+|\d{3,6})/i);
 if(money){const amount=(money[1]||money[3]||"").replace(/[ .']/g,"");if(amount)found.push(["budget",amount+" "+(money[2]||q.match(/CHF|EUR|RON|USD|€/i)?.[0]||"").toUpperCase()])}
-const year=q.match(/(?:din|from|ab|since|după|after|nach|începând cu|mai nou de)\\s*(?:anul\\s*)?(20[0-3]\\d)|(?:20[0-3]\\d)\\s*(?:sau mai nou|or newer|oder neuer)/i);
+const year=q.match(/(?:din|from|ab|since|după|after|nach|începând cu|mai nou de)\s*(?:anul\s*)?(20[0-3]\d)|(?:20[0-3]\d)\s*(?:sau mai nou|or newer|oder neuer)/i);
 if(year)found.push(["year",year[1]||year[2]]);
-const place=q.match(/(?:în|in|near|lângă|bei|around|zona|region|regiunea)\\s+([A-ZĂÂÎȘȚ][\\p{L}-]+(?:\\s+[A-ZĂÂÎȘȚ][\\p{L}-]+){0,2})/u);
+const place=q.match(/(?:în|in|near|lângă|bei|around|zona|region|regiunea)\s+([A-ZĂÂÎȘȚ][\p{L}-]+(?:\s+[A-ZĂÂÎȘȚ][\p{L}-]+){0,2})/u);
 if(place)found.push(["place",place[1]]);
-const count=q.match(/(?:exact|exactly|genau|vreau|want|suche|caut)\\s+(\\d{1,2})\\s+(?:mașini|masini|autos|cars|oferte|options|variante|apartamente|wohnungen|jobs|produse|products)/i);
+const count=q.match(/(?:exact|exactly|genau|vreau|want|suche|caut)\s+(\d{1,2})\s+(?:mașini|masini|autos|cars|oferte|options|variante|apartamente|wohnungen|jobs|produse|products)/i);
 if(count)found.push(["count",count[1]]);
 return found;
 }
