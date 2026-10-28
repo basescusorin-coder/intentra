@@ -51,7 +51,7 @@ jobs:[["jobs.ch","https://www.google.com/search?q="+encodeURIComponent("site:job
 products:[["Galaxus","https://www.google.com/search?q="+encodeURIComponent("site:galaxus.ch ")],["Digitec","https://www.google.com/search?q="+encodeURIComponent("site:digitec.ch ")],["Toppreise","https://www.google.com/search?q="+encodeURIComponent("site:toppreise.ch ")]]
 };
 const keys=["auto","housing","jobs","products"];
-let lang="ro",category="auto",searched=false;
+let lang="ro",category="auto",searched=false,categoryChosen=false;
 try{const saved=localStorage.getItem("intentra-lang");if(i18n[saved])lang=saved}catch(e){}
 const $=id=>document.getElementById(id);
 function render(){
@@ -62,7 +62,7 @@ $("helper").textContent=t.helper;$("footer").textContent=t.footer;$("resultsTitl
 $("resultsSubtitle").textContent=t.resultsSubtitle;$("notice").textContent=t.notice;
 document.querySelectorAll("[data-lang]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.lang===lang)));
 $("categories").replaceChildren();
-keys.forEach((k,index)=>{const b=document.createElement("button");b.type="button";b.textContent=t.categories[index];b.setAttribute("aria-pressed",String(category===k));b.addEventListener("click",()=>{category=k;render();if(searched)showResults()});$("categories").appendChild(b)});
+keys.forEach((k,index)=>{const b=document.createElement("button");b.type="button";b.textContent=t.categories[index];b.setAttribute("aria-pressed",String(category===k));b.addEventListener("click",()=>{category=k;categoryChosen=true;render();if(searched)showResults()});$("categories").appendChild(b)});
 if(searched)showResults();
 }
 function extractRequirements(q){
@@ -84,12 +84,22 @@ if(!found.length){const p=document.createElement("p");p.textContent=t.none;el.ap
 const tags=document.createElement("div");tags.className="req-tags";
 found.forEach(([type,value])=>{const span=document.createElement("span");span.className="req-tag";span.textContent=t[type]+": "+value;tags.appendChild(span)});el.appendChild(tags);
 }
+function inferCategory(q){
+const text=q.toLocaleLowerCase();
+const patterns=[
+["housing",/\\b(apartament|apartamente|garsonier|chirie|inchiri|închiri|wohnung|miete|haus|house|rent|flat|studio|imobil|locuinț|locuint)/iu],
+["jobs",/\\b(job|jobs|angaj|serviciu|muncă|munca|arbeits|stelle|arbeit|employment|vacanc|recrut|salari|salary)/iu],
+["auto",/\\b(mașin|masin|autoturism|automobil|mercedes|bmw|audi|volkswagen|toyota|hyundai|ford|tesla|auto|cars?|fahrzeug|occasion)/iu],
+["products",/\\b(televiz|telefon|laptop|frigider|mobil|sofa|canapea|produ|product|handy|smartphone|computer|möbel|möbl|tv\\b)/iu]
+];
+return patterns.find(([key,re])=>re.test(text))?.[0]||"products";
+}
 function showResults(){
 const q=$("query").value.trim(),t=i18n[lang];if(!q){$("error").textContent=t.error;$("results").hidden=true;searched=false;return}
-$("error").textContent="";$("results").hidden=false;searched=true;$("cards").replaceChildren();renderRequirements(q);
+$("error").textContent="";$("results").hidden=false;searched=true;if(!categoryChosen){const inferred=inferCategory(q);if(category!==inferred){category=inferred;render();return}}$("cards").replaceChildren();renderRequirements(q);
 sources[category].forEach(([name,prefix])=>{const card=document.createElement("article");card.className="result-card";
 const h=document.createElement("h3");h.textContent=name;const p=document.createElement("p");p.textContent=t.descriptions[keys.indexOf(category)];
-const a=document.createElement("a");a.textContent=t.open;a.href=prefix+encodeURIComponent(q);a.target="_blank";a.rel="noopener noreferrer";
+const a=document.createElement("a");a.textContent=t.open;a.href=prefix+encodeURIComponent(q);a.setAttribute("aria-label",t.open+" — "+name);a.target="_blank";a.rel="noopener noreferrer";
 card.append(h,p,a);$("cards").appendChild(card)});
 }
 document.querySelectorAll("[data-lang]").forEach(b=>b.addEventListener("click",()=>{lang=b.dataset.lang;try{localStorage.setItem("intentra-lang",lang)}catch(e){}render()}));
