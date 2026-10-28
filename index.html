@@ -1,571 +1,80 @@
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="INTENTRA compares an original request with an AI answer and flags supported explicit contradictions. Free browser-based checks; your text stays on your device.">
-  <link rel="canonical" href="https://basescusorin-coder.github.io/intentra/">
-  <meta name="google-site-verification" content="2KI8H6tvn0gXqwWRWvHc2bvzbMq9MAxwfb5Mwc7Cvuc">
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="INTENTRA — Check AI answers against your instructions">
-  <meta property="og:description" content="Compare a request with an AI answer. Free local checks flag a limited set of explicit contradictions without sending your text to a server.">
-  <meta property="og:url" content="https://basescusorin-coder.github.io/intentra/">
-  <meta name="twitter:card" content="summary">
-  <meta name="theme-color" content="#07111e">
-  <title>INTENTRA — Check AI answers against your instructions</title>
-  <style>
-    :root {
-      color-scheme: dark;
-      --bg: #050916;
-      --panel: #09152a;
-      --panel-raised: #0d2050;
-      --line: #244274;
-      --text: #f5f8ff;
-      --muted: #b9c9e6;
-      --accent: #2fc8ff;
-      --accent-strong: #83e1ff;
-      --danger: #ff929d;
-      --warning: #ffd47f;
-      --success: #91e5ae;
-    }
-
-    * { box-sizing: border-box; }
-    html { min-width: 320px; scroll-behavior: smooth; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      color: var(--text);
-      background:
-        radial-gradient(ellipse at 52% -12%, rgba(0, 82, 255, .54), transparent 52%),
-        radial-gradient(ellipse at 100% 48%, rgba(0, 180, 255, .12), transparent 38%),
-        linear-gradient(160deg, #07142f 0%, var(--bg) 60%, #030610 100%);
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      line-height: 1.5;
-    }
-
-    button, textarea { font: inherit; }
-    button:focus-visible, textarea:focus-visible {
-      outline: 3px solid rgba(99, 228, 208, .55);
-      outline-offset: 3px;
-    }
-
-    .shell { width: min(1080px, calc(100% - 40px)); margin: 0 auto; padding: 32px 0 42px; }
-    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 54px; }
-    .brand { display: inline-flex; align-items: center; gap: 11px; color: var(--text); text-decoration: none; font-weight: 800; letter-spacing: .13em; }
-    .brand-mark {
-      display: grid; width: 38px; height: 38px; place-items: center; border: 1px solid rgba(99, 228, 208, .55);
-      border-radius: 12px; color: var(--accent); background: rgba(99, 228, 208, .08); font-size: 20px;
-    }
-    .top-note { color: var(--muted); font-size: 13px; }
-    .hero { max-width: 820px; margin: 0 0 34px; text-align: left; }
-    .eyebrow { display: inline-flex; align-items: center; gap: 9px; color: #70dfff; font-size: 11px; font-weight: 800; letter-spacing: .19em; text-transform: uppercase; }
-    .eyebrow::before { content: "✦"; font-size: 14px; }
-    h1 { max-width: 800px; margin: 12px 0 14px; font-size: clamp(40px, 7vw, 72px); line-height: .99; letter-spacing: -.055em; text-transform: uppercase; }
-    h1 span { color: #32cfff; text-shadow: 0 0 32px rgba(30, 178, 255, .25); }
-    .hero p { max-width: 690px; margin: 0; color: #c1d2f0; font-size: clamp(15px, 2vw, 18px); }
-
-    .workspace { padding: 22px; border: 1px solid rgba(76, 143, 255, .38); border-radius: 24px; background: linear-gradient(145deg, rgba(10, 31, 80, .88), rgba(7, 18, 42, .94)); box-shadow: 0 26px 90px rgba(0, 30, 110, .28), inset 0 1px 0 rgba(255, 255, 255, .035); }
-    .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .input-card { min-width: 0; padding: 18px; border: 1px solid rgba(75, 132, 220, .36); border-radius: 17px; background: linear-gradient(160deg, rgba(12, 39, 99, .56), rgba(8, 23, 52, .78)); }
-    .field-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 11px; }
-    label { display: flex; align-items: center; gap: 9px; font-size: 15px; font-weight: 750; }
-    .step { display: inline-grid; width: 25px; height: 25px; place-items: center; border-radius: 8px; color: var(--accent-strong); background: rgba(99, 228, 208, .12); font-size: 12px; }
-    .char-count { color: #8197ab; font-size: 12px; font-variant-numeric: tabular-nums; }
-    textarea {
-      display: block; width: 100%; min-height: 190px; padding: 15px; resize: vertical;
-      border: 1px solid #28519a; border-radius: 12px; color: var(--text); background: rgba(3, 16, 45, .84);
-      font-size: 15px; line-height: 1.55;
-    }
-    textarea::placeholder { color: #71869b; }
-    textarea:focus { border-color: var(--accent); }
-    .field-hint { margin: 9px 0 0; color: #8da2b5; font-size: 12px; }
-    .actions { display: flex; align-items: center; gap: 14px; margin-top: 18px; }
-    .verify-button {
-      display: inline-flex; min-height: 52px; align-items: center; justify-content: center; gap: 10px;
-      padding: 0 24px; border: 1px solid rgba(140, 235, 255, .52); border-radius: 13px; color: #03132b;
-      background: linear-gradient(105deg, #25c8ff, #65e0ff); box-shadow: 0 8px 28px rgba(0, 178, 255, .2);
-      font-weight: 850; letter-spacing: .025em; cursor: pointer; transition: transform .15s ease, filter .15s ease;
-    }
-    .verify-button:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.08); }
-    .verify-button:disabled { cursor: progress; opacity: .74; }
-    .privacy-note { margin: 0; color: #93a8ba; font-size: 12px; }
-    .form-error { min-height: 20px; margin: 9px 0 0; color: var(--danger); font-size: 13px; }
-    .quick-examples { margin: 0 0 17px; padding: 15px; border: 1px solid rgba(75, 132, 220, .3); border-radius: 14px; background: rgba(4, 17, 43, .48); }
-    .quick-examples h2 { margin: 0 0 4px; font-size: 15px; }
-    .quick-examples p { margin: 0; color: var(--muted); font-size: 12px; }
-    .example-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin: 11px 0 8px; }
-    .example-button { min-height: 38px; padding: 7px 12px; border: 1px solid #31588f; border-radius: 999px; color: var(--text); background: rgba(16, 45, 93, .62); cursor: pointer; }
-    .example-button:hover { border-color: var(--accent); color: var(--accent-strong); }
-
-    .result { display: none; margin-top: 20px; padding: 20px; border: 1px solid rgba(73, 139, 232, .42); border-radius: 17px; background: rgba(4, 17, 43, .84); }
-    .result.is-visible { display: block; }
-    .result-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
-    .result-title { margin: 0; font-size: 20px; }
-    .result-badge { display: inline-flex; align-items: center; min-height: 27px; padding: 4px 10px; border: 1px solid #35516a; border-radius: 999px; color: var(--muted); font-size: 11px; font-weight: 750; letter-spacing: .05em; text-transform: uppercase; }
-    .result-badge.ai { border-color: rgba(99, 228, 208, .36); color: var(--accent-strong); }
-    .result-badge.local { border-color: rgba(255, 212, 127, .38); color: var(--warning); }
-    .score-row { display: flex; align-items: baseline; gap: 10px; margin: 16px 0 8px; }
-    .score { color: var(--accent-strong); font-size: 35px; font-weight: 850; letter-spacing: -.04em; }
-    .verdict { font-size: 17px; font-weight: 750; }
-    .summary { margin: 0; color: #c3d0dc; }
-    .result-section { margin-top: 18px; }
-    .result-section h3 { margin: 0 0 9px; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; }
-    .constraint-list, .violation-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
-    .constraint-item, .violation-item { display: flex; align-items: flex-start; gap: 9px; padding: 10px 12px; border-radius: 10px; color: #c8d5e0; background: rgba(24, 45, 65, .62); font-size: 14px; }
-    .constraint-item::before { content: "✓"; color: var(--success); font-weight: 800; }
-    .violation-item { border: 1px solid rgba(255, 141, 150, .16); background: rgba(88, 34, 44, .24); }
-    .violation-item::before { content: "!"; color: var(--danger); font-weight: 900; }
-    .warning-copy { margin: 14px 0 0; color: var(--warning); font-size: 13px; }
-    .error-copy { margin: 13px 0 0; padding: 11px 12px; border-radius: 10px; color: #ffd1d4; background: rgba(113, 37, 49, .28); font-size: 13px; overflow-wrap: anywhere; }
-    .empty-state { margin: 0; color: var(--muted); font-size: 14px; }
-    footer { margin: 26px 8px 0; color: #8195a8; text-align: center; font-size: 12px; }
-    footer strong { color: #b1c1ce; }
-
-    @media (max-width: 720px) {
-      .shell { width: min(100% - 28px, 560px); padding: 20px 0 30px; }
-      .topbar { margin-bottom: 36px; }
-      .top-note { max-width: 145px; text-align: right; }
-      .hero { margin-bottom: 23px; }
-      .workspace { padding: 13px; border-radius: 19px; }
-      .input-grid { grid-template-columns: 1fr; gap: 12px; }
-      .input-card { padding: 14px; }
-      textarea { min-height: 145px; font-size: 16px; }
-      .actions { align-items: stretch; flex-direction: column; gap: 9px; }
-      .verify-button { width: 100%; }
-      .privacy-note { text-align: center; }
-      .result { padding: 15px; }
-    }
-    @media (max-width: 380px) {
-      .shell { width: calc(100% - 22px); }
-      h1 { font-size: 36px; }
-      .top-note { font-size: 11px; }
-      .result-head { flex-direction: column; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
-    }
-
-    .lang-switch { display:flex;gap:5px;flex-wrap:wrap; }
-    .lang-switch button { background:#10244b;color:white;border:1px solid #385b8e;border-radius:8px;padding:7px;cursor:pointer; }
-    .lang-switch button[aria-pressed="true"] {background:#32cfff;color:#07111e;}
-  </style>
-</head>
-<body>
-  <main class="shell">
-    <header class="topbar">
-      <a class="brand" href="#top" aria-label="INTENTRA home">
-        <span class="brand-mark" aria-hidden="true">✓</span><span>INTENTRA</span>
-      </a>
-      <span class="top-note">An independent check for AI outputs</span>
-    </header>
-
-    <section class="hero" id="top" aria-labelledby="page-title">
-      <div class="eyebrow">AI intent verification platform</div>
-      <h1 id="page-title">Verify the intent,<br><span>not just the output.</span></h1>
-      <p>Check whether an AI followed your instructions for shopping, trips, housing, services, work, writing, and more. Free local checks catch clear requirements such as budgets, language, item counts, required phrases, and word limits. They do not search live offers or make bookings.</p>
-    </section>
-
-    <section class="workspace" aria-label="Intent verification form">
-      <div class="input-grid">
-        <div class="input-card">
-          <div class="field-heading">
-            <label for="userRequest"><span class="step">01</span> Original request</label>
-            <span class="char-count" id="requestCount">0 / 12000</span>
-          </div>
-          <textarea id="userRequest" maxlength="12000" placeholder="Example: Reply in Romanian, use exactly 3 bullet points, and keep it under 50 words." aria-describedby="requestHint"></textarea>
-          <p class="field-hint" id="requestHint">Paste the instruction exactly as it was given.</p>
-        </div>
-        <div class="input-card">
-          <div class="field-heading">
-            <label for="aiResult"><span class="step">02</span> AI result</label>
-            <span class="char-count" id="resultCount">0 / 12000</span>
-          </div>
-          <textarea id="aiResult" maxlength="12000" placeholder="Paste the answer or outcome produced by the AI." aria-describedby="resultHint"></textarea>
-          <p class="field-hint" id="resultHint">Include the final answer and relevant actions.</p>
-        </div>
-      </div>
-
-      <div class="quick-examples" aria-labelledby="examplesTitle">
-        <h2 id="examplesTitle">Try a free example</h2>
-        <p>Shopping, hotels, restaurants, housing, and writing. These are sample answers, not live search results.</p>
-        <div class="example-buttons" id="exampleButtons"></div>
-      </div>
-      <p class="form-error" id="formError" role="alert"></p>
-      <div class="actions">
-        <button class="verify-button" id="verifyButton" type="button">
-          <span aria-hidden="true">✦</span><span id="buttonText">Verify intent</span>
-        </button>
-        <p class="privacy-note">Free local checks run in your browser. Your text is not sent to a server.</p>
-      </div>
-
-      <section class="result" id="result" aria-live="polite" aria-busy="false" aria-labelledby="resultTitle">
-        <div class="result-head">
-          <h2 class="result-title" id="resultTitle">Verification result</h2>
-          <span class="result-badge" id="modeBadge">Waiting</span>
-        </div>
-        <div class="score-row" id="scoreRow" hidden>
-          <span class="score" id="score"></span><span class="verdict" id="verdict"></span>
-        </div>
-        <p class="summary" id="summary"></p>
-        <div class="result-section" id="explanationSection" hidden>
-          <h3>Explanation</h3>
-          <p class="summary" id="explanation"></p>
-        </div>
-        <div class="result-section" id="constraintsSection" hidden>
-          <h3>Critical constraints found</h3>
-          <ul class="constraint-list" id="constraints"></ul>
-        </div>
-        <div class="result-section" id="violationsSection" hidden>
-          <h3>Possible violations</h3>
-          <ul class="violation-list" id="violations"></ul>
-        </div>
-        <p class="warning-copy" id="localWarning" hidden></p>
-        <p class="error-copy" id="serviceError" hidden></p>
-      </section>
-    </section>
-
-    <footer><strong>INTENTRA</strong> · Verify the intent, not just the output.</footer>
-  </main>
-
-  <script>
-    "use strict";
-    const MAX_CHARS = 12000;
-    const requestField = document.getElementById("userRequest");
-    const resultField = document.getElementById("aiResult");
-    const verifyButton = document.getElementById("verifyButton");
-    const resultPanel = document.getElementById("result");
-
-    function updateCount(field, output) {
-      output.textContent = `${field.value.length.toLocaleString()} / ${MAX_CHARS.toLocaleString()}`;
-    }
-
-    function normalizeForRules(text) {
-      return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-    }
-
-    function numberValue(value) {
-      const numbers = { zero: 0, no: 0, none: 0, one: 1, a: 1, an: 1, unu: 1, una: 1, un: 1, o: 1, two: 2, doua: 2, trei: 3, three: 3, patru: 4, four: 4, cinci: 5, five: 5, sase: 6, six: 6, sapte: 7, seven: 7, opt: 8, eight: 8, noua: 9, nine: 9, zece: 10, ten: 10 };
-      return /^\d+$/.test(value) ? Number(value) : numbers[value];
-    }
-
-    const STOP_WORDS = "stops?|stopovers?|layovers?|connections?|transfers?|escal(?:a|e)?|oprir(?:e|i)|schimb(?:are|ari)|transferuri";
-    const STOP_TERMS = new RegExp(`\\b(?:${STOP_WORDS})\\b`, "i");
-    const LANGUAGE_NAMES = { english: "English", romanian: "Romanian", german: "German", french: "French", spanish: "Spanish", italian: "Italian", engleza: "English", romana: "Romanian", germana: "German", franceza: "French", spaniola: "Spanish", italiana: "Italian" };
-
-    function parseNumber(value) {
-      const numbers = { zero: 0, no: 0, none: 0, one: 1, unu: 1, una: 1, un: 1, o: 1, two: 2, doi: 2, doua: 2, three: 3, trei: 3, four: 4, patru: 4, five: 5, cinci: 5, six: 6, sase: 6, seven: 7, sapte: 7, eight: 8, opt: 8, nine: 9, noua: 9, ten: 10, zece: 10 };
-      const normalized = normalizeForRules(value);
-      return /^\d+$/.test(normalized) ? Number(normalized) : numbers[normalized];
-    }
-
-
-    function parseMoney(value) {
-      const normalized = value
-        .replace(/['’\s]/g, "")
-        .replace(/[.,](?=\d{3}(?:\D|$))/g, "")
-        .replace(",", ".");
-      return Number(normalized);
-    }
-
-    function extractConstraints(request) {
-      const found = [];
-      const text = normalizeForRules(request);
-      const explicitNoStops = new RegExp(`\\b(?:non[ -]?stop|no\\s+(?:any\\s+)?(?:${STOP_WORDS})|without\\s+(?:any\\s+)?(?:${STOP_WORDS})|(?:do\\s+not|don't|must\\s+not)\\s+(?:include\\s+)?(?:any\\s+)?(?:${STOP_WORDS})|fara\\s+(?:nicio?\\s+)?(?:${STOP_WORDS})|nu\\s+(?:include|vreau|accept|doresc)\\s+(?:deloc\\s+)?(?:${STOP_WORDS}))\\b`, "i").test(text);
-      const directTravel = /\b(?:direct(?:\s+(?:flight|route|trip|connection))?|non[ -]?stop)\b/.test(text) && /\b(?:flight|trip|travel|route|zbor|calator|bucuresti|zurich|vienna|bucharest)\b/.test(text);
-      if (explicitNoStops || directTravel) {
-        found.push({ type: "no-stops", text: "Travel must be direct, with no stopovers or connections." });
-      }
-
-      const maxStops = text.match(new RegExp(`\\b(?:at\\s+most|no\\s+more\\s+than|maximum(?:\\s+of)?|max\\.?|up\\s+to|cel\\s+mult|nu\\s+mai\\s+mult\\s+de|maxim(?:um)?(?:\\s+de)?)\\s+(\\d+|zero|no|none|one|two|three|four|five|six|seven|eight|nine|ten|unu|una|un|o|doua|trei|patru|cinci|sase|sapte|opt|noua|zece)\\s+(?:${STOP_WORDS})\\b`, "i"));
-      if (maxStops) {
-        const value = numberValue(maxStops[1]);
-        if (Number.isInteger(value)) found.push({ type: "max-stops", value, text: `No more than ${value} stop${value === 1 ? "" : "s"} is allowed.` });
-      }
-
-      const language = text.match(/\b(?:answer|respond|reply|write)\s+(?:only\s+)?(?:in\s+)?(english|romanian|german|french|spanish|italian)\b|\b(?:raspunde|scrie|redacteaza|vorbeste)\s+(?:numai\s+)?(?:in\s+)?(engleza|romana|germana|franceza|spaniola|italiana)\b/);
-      if (language) {
-        const name = language[1] || language[2];
-        found.push({ type: "language", value: LANGUAGE_NAMES[name], text: `The answer should be in ${LANGUAGE_NAMES[name]}.` });
-      }
-
-      const exactItems = text.match(/\b(?:exactly|precisely|exact)\s+(\d+|zero|one|two|three|four|five|six|seven|eight|nine|ten)\s+(bullet\s+points?|points?|items?|steps?|options?|examples?)\b|\b(?:exact|exactly)\s+(\d+|zero|one|two|three|four|five|six|seven|eight|nine|ten|unu|una|un|o|doi|doua|trei|patru|cinci|sase|sapte|opt|noua|zece)\s+(puncte|elemente|pasi|optiuni|exemple)\b/);
-      if (exactItems) {
-        const value = parseNumber(exactItems[1] || exactItems[3]);
-        const label = exactItems[2] || exactItems[4];
-        if (Number.isInteger(value)) found.push({ type: "exact-items", value, label, text: `The answer should contain exactly ${value} ${label}.` });
-      }
-
-      const maxWords = text.match(/\b(?:under|fewer than|less than|at most|no more than|maximum(?:\s+of)?|max\.?)\s+(\d+)\s+words?\b|\b(?:sub|maxim(?:um)?|cel\s+mult|nu\s+mai\s+mult\s+de)\s+(\d+)\s+cuvinte\b/);
-      if (maxWords) found.push({ type: "max-words", value: Number(maxWords[1] || maxWords[2]), text: `The answer should be no longer than ${Number(maxWords[1] || maxWords[2])} words.` });
-
-      const priceCap = text.match(/\b(?:under|below|less than|at most|no more than|maximum(?:\s+of)?|max\.?|up to|sub|maxim(?:um)?|cel\s+mult|nu\s+mai\s+mult\s+de|pana\s+la)\s+(?:(chf|eur|usd|€|\$)\s*)?((?:\d{1,3}(?:['’ ,.]\d{3})+|\d+)(?:[.,]\d{1,2})?)(?:\s*(chf|eur|usd|€|\$))?\b/i);
-      if (priceCap && (priceCap[1] || priceCap[3])) {
-        const amount = parseMoney(priceCap[2]);
-        const rawCurrency = (priceCap[1] || priceCap[3]).toUpperCase();
-        const currency = rawCurrency === "€" ? "EUR" : rawCurrency === "$" ? "USD" : rawCurrency;
-        if (Number.isFinite(amount)) found.push({ type: "max-price", value: amount, currency, text: "The price should not exceed " + currency + " " + amount + "." });
-      }
-
-      const requiredPhrase = text.match(/\b(?:include|use|say|contain)\s+(?:the\s+)?(?:exact\s+)?phrase\s+["“„']([^"”„']+)["”„']|\b(?:include|foloseste|scrie|mentioneaza)\s+(?:exact\s+)?(?:expresia|fraza)\s+["“„']([^"”„']+)["”„']/);
-      if (requiredPhrase) found.push({ type: "required-phrase", value: requiredPhrase[1] || requiredPhrase[2], text: `The answer must include the phrase “${requiredPhrase[1] || requiredPhrase[2]}”.` });
-
-      const forbiddenPhrase = text.match(/\b(?:do\s+not\s+(?:mention|include)|don't\s+(?:mention|include)|avoid\s+(?:mentioning|including))\s+["“„']([^"”„']+)["”„']|\b(?:nu\s+mentiona|nu\s+include|evita)\s+["“„']([^"”„']+)["”']/);
-      if (forbiddenPhrase) found.push({ type: "forbidden-phrase", value: forbiddenPhrase[1] || forbiddenPhrase[2], text: `The answer must not include “${forbiddenPhrase[1] || forbiddenPhrase[2]}”.` });
-
-      return found;
-    }
-
-    function extractStopCounts(text) {
-      const normalized = normalizeForRules(text);
-      const counts = [];
-      const countPattern = new RegExp(`\\b(\\d+|zero|one|two|three|four|five|six|seven|eight|nine|ten|unu|una|un|o|doua|trei|patru|cinci|sase|sapte|opt|noua|zece)\\s*(?:-|\\s)\\s*(?:${STOP_WORDS})\\b`, "gi");
-      for (const match of normalized.matchAll(countPattern)) {
-        const value = numberValue(match[1]);
-        if (Number.isInteger(value)) counts.push(value);
-      }
-      return counts;
-    }
-
-    function detectLocalViolations(constraints, aiResult) {
-      const violations = [];
-      const text = normalizeForRules(aiResult);
-      const explicitStopClaims = /\b(?:connecting flight|indirect flight|via\s+[\p{L}-]+|through\s+[\p{L}-]+|(?:stop|stopover|layover|connection|transfer)\s+(?:in|at)\s+[\p{L}-]+|(?:cu|via)\s+(?:o\s+)?(?:escala|oprire|schimbare)|(?:escala|oprire|schimbare)\s+(?:in|la)\s+[\p{L}-]+)\b/iu.test(text);
-      const countedStops = extractStopCounts(aiResult);
-      const positiveStop = explicitStopClaims || countedStops.some(count => count > 0) || /\b(?:one|two|three)[ -]stop\b/i.test(text);
-      const listLines = aiResult.split(/\r?\n/).filter(line => /^\s*(?:[-*+]\s+|\d+[.)]\s+|(?:step|pasul?)\s+\d+\s*[:.)-]\s*)/iu.test(line));
-      const wordCount = aiResult.trim().match(/\b[\p{L}\p{N}]+(?:['’][\p{L}]+)?\b/gu)?.length || 0;
-      const prices = [...text.matchAll(/\b(chf|eur|usd|€|\$)\s*((?:\d{1,3}(?:['’ ,.]\d{3})+|\d+)(?:[.,]\d{1,2})?)\b|\b((?:\d{1,3}(?:['’ ,.]\d{3})+|\d+)(?:[.,]\d{1,2})?)\s*(chf|eur|usd|€|\$)\b/giu)].map(match => {
-        const rawCurrency = (match[1] || match[4]).toUpperCase();
-        return { currency: rawCurrency === "€" ? "EUR" : rawCurrency === "$" ? "USD" : rawCurrency, value: parseMoney(match[2] || match[3]) };
-      });
-      const languageMarkers = {
-        English: /\b(?:the|and|is|are|with|this|that|answer|because|from|for|you|we|it)\b/giu,
-        Romanian: /\b(?:si|este|sunt|pentru|care|raspuns|da|nu|acesta|aceasta|din|gasesc|am|vreau|zbor|fara|escala|buna|ziua)\b/giu,
-        German: /\b(?:und|ist|sind|mit|nicht|eine|der|die|das|antwort|ich|wir)\b/giu,
-        French: /\b(?:et|est|sont|avec|pas|une|le|la|les|reponse|je|nous)\b/giu,
-        Spanish: /\b(?:y|es|son|con|no|una|el|la|los|respuesta|que|para)\b/giu,
-        Italian: /\b(?:e|sono|con|non|una|il|la|risposta|che|per)\b/giu
-      };
-      const languageScores = Object.entries(languageMarkers).map(([name, pattern]) => [name, [...text.matchAll(pattern)].length]).sort((a, b) => b[1] - a[1]);
-      const answerLanguage = languageScores[0][1] >= 2 && languageScores[0][1] > languageScores[1][1] ? languageScores[0][0] : null;
-
-      for (const constraint of constraints) {
-        if (constraint.type === "no-stops" && positiveStop) {
-          violations.push("The result describes a stop, transfer, or connection even though the request requires a direct trip.");
-        }
-        if (constraint.type === "max-stops" && countedStops.some(count => count > constraint.value)) {
-          const actual = Math.max(...countedStops);
-          violations.push(`The result mentions ${actual} stops, above the allowed maximum of ${constraint.value}.`);
-        }
-        if (constraint.type === "language" && answerLanguage && answerLanguage !== constraint.value) violations.push(`The request requires ${constraint.value}, but the answer appears to be in ${answerLanguage}.`);
-        if (constraint.type === "exact-items" && listLines.length !== constraint.value) violations.push(`The request requires exactly ${constraint.value} list items, but the answer contains ${listLines.length}.`);
-        if (constraint.type === "max-words" && wordCount > constraint.value) violations.push(`The answer contains ${wordCount} words, above the ${constraint.value}-word limit.`);
-        if (constraint.type === "max-price") {
-          const comparablePrices = prices.filter(price => price.currency === constraint.currency);
-          if (!comparablePrices.length) violations.push("The answer does not provide a " + constraint.currency + " price, so the " + constraint.currency + " " + constraint.value + " budget cannot be checked.");
-          else if (comparablePrices.some(price => price.value > constraint.value)) {
-            const actual = Math.max(...comparablePrices.map(price => price.value));
-            violations.push("The answer lists a price of " + constraint.currency + " " + actual + ", above the " + constraint.currency + " " + constraint.value + " limit.");
-          }
-        }
-        if (constraint.type === "required-phrase" && !text.includes(normalizeForRules(constraint.value))) violations.push(`The answer is missing the required phrase “${constraint.value}”.`);
-        if (constraint.type === "forbidden-phrase" && text.includes(normalizeForRules(constraint.value))) violations.push(`The answer includes the forbidden phrase “${constraint.value}”.`);
-      }
-      return violations;
-    }
-
-    function addItems(list, items, className) {
-      list.replaceChildren();
-      for (const item of items) {
-        const li = document.createElement("li");
-        li.className = className;
-        li.textContent = typeof item === "string" ? item : item.text;
-        list.appendChild(li);
-      }
-    }
-
-    function setLoading(loading) {
-      verifyButton.disabled = loading;
-      document.getElementById("buttonText").textContent = loading ? "Checking…" : "Verify intent";
-      resultPanel.setAttribute("aria-busy", String(loading));
-    }
-
-    function showLocalResult(constraints, localViolations, errorMessage) {
-      document.getElementById("modeBadge").textContent = "Local checks only";
-      document.getElementById("modeBadge").className = "result-badge local";
-      document.getElementById("scoreRow").hidden = true;
-      document.getElementById("summary").textContent = localViolations.length
-        ? "A rule-based check found a possible contradiction in an explicit constraint."
-        : "The local check did not find a contradiction in the constraints it recognizes. This is not a complete AI semantic verdict.";
-      document.getElementById("explanationSection").hidden = true;
-      document.getElementById("explanation").textContent = "";
-      document.getElementById("constraintsSection").hidden = constraints.length === 0;
-      addItems(document.getElementById("constraints"), constraints, "constraint-item");
-      document.getElementById("violationsSection").hidden = localViolations.length === 0;
-      addItems(document.getElementById("violations"), localViolations, "violation-item");
-      document.getElementById("localWarning").hidden = false;
-      document.getElementById("localWarning").textContent = "Free local mode: INTENTRA checks a limited set of explicit constraints in your browser. It sends no text to a paid AI service and can miss broader meaning or context.";
-      const serviceError = document.getElementById("serviceError");
-      serviceError.hidden = !errorMessage;
-      serviceError.textContent = errorMessage ? `AI service: ${errorMessage}` : "";
-    }
-
-    function showAiResult(verification, constraints, localViolations) {
-      const verdictMap = { fulfilled: "Intent fulfilled", partial: "Partially fulfilled", not_fulfilled: "Intent not fulfilled", failed: "Intent not fulfilled" };
-      const score = Number(verification.score);
-      document.getElementById("modeBadge").textContent = "AI + rule checks";
-      document.getElementById("modeBadge").className = "result-badge ai";
-      document.getElementById("scoreRow").hidden = !Number.isFinite(score);
-      document.getElementById("score").textContent = Number.isFinite(score) ? `${Math.max(0, Math.min(100, score))}%` : "";
-      document.getElementById("verdict").textContent = verdictMap[verification.verdict] || "Intent not fulfilled";
-      document.getElementById("summary").textContent = verification.summary || verification.explanation || "The AI verification is complete.";
-      const explanation = verification.explanation && verification.explanation !== verification.summary ? verification.explanation : "";
-      document.getElementById("explanationSection").hidden = !explanation;
-      document.getElementById("explanation").textContent = explanation;
-      const aiViolations = Array.isArray(verification.critical_violations) ? verification.critical_violations : (Array.isArray(verification.violations) ? verification.violations : []);
-      const combined = [...aiViolations, ...localViolations].filter((item, index, all) => all.findIndex(other => String(other).toLowerCase() === String(item).toLowerCase()) === index);
-      const aiConstraints = Array.isArray(verification.critical_constraints) ? verification.critical_constraints : (Array.isArray(verification.constraints) ? verification.constraints : []);
-      const allConstraints = [...constraints, ...aiConstraints.map(item => ({ text: String(item) }))].filter((item, index, all) => all.findIndex(other => other.text.toLowerCase() === item.text.toLowerCase()) === index);
-      document.getElementById("constraintsSection").hidden = allConstraints.length === 0;
-      addItems(document.getElementById("constraints"), allConstraints, "constraint-item");
-      document.getElementById("violationsSection").hidden = combined.length === 0;
-      addItems(document.getElementById("violations"), combined, "violation-item");
-      document.getElementById("localWarning").hidden = localViolations.length === 0;
-      document.getElementById("localWarning").textContent = localViolations.length ? "The rule-based pre-check also found a possible contradiction. Review it alongside the AI analysis." : "";
-      document.getElementById("serviceError").hidden = true;
-      document.getElementById("serviceError").textContent = "";
-    }
-
-    function verifyIntent() {
-      const userRequest = requestField.value.trim();
-      const aiResult = resultField.value.trim();
-      const formError = document.getElementById("formError");
-      formError.textContent = "";
-      if (!userRequest || !aiResult) {
-        formError.textContent = "Enter both the original request and the AI result.";
-        (!userRequest ? requestField : resultField).focus();
-        return;
-      }
-
-      const constraints = extractConstraints(userRequest);
-      const localViolations = detectLocalViolations(constraints, aiResult);
-      resultPanel.classList.add("is-visible");
-      document.getElementById("resultTitle").textContent = "Free local verification";
-      setLoading(false);
-      showLocalResult(constraints, localViolations, "");
-      resultPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    }
-
-    const EXAMPLES = [
-      { label: "Shopping", request: "Compare exactly 3 options for laptops under CHF 900.", result: "Here are three options:\n- Laptop A — CHF 850\n- Laptop B — CHF 920\n- Laptop C — CHF 875" },
-      { label: "Hotels", request: "Find exactly 2 hotel options below EUR 150 per night.", result: "Two options:\n- Hotel A — EUR 125 per night\n- Hotel B — EUR 175 per night" },
-      { label: "Restaurants", request: "Găsește exact 3 opțiuni de restaurante sub 30 CHF de persoană. Răspunde în română.", result: "Am găsit restaurantele pentru tine:\n- Restaurantul A — CHF 25 de persoană\n- Restaurantul B — CHF 36 de persoană\n- Restaurantul C — CHF 28 de persoană" },
-      { label: "Housing", request: "List exactly 3 apartment options under CHF 1800 per month.", result: "Available apartments:\n- Apartment A — CHF 1650 per month\n- Apartment B — CHF 1950 per month\n- Apartment C — CHF 1700 per month" },
-      { label: "Writing", request: "Write a short email. Include the exact phrase \"Thank you\" and do not mention \"refund\".", result: "Hello, we will issue a refund. Please wait." }
-    ];
-    const exampleButtons = document.getElementById("exampleButtons");
-    EXAMPLES.forEach(example => {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "example-button";
-      button.textContent = example.label;
-      button.addEventListener("click", () => {
-        requestField.value = example.request;
-        resultField.value = example.result;
-        updateCount(requestField, document.getElementById("requestCount"));
-        updateCount(resultField, document.getElementById("resultCount"));
-        verifyIntent();
-      });
-      exampleButtons.appendChild(button);
-    });
-
-    requestField.addEventListener("input", () => updateCount(requestField, document.getElementById("requestCount")));
-    resultField.addEventListener("input", () => updateCount(resultField, document.getElementById("resultCount")));
-    verifyButton.addEventListener("click", verifyIntent);
-    updateCount(requestField, document.getElementById("requestCount"));
-    updateCount(resultField, document.getElementById("resultCount"));
-  </script>
-
-  <script>
-  (() => {
-    const dict={
-      ro:{
-        'An independent check for AI outputs':'Verificare independentă a răspunsurilor AI',
-        'AI intent verification platform':'Platformă de verificare a cerințelor AI',
-        'Verify the intent,':'Verifică cerința,',
-        'not just the output.':'nu doar răspunsul.',
-        'Check whether an AI followed your instructions for shopping, trips, housing, services, work, writing, and more. Free local checks catch clear requirements such as budgets, language, item counts, required phrases, and word limits. They do not search live offers or make bookings.':'Verifică dacă un AI ți-a respectat cerințele pentru cumpărături, călătorii, locuințe, servicii și texte. Verificările gratuite identifică unele limite de preț, cerințe de limbă, număr de elemente și lungime. Nu caută oferte în timp real și nu fac rezervări.',
-        'Original request':'Cererea originală','AI result':'Răspunsul AI',
-        'Paste the instruction exactly as it was given.':'Introdu cererea exact cum ai formulat-o.',
-        'Include the final answer and relevant actions.':'Introdu răspunsul final și acțiunile relevante.',
-        'Try a free example':'Încearcă un exemplu gratuit',
-        'Shopping, hotels, restaurants, housing, and writing. These are sample answers, not live search results.':'Cumpărături, hoteluri, restaurante, locuințe și texte. Sunt exemple, nu rezultate în timp real.',
-        'Verify intent':'Verifică cerința',
-        'Free local checks run in your browser. Your text is not sent to a server.':'Verificările gratuite rulează în browser. Textul tău nu este trimis la server.',
-        'Free local verification':'Verificare locală gratuită','Local checks only':'Doar verificări locale',
-        'Critical constraints found':'Cerințe importante identificate','Possible violations':'Posibile încălcări',
-        'A rule-based check found a possible contradiction in an explicit constraint.':'Verificarea bazată pe reguli a găsit o posibilă contradicție cu o cerință explicită.',
-        'Shopping':'Cumpărături','Hotels':'Hoteluri','Restaurants':'Restaurante','Housing':'Locuințe','Writing':'Texte'
-      },
-      de:{
-        'An independent check for AI outputs':'Unabhängige Prüfung von KI-Antworten',
-        'AI intent verification platform':'Plattform zur Prüfung von KI-Vorgaben',
-        'Verify the intent,':'Prüfe die Vorgabe,','not just the output.':'nicht nur die Antwort.',
-        'Check whether an AI followed your instructions for shopping, trips, housing, services, work, writing, and more. Free local checks catch clear requirements such as budgets, language, item counts, required phrases, and word limits. They do not search live offers or make bookings.':'Prüfe, ob eine KI deine Vorgaben für Einkäufe, Reisen, Wohnen, Dienstleistungen und Texte befolgt hat. Kostenlose Prüfungen erkennen bestimmte Preis-, Sprach-, Mengen- und Längenvorgaben. Sie suchen keine Live-Angebote und buchen nichts.',
-        'Original request':'Ursprüngliche Anfrage','AI result':'KI-Antwort',
-        'Paste the instruction exactly as it was given.':'Füge die ursprüngliche Anweisung unverändert ein.',
-        'Include the final answer and relevant actions.':'Füge die endgültige Antwort und relevante Aktionen ein.',
-        'Try a free example':'Kostenloses Beispiel ausprobieren',
-        'Shopping, hotels, restaurants, housing, and writing. These are sample answers, not live search results.':'Einkaufen, Hotels, Restaurants, Wohnen und Texte. Dies sind Beispiele, keine Live-Suchergebnisse.',
-        'Verify intent':'Vorgabe prüfen',
-        'Free local checks run in your browser. Your text is not sent to a server.':'Kostenlose Prüfungen laufen im Browser. Dein Text wird nicht an einen Server gesendet.',
-        'Free local verification':'Kostenlose lokale Prüfung','Local checks only':'Nur lokale Prüfungen',
-        'Critical constraints found':'Erkannte wichtige Vorgaben','Possible violations':'Mögliche Verstöße',
-        'A rule-based check found a possible contradiction in an explicit constraint.':'Die regelbasierte Prüfung hat einen möglichen Widerspruch zu einer ausdrücklichen Vorgabe gefunden.',
-        'Shopping':'Einkaufen','Hotels':'Hotels','Restaurants':'Restaurants','Housing':'Wohnen','Writing':'Texte'
-      }
-    };
-    const selectors=['.top-note','.eyebrow','.hero p','label[for="userRequest"]','label[for="aiResult"]','#requestHint','#resultHint','#examplesTitle','.quick-examples p','#buttonText','.privacy-note','.result-title','.result-badge','.result-section h3'];
-    const original=new WeakMap();
-    const switcher=document.createElement('nav');switcher.className='lang-switch';switcher.setAttribute('aria-label','Language / Limbă / Sprache');
-    const getLang=()=>{try{return localStorage.getItem('intentra-lang')||'en'}catch(e){return 'en'}};
-    const setLang=l=>{try{localStorage.setItem('intentra-lang',l)}catch(e){}};
-    [['ro','🇷🇴 RO'],['de','🇩🇪 DE'],['en','🇬🇧 EN']].forEach(([lang,label])=>{
-      const b=document.createElement('button');b.type='button';b.dataset.lang=lang;b.textContent=label;
-      b.addEventListener('click',()=>{setLang(lang);render()});switcher.appendChild(b);
-    });
-    document.querySelector('.topbar')?.appendChild(switcher);
-    function translateText(text,lang){
-      const trim=text.trim();const en=dict.ro;
-      const key=Object.keys(en).find(k=>k===trim||en[k]===trim||dict.de[k]===trim);
-      return key?(dict[lang]?.[key]||key):text;
-    }
-    function render(){
-      const lang=getLang();document.documentElement.lang=lang;
-      const h=document.getElementById('page-title');
-      if(h)h.innerHTML=lang==='ro'?'Verifică cerința,<br><span>nu doar răspunsul.</span>':lang==='de'?'Prüfe die Vorgabe,<br><span>nicht nur die Antwort.</span>':'Verify the intent,<br><span>not just the output.</span>';
-      selectors.forEach(sel=>document.querySelectorAll(sel).forEach(el=>{
-        if(el.id==='summary')return;
-        [...el.childNodes].filter(n=>n.nodeType===3&&n.textContent.trim()).forEach(n=>{
-          if(!original.has(n))original.set(n,n.textContent.trim());
-          const base=original.get(n);n.textContent=' '+translateText(base,lang)+' ';
-        });
-      }));
-      document.querySelectorAll('.example-button').forEach((b,i)=>{
-        const en=['Shopping','Hotels','Restaurants','Housing','Writing'][i];
-        if(en)b.textContent=dict[lang]?.[en]||en;
-      });
-      const placeholders={
-        userRequest:{en:'Example: Reply in Romanian, use exactly 3 bullet points, and keep it under 50 words.',ro:'Exemplu: Răspunde în română, cu exact 3 puncte și maximum 50 de cuvinte.',de:'Beispiel: Antworte auf Deutsch mit genau 3 Punkten und höchstens 50 Wörtern.'},
-        aiResult:{en:'Paste the answer or outcome produced by the AI.',ro:'Introdu răspunsul produs de AI.',de:'Füge die Antwort der KI ein.'}
-      };
-      Object.entries(placeholders).forEach(([id,values])=>{const el=document.getElementById(id);if(el)el.placeholder=values[lang]||values.en});
-      document.querySelectorAll('.lang-switch button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.lang===lang)));
-    }
-    render();
-    document.getElementById('verifyButton')?.addEventListener('click',()=>setTimeout(render,0));
-    document.getElementById('exampleButtons')?.addEventListener('click',()=>setTimeout(render,0));
-  })();
-  </script>
-</body>
-</html>
+<html lang="ro"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="INTENTRA: descrie ce cauți și explorează surse relevante pentru mașini, locuințe, joburi și produse.">
+<meta name="google-site-verification" content="2KI8H6tvn0gXqwWRWvHc2bvzbMq9MAxwfb5Mwc7Cvuc">
+<link rel="canonical" href="https://basescusorin-coder.github.io/intentra/">
+<title>INTENTRA — Tu spui ce cauți</title>
+<style>
+:root{color-scheme:dark;font-family:Inter,system-ui,-apple-system,sans-serif;background:#050b1b;color:#f1f7ff}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% 0,#153c83 0,transparent 60%),#050b1b;min-height:100vh}
+main{max-width:1020px;margin:auto;padding:24px 20px 65px}header{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.brand{font-size:23px;letter-spacing:.13em;font-weight:850;color:white;text-decoration:none}.brand b{color:#55d7ff}
+.languages{display:flex;gap:7px}.languages button,.categories button{background:#102448;color:#d7e8ff;border:1px solid #355c8b;border-radius:10px;padding:9px 12px;cursor:pointer}
+.languages button[aria-pressed=true],.categories button[aria-pressed=true]{background:#4bd3ff;color:#031427;border-color:#4bd3ff;font-weight:800}
+.hero{padding:80px 0 32px;max-width:830px}.eyebrow{color:#73dfff;font-size:12px;letter-spacing:.17em;font-weight:800;text-transform:uppercase}
+h1{font-size:clamp(38px,7vw,72px);line-height:1.04;letter-spacing:-.055em;margin:16px 0}h1 em{color:#55d7ff;font-style:normal}
+.hero p{font-size:clamp(16px,2vw,19px);color:#c2d5f1;max-width:750px}
+.panel{background:linear-gradient(140deg,#0b2657,#0a1732);border:1px solid #345f98;border-radius:22px;padding:24px;box-shadow:0 18px 65px #0005}
+label{display:block;font-weight:750;margin-bottom:12px}textarea{width:100%;resize:vertical;min-height:120px;background:#06152f;color:white;border:1px solid #4474b1;border-radius:12px;padding:17px;font:inherit;font-size:17px}
+textarea:focus,button:focus-visible,a:focus-visible{outline:3px solid #63ddff;outline-offset:3px}
+.categories{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}
+.actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.primary{border:0;background:linear-gradient(110deg,#31c9ff,#7ce9ff);color:#04152c;font-weight:850;border-radius:12px;padding:15px 25px;cursor:pointer;font:inherit;font-weight:800}
+.muted{color:#afc2de;font-size:13px}.error{color:#ffb6bd;min-height:20px}
+.results{margin-top:28px}.results h2{font-size:25px}.result-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:13px}
+.result-card{border:1px solid #315786;border-radius:16px;padding:20px;background:#0d2145}
+.result-card h3{margin:0 0 8px;font-size:18px}.result-card p{color:#b9cde7;font-size:14px;min-height:60px}
+.result-card a{display:inline-block;color:#04152c;background:#71dcff;text-decoration:none;padding:10px 13px;border-radius:9px;font-weight:800}
+.notice{margin-top:22px;padding:15px;border:1px solid #536687;border-radius:12px;background:#10203b;color:#d0dced;font-size:14px}
+footer{margin-top:42px;color:#8da7c7;text-align:center;font-size:12px}
+@media(max-width:600px){main{padding:20px 14px 40px}.hero{padding:45px 0 20px}.panel{padding:15px}.actions .primary{width:100%}}
+</style></head>
+<body><main>
+<header><a class="brand" href="./">✓ INTENTRA<b>.</b></a><nav class="languages" aria-label="Language"><button type="button" data-lang="ro">🇷🇴 RO</button><button type="button" data-lang="de">🇩🇪 DE</button><button type="button" data-lang="en">🇬🇧 EN</button></nav></header>
+<section class="hero"><div class="eyebrow" id="eyebrow"></div><h1 id="headline"></h1><p id="intro"></p></section>
+<section class="panel"><label for="query" id="queryLabel"></label><textarea id="query" maxlength="2000"></textarea>
+<div class="categories" id="categories"></div><div class="actions"><button type="button" class="primary" id="search"></button><span class="muted" id="helper"></span></div><p class="error" id="error" role="alert"></p></section>
+<section class="results" id="results" hidden aria-live="polite"><h2 id="resultsTitle"></h2><p class="muted" id="resultsSubtitle"></p><div class="result-grid" id="cards"></div><div class="notice" id="notice"></div></section>
+<footer id="footer"></footer>
+</main>
+<script>
+(()=>{
+const i18n={
+ro:{eyebrow:"Căutare simplă • surse relevante",headline:"Tu spui ce cauți.<br><em>Noi te ajutăm să găsești.</em>",intro:"Mașini, locuințe, locuri de muncă și produse. Descrie ce îți trebuie și pornește căutarea pe platforme relevante.",queryLabel:"Ce cauți?",placeholder:"Exemplu: Mercedes E-Class din 2020, sub 20.000 CHF, în Elveția",search:"Caută variante",helper:"Fără cont. Fără oferte inventate.",error:"Scrie ce cauți înainte să pornești căutarea.",resultsTitle:"Unde poți găsi variante",resultsSubtitle:"Am pregătit căutări pe platforme externe. Deschide sursele pentru anunțuri și prețuri actuale.",notice:"Important: INTENTRA nu preia încă automat ofertele și nu le verifică disponibilitatea. Linkurile deschid căutări pe site-uri terțe. Compară prețul, locația și condițiile înainte să decizi.",footer:"INTENTRA • Căutare orientată spre cerințele tale • Versiune inițială",categories:["Auto","Locuințe","Joburi","Produse"],open:"Deschide căutarea",descriptions:["Caută anunțuri auto pe această platformă.","Explorează anunțuri imobiliare.","Descoperă posturi disponibile.","Compară produse și magazine."]},
+de:{eyebrow:"Einfach suchen • relevante Quellen",headline:"Sag, was du suchst.<br><em>Wir helfen dir dabei.</em>",intro:"Autos, Wohnungen, Jobs und Produkte. Beschreibe deinen Wunsch und suche auf passenden Plattformen.",queryLabel:"Was suchst du?",placeholder:"Beispiel: Mercedes E-Klasse ab 2020, unter 20.000 CHF, Schweiz",search:"Angebote suchen",helper:"Ohne Konto. Keine erfundenen Angebote.",error:"Bitte beschreibe zuerst, was du suchst.",resultsTitle:"Hier findest du Angebote",resultsSubtitle:"Wir haben externe Suchlinks vorbereitet. Öffne die Quellen für aktuelle Angebote und Preise.",notice:"Wichtig: INTENTRA ruft Angebote noch nicht automatisch ab und prüft deren Verfügbarkeit nicht. Die Links führen zu externen Websites. Prüfe Preise, Standort und Bedingungen.",footer:"INTENTRA • Suche nach deinen Vorgaben • Erste Version",categories:["Autos","Wohnen","Jobs","Produkte"],open:"Suche öffnen",descriptions:["Autoanzeigen auf dieser Plattform suchen.","Immobilienangebote entdecken.","Offene Stellen finden.","Produkte und Shops vergleichen."]},
+en:{eyebrow:"Simple search • relevant sources",headline:"Tell us what you need.<br><em>We'll help you find it.</em>",intro:"Cars, homes, jobs and products. Describe what you need and search relevant platforms.",queryLabel:"What are you looking for?",placeholder:"Example: Mercedes E-Class from 2020, under CHF 20,000, Switzerland",search:"Find options",helper:"No account. No invented listings.",error:"Describe what you need before searching.",resultsTitle:"Where to find options",resultsSubtitle:"We've prepared external searches. Open the sources for current listings and prices.",notice:"Important: INTENTRA does not yet retrieve listings automatically or verify availability. Links open third-party websites. Check prices, location and terms before deciding.",footer:"INTENTRA • Search based on your requirements • Initial version",categories:["Cars","Housing","Jobs","Products"],open:"Open search",descriptions:["Find car listings on this platform.","Explore property listings.","Discover available positions.","Compare products and stores."]}
+};
+const sources={
+auto:[["AutoScout24","https://www.google.com/search?q="+encodeURIComponent("site:autoscout24.ch ")],["Car For You","https://www.google.com/search?q="+encodeURIComponent("site:carforyou.ch ")],["tutti.ch","https://www.google.com/search?q="+encodeURIComponent("site:tutti.ch Auto ")]],
+housing:[["Homegate","https://www.google.com/search?q="+encodeURIComponent("site:homegate.ch ")],["ImmoScout24","https://www.google.com/search?q="+encodeURIComponent("site:immoscout24.ch ")],["Flatfox","https://www.google.com/search?q="+encodeURIComponent("site:flatfox.ch ")]],
+jobs:[["jobs.ch","https://www.google.com/search?q="+encodeURIComponent("site:jobs.ch ")],["JobScout24","https://www.google.com/search?q="+encodeURIComponent("site:jobscout24.ch ")],["Indeed","https://www.google.com/search?q="+encodeURIComponent("site:ch.indeed.com ")]],
+products:[["Galaxus","https://www.google.com/search?q="+encodeURIComponent("site:galaxus.ch ")],["Digitec","https://www.google.com/search?q="+encodeURIComponent("site:digitec.ch ")],["Toppreise","https://www.google.com/search?q="+encodeURIComponent("site:toppreise.ch ")]]
+};
+const keys=["auto","housing","jobs","products"];
+let lang="ro",category="auto",searched=false;
+try{const saved=localStorage.getItem("intentra-lang");if(i18n[saved])lang=saved}catch(e){}
+const $=id=>document.getElementById(id);
+function render(){
+const t=i18n[lang];document.documentElement.lang=lang;
+$("eyebrow").textContent=t.eyebrow;$("headline").innerHTML=t.headline;$("intro").textContent=t.intro;
+$("queryLabel").textContent=t.queryLabel;$("query").placeholder=t.placeholder;$("search").textContent=t.search;
+$("helper").textContent=t.helper;$("footer").textContent=t.footer;$("resultsTitle").textContent=t.resultsTitle;
+$("resultsSubtitle").textContent=t.resultsSubtitle;$("notice").textContent=t.notice;
+document.querySelectorAll("[data-lang]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.lang===lang)));
+$("categories").replaceChildren();
+keys.forEach((k,index)=>{const b=document.createElement("button");b.type="button";b.textContent=t.categories[index];b.setAttribute("aria-pressed",String(category===k));b.addEventListener("click",()=>{category=k;render();if(searched)showResults()});$("categories").appendChild(b)});
+if(searched)showResults();
+}
+function showResults(){
+const q=$("query").value.trim(),t=i18n[lang];if(!q){$("error").textContent=t.error;$("results").hidden=true;searched=false;return}
+$("error").textContent="";$("results").hidden=false;searched=true;$("cards").replaceChildren();
+sources[category].forEach(([name,prefix])=>{const card=document.createElement("article");card.className="result-card";
+const h=document.createElement("h3");h.textContent=name;const p=document.createElement("p");p.textContent=t.descriptions[keys.indexOf(category)];
+const a=document.createElement("a");a.textContent=t.open;a.href=prefix+encodeURIComponent(q);a.target="_blank";a.rel="noopener noreferrer";
+card.append(h,p,a);$("cards").appendChild(card)});
+}
+document.querySelectorAll("[data-lang]").forEach(b=>b.addEventListener("click",()=>{lang=b.dataset.lang;try{localStorage.setItem("intentra-lang",lang)}catch(e){}render()}));
+$("search").addEventListener("click",showResults);$("query").addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter")showResults()});
+render();
+})();
+</script></body></html>
