@@ -66,8 +66,10 @@ jobs:
             if(await page.locator('#results').isHidden()) throw Error('Results not shown');
             if(await page.locator('#cards a').count()!==3) throw Error('Missing search links');
             if(!(await page.locator('#requirements').innerText()).includes('10000')) throw Error('Budget parsing failed: '+await page.locator('#requirements').innerText());
-            const url=await page.locator('#cards a').first().getAttribute('href');
-            if(!url.includes('Mercedes')) throw Error('Search text missing from URL');
+            const url=new URL(await page.locator('#cards a').first().getAttribute('href'));
+            if(url.hostname!=='www.autoscout24.ch'||url.pathname!=='/de/s') throw Error('Car result does not link directly to AutoScout24');
+            if(!(await page.locator('#resultsSubtitle').innerText()).includes('Mercedes')) throw Error('Search text missing from guidance');
+            if(!(await page.locator('#copyQuery').innerText()).includes('Copiază cererea')) throw Error('Copy request control missing');
             await page.locator('#query').fill('Caut hotel în Zürich');
             await page.locator('#search').click();
             console.log('Hotel search submitted');
