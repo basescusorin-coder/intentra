@@ -65,7 +65,7 @@ jobs:
             console.log('Car search submitted');
             if(await page.locator('#results').isHidden()) throw Error('Results not shown');
             if(await page.locator('#cards a').count()!==3) throw Error('Missing search links');
-            if(!(await page.locator('#requirements').innerText()).includes('10000')) throw Error('Budget parsing failed');
+            if(!(await page.locator('#requirements').innerText()).includes('10000')) throw Error('Budget parsing failed: '+await page.locator('#requirements').innerText());
             const url=await page.locator('#cards a').first().getAttribute('href');
             if(!url.includes('Mercedes')) throw Error('Search text missing from URL');
             await page.locator('#query').fill('Caut hotel în Zürich');
