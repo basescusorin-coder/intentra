@@ -33,3 +33,38 @@ jobs:
           }
           console.log('PASS: JavaScript parses; essential UI, languages and categories present.');
           NODE
+      - name: Install browser test dependencies
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Test page interactions in Chromium
+        run: |
+          node - <<'NODE'
+          const {chromium}=require('playwright');
+          (async()=>{
+            const browser=await chromium.launch({headless:true});
+            const page=await browser.newPage();
+            const errors=[];
+            page.on('pageerror',e=>errors.push(e.message));
+            await page.goto('file://'+process.cwd()+'/index.html');
+            for(const lang of ['ro','de','en']){
+              await page.locator('[data-lang="'+lang+'"]').click();
+              if(await page.locator('html').getAttribute('lang')!==lang) throw Error('Language failed: '+lang);
+              if(!(await page.locator('#headline').innerText()).trim()) throw Error('Heading missing: '+lang);
+            }
+            await page.locator('[data-lang="ro"]').click();
+            await page.locator('#query').fill('Caut un Mercedes sub 10000 CHF în Elveția');
+            await page.locator('#search').click();
+            if(await page.locator('#results').isHidden()) throw Error('Results not shown');
+            if(await page.locator('#cards a').count()!==3) throw Error('Missing search links');
+            if(!(await page.locator('#requirements').innerText()).includes('10000')) throw Error('Budget parsing failed');
+            const url=await page.locator('#cards a').first().getAttribute('href');
+            if(!url.includes('Mercedes')) throw Error('Search text missing from URL');
+            await page.locator('#query').fill('Caut hotel în Zürich');
+            await page.locator('#search').click();
+            if(!(await page.locator('#cards').innerText()).includes('Booking.com')) throw Error('Hotel category detection failed');
+            if(errors.length) throw Error('JavaScript errors: '+errors.join('; '));
+            console.log('PASS: language switching, car and hotel searches, budget parsing, external links, no JS exceptions');
+            await browser.close();
+          })().catch(e=>{console.error(e);process.exit(1)});
+          NODE
