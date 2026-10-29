@@ -41,20 +41,28 @@ jobs:
         run: |
           node - <<'NODE'
           const {chromium}=require('playwright');
+          const http=require('node:http');
+          const fs=require('node:fs');
           (async()=>{
+            const server=http.createServer((req,res)=>{res.setHeader('Content-Type','text/html; charset=utf-8');res.end(fs.readFileSync('index.html'))});
+            await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
             const browser=await chromium.launch({headless:true});
             const page=await browser.newPage();
             const errors=[];
             page.on('pageerror',e=>errors.push(e.message));
-            await page.goto('file://'+process.cwd()+'/index.html');
+            page.on('console',msg=>console.log('BROWSER:',msg.type(),msg.text()));
+            await page.goto('http://127.0.0.1:'+server.address().port+'/');
+            console.log('Loaded app over HTTP');
             for(const lang of ['ro','de','en']){
               await page.locator('[data-lang="'+lang+'"]').click();
+              console.log('Language switched:',lang);
               if(await page.locator('html').getAttribute('lang')!==lang) throw Error('Language failed: '+lang);
               if(!(await page.locator('#headline').innerText()).trim()) throw Error('Heading missing: '+lang);
             }
             await page.locator('[data-lang="ro"]').click();
             await page.locator('#query').fill('Caut un Mercedes sub 10000 CHF în Elveția');
             await page.locator('#search').click();
+            console.log('Car search submitted');
             if(await page.locator('#results').isHidden()) throw Error('Results not shown');
             if(await page.locator('#cards a').count()!==3) throw Error('Missing search links');
             if(!(await page.locator('#requirements').innerText()).includes('10000')) throw Error('Budget parsing failed');
@@ -62,9 +70,11 @@ jobs:
             if(!url.includes('Mercedes')) throw Error('Search text missing from URL');
             await page.locator('#query').fill('Caut hotel în Zürich');
             await page.locator('#search').click();
+            console.log('Hotel search submitted');
             if(!(await page.locator('#cards').innerText()).includes('Booking.com')) throw Error('Hotel category detection failed');
             if(errors.length) throw Error('JavaScript errors: '+errors.join('; '));
             console.log('PASS: language switching, car and hotel searches, budget parsing, external links, no JS exceptions');
             await browser.close();
+            await new Promise(resolve=>server.close(resolve));
           })().catch(e=>{console.error(e);process.exit(1)});
           NODE
