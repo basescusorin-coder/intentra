@@ -1,0 +1,35 @@
+name: Verify INTENTRA JavaScript
+on:
+  push:
+    paths:
+      - index.html
+      - .github/workflows/verify.yml
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check HTML structure and JavaScript syntax
+        run: |
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const vm = require('node:vm');
+          const html = fs.readFileSync('index.html','utf8');
+          const script = html.match(/<script>([\s\S]*?)<\/script>/);
+          if (!script) throw new Error('Inline JavaScript missing');
+          new vm.Script(script[1]);
+          for (const id of ['query','search','categories','results','cards','requirements']) {
+            if (!html.includes('id="'+id+'"')) throw new Error('Missing element: '+id);
+          }
+          for (const lang of ['ro','de','en']) {
+            if (!html.includes('data-lang="'+lang+'"')) throw new Error('Missing language: '+lang);
+          }
+          for (const cat of ['auto','housing','hotels','jobs','products']) {
+            if (!html.includes(cat+':[')) throw new Error('Missing source category: '+cat);
+          }
+          console.log('PASS: JavaScript parses; essential UI, languages and categories present.');
+          NODE
