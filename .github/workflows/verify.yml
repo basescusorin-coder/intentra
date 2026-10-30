@@ -105,7 +105,7 @@ jobs:
               page.on('pageerror',err=>errors.push(err.message));
               const response=await page.goto(SITE_URL+'?livecheck='+Date.now(),{waitUntil:'networkidle',timeout:45000});
               if(!response||response.status()!==200) throw Error('Public page returned HTTP '+(response?.status()??'no response'));
-              const html=await response.text();
+              const html=await page.content();
               for(const lang of ['ro','de','en']) {
                 if(!html.includes('data-lang="'+lang+'"')) throw Error('Missing '+lang+' in publicly delivered HTML');
               }
