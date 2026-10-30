@@ -80,3 +80,52 @@ jobs:
             await new Promise(resolve=>server.close(resolve));
           })().catch(e=>{console.error(e);process.exit(1)});
           NODE
+
+  public_site:
+    name: Test deployed public GitHub Pages site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+      - name: Verify delivered HTML and live language switching
+        run: |
+          node - <<'NODE'
+          const { chromium } = require('playwright');
+          const URL='https://basescusorin-coder.github.io/intentra/';
+          (async () => {
+            const browser=await chromium.launch({headless:true});
+            try {
+              const page=await browser.newPage();
+              const errors=[];
+              page.on('pageerror',err=>errors.push(err.message));
+              const response=await page.goto(URL+'?livecheck='+Date.now(),{waitUntil:'networkidle',timeout:45000});
+              if(!response||response.status()!==200) throw Error('Public page returned HTTP '+(response?.status()??'no response'));
+              const html=await response.text();
+              for(const lang of ['ro','de','en']) {
+                if(!html.includes('data-lang="'+lang+'"')) throw Error('Missing '+lang+' in publicly delivered HTML');
+              }
+              if(!html.includes('<script>')) throw Error('No JavaScript in publicly delivered HTML');
+              const headings=[];
+              for(const lang of ['ro','de','en']){
+                const btn=page.locator('[data-lang="'+lang+'"]');
+                if(await btn.count()!==1) throw Error('Public selector '+lang+' not visible exactly once');
+                if(!await btn.isVisible()) throw Error('Public selector '+lang+' is hidden');
+                await btn.click();
+                if(await page.locator('html').getAttribute('lang')!==lang) throw Error('Language switching failed: '+lang);
+                if(await btn.getAttribute('aria-pressed')!=='true') throw Error('Selected language not active: '+lang);
+                const headline=(await page.locator('#headline').innerText()).trim();
+                if(!headline) throw Error('Empty headline for '+lang);
+                headings.push(headline);
+                console.log('PUBLIC '+lang+' OK:',headline);
+              }
+              if(new Set(headings).size!==3) throw Error('Headline not translated across three languages');
+              if(errors.length) throw Error('Public page JavaScript exceptions: '+errors.join('; '));
+              console.log('PASS PUBLIC SITE:',URL,'HTTP 200; delivered HTML; RO/DE/EN selector; real switching; no JS exceptions');
+            } finally { await browser.close(); }
+          })().catch(e=>{console.error(e);process.exit(1)});
+          NODE
