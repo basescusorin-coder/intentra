@@ -96,14 +96,14 @@ jobs:
         run: |
           node - <<'NODE'
           const { chromium } = require('playwright');
-          const URL='https://basescusorin-coder.github.io/intentra/';
+          const SITE_URL='https://basescusorin-coder.github.io/intentra/';
           (async () => {
             const browser=await chromium.launch({headless:true});
             try {
               const page=await browser.newPage();
               const errors=[];
               page.on('pageerror',err=>errors.push(err.message));
-              const response=await page.goto(URL+'?livecheck='+Date.now(),{waitUntil:'networkidle',timeout:45000});
+              const response=await page.goto(SITE_URL+'?livecheck='+Date.now(),{waitUntil:'networkidle',timeout:45000});
               if(!response||response.status()!==200) throw Error('Public page returned HTTP '+(response?.status()??'no response'));
               const html=await response.text();
               for(const lang of ['ro','de','en']) {
@@ -125,7 +125,7 @@ jobs:
               }
               if(new Set(headings).size!==3) throw Error('Headline not translated across three languages');
               if(errors.length) throw Error('Public page JavaScript exceptions: '+errors.join('; '));
-              console.log('PASS PUBLIC SITE:',URL,'HTTP 200; delivered HTML; RO/DE/EN selector; real switching; no JS exceptions');
+              console.log('PASS PUBLIC SITE:',SITE_URL,'HTTP 200; delivered HTML; RO/DE/EN selector; real switching; no JS exceptions');
             } finally { await browser.close(); }
           })().catch(e=>{console.error(e);process.exit(1)});
           NODE
