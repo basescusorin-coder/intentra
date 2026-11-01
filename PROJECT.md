@@ -1,35 +1,19 @@
 # INTENTRA
 
-AI Intent Verification Platform
+INTENTRA helps users find relevant third-party search platforms from a description of what they need.
 
-INTENTRA is designed to verify whether an AI agent actually delivers what a user requested.
+## Current scope
 
-## The Problem
+- Cars, rentals, hotels, jobs and products.
+- Romanian, German and English interface.
+- Automatic category detection and basic extraction of requirements.
+- Direct links to platforms and a button to copy the user's request.
+- Static hosting on free GitHub Pages with intentra.ch as the custom domain.
 
-AI agents can perform complex tasks, but there is often a gap between what a user intended and what an AI system actually delivered.
+## Current limitations
 
-## The Solution
+INTENTRA does not aggregate live listings or verify availability. Extracted requirements are interpretations of the user's text, not checks against third-party offers. The current platform list focuses mainly on Switzerland.
 
-INTENTRA provides an independent verification layer between user intent and AI output.
+## Brand
 
-It evaluates:
-
-- What the user requested
-- What the AI agent understood
-- What actions were performed
-- What result was delivered
-- Whether the final result matches the original intent
-
-## Core Principle
-
-Don't just trust the AI output. Verify the intent.
-
-## Vision
-
-As AI agents increasingly act on behalf of people and businesses, intent verification can become a critical layer for reliability, transparency, and trust.
-
-## Status
-
-INTENTRA is currently in early development.
-
-More information and the first prototype will be added soon.
+Use INTENTRA in public-facing content. Personal contributor details remain discoverable through the public source repository and commit history.
