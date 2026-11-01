@@ -30,6 +30,15 @@
 .hero-copy,.search-wrap,.bottom-grid>*{min-width:0}.share-row{flex-wrap:wrap}@media(max-width:480px){.hero::before{width:100%;left:0;top:-30px;height:400px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{transition:none!important;animation:none!important}}
 
+
+/* INTENTRA palette refinement: cohesive dark navy search panel with electric-blue controls. */
+.panel{background:linear-gradient(145deg,#102543,#0b1a30);color:#f1f7ff;border:1px solid #2a4a70;box-shadow:0 26px 75px #0006;color-scheme:dark}
+.panel-title{color:#dceaff}.live-pill{background:#123b43;color:#9be5d0}.live-pill::before{background:#62ddb1;box-shadow:0 0 10px #62ddb177}
+.categories button{border-color:#294564;color:#b8c9dd;background:#0b1b30}.categories button:hover{border-color:#4ebeea;background:#102c48;color:#eaf8ff}.categories button[aria-pressed=true]{color:#d9f5ff;background:#123d5b;border-color:#44c5f5}
+label{color:#f0f6ff}.auto-toggle{color:#92dafa}textarea{background:#08172b;color:#f2f7ff;border-color:#2d4c70}textarea::placeholder{color:#8298b4}textarea:focus{border-color:#4bc9ff;box-shadow:0 0 0 3px #39bbeb29}
+.example-label{color:#9bb0c9}.examples button{background:#142b46;color:#bdd0e5;border:1px solid #294563}.examples button:hover{background:#1a3859;color:#e9f8ff;border-color:#3b7197}
+.primary{background:linear-gradient(110deg,#41c4fb,#8adfff);color:#03162a;font-weight:800;box-shadow:0 8px 24px #31baff23}.primary:hover{background:linear-gradient(110deg,#70d5ff,#a8e9ff)}.primary::after{color:#06324c}
+.helper{color:#9cb0c8}.error{color:#ffabb4}.under-panel{color:#8ca4c1}
 </style></head>
 
 <body><a class="skip" href="#searchPanel" data-ui="skip">Mergi la căutare</a>
@@ -125,12 +134,27 @@ products:["televiz","telefon","laptop","frigider","mobil","sofa","canapea","prod
 };
 return Object.keys(groups).find(k=>groups[k].some(word=>t.includes(word)))||"products";
 }
+function searchUrl(name,base,query){
+const direct={
+"AutoScout24":q=>"https://www.autoscout24.ch/de/s?query="+encodeURIComponent(q),
+"Booking.com":q=>"https://www.booking.com/searchresults.html?ss="+encodeURIComponent(q),
+"Hotels.com":q=>"https://www.hotels.com/Hotel-Search?destination="+encodeURIComponent(q),
+"Expedia":q=>"https://www.expedia.com/Hotel-Search?destination="+encodeURIComponent(q),
+"jobs.ch":q=>"https://www.jobs.ch/de/stellenangebote/?term="+encodeURIComponent(q),
+"JobScout24":q=>"https://www.jobscout24.ch/en/jobs/?query="+encodeURIComponent(q),
+"Indeed":q=>"https://ch.indeed.com/jobs?q="+encodeURIComponent(q),
+"Galaxus":q=>"https://www.galaxus.ch/de/search?q="+encodeURIComponent(q),
+"Digitec":q=>"https://www.digitec.ch/de/search?q="+encodeURIComponent(q),
+"Toppreise":q=>"https://www.toppreise.ch/produktsuche?q="+encodeURIComponent(q)
+};
+return direct[name]?direct[name](query):base;
+}
 function showResults(){
 const q=$("query").value.trim(),t=i18n[lang];if(!q){$("error").textContent=t.error;$("results").hidden=true;searched=false;return}
 $("error").textContent="";$("results").hidden=false;$("resultsSubtitle").textContent=t.resultsSubtitle+q;searched=true;if(!categoryChosen){const inferred=inferCategory(q);if(category!==inferred){category=inferred;render();return}}$("cards").replaceChildren();renderRequirements(q);
 sources[category].forEach(([name,prefix])=>{const card=document.createElement("article");card.className="result-card";
 const h=document.createElement("h3");h.textContent=name;const p=document.createElement("p");p.textContent=t.descriptions[keys.indexOf(category)];
-const a=document.createElement("a");a.textContent=t.open;a.href=prefix;a.setAttribute("aria-label",t.open+" — "+name);a.target="_blank";a.rel="noopener noreferrer";
+const a=document.createElement("a");a.textContent=t.open;a.href=searchUrl(name,prefix,q);a.setAttribute("aria-label",t.open+" — "+name);a.target="_blank";a.rel="noopener noreferrer";
 card.append(h,p,a);$("cards").appendChild(card)});
 }
 document.querySelectorAll("[data-lang]").forEach(b=>b.addEventListener("click",()=>{lang=b.dataset.lang;try{localStorage.setItem("intentra-lang",lang)}catch(e){}render()}));
