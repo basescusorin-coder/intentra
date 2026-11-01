@@ -1,31 +1,30 @@
 # INTENTRA
 
-**Check whether an AI answer follows your original instructions.**
+Describe what you are looking for and discover relevant search platforms for cars, rentals, hotels, jobs and products.
 
-INTENTRA is an early-stage, browser-based tool for comparing a user's request with an AI-generated answer. It flags a limited set of explicit contradictions; it does **not** guarantee that an answer is correct, complete, or safe.
-
-**Live site:** https://basescusorin-coder.github.io/intentra/
+**Public address:** https://intentra.ch/
 
 ## How to use
 
-1. Open the live site.
-2. Paste your original request and the AI response into the designated fields.
-3. Run the check and review any flagged issues manually.
+1. Choose Romanian, German or English.
+2. Describe what you need and select a category, or let INTENTRA detect it.
+3. Review the detected requirements and open a suggested platform.
+4. Copy your request into the platform's search field.
 
-The current browser-based checks run locally; the site's description states that entered text is not sent to a server. Avoid entering confidential information unless you have independently reviewed the deployed code and your browser environment.
+INTENTRA currently links to third-party platforms. It does not automatically retrieve listings or verify their availability, prices or compliance with your requirements.
+
+## Hosting
+
+The static site is hosted on free GitHub Pages from the main branch root. The CNAME file declares intentra.ch. Relative asset links support the custom domain.
 
 ## Search indexing
 
-- Canonical page: https://basescusorin-coder.github.io/intentra/
-- Sitemap: https://basescusorin-coder.github.io/intentra/sitemap.xml
-- Robots file: https://basescusorin-coder.github.io/intentra/robots.txt
+- Canonical page: https://intentra.ch/
+- Sitemap: https://intentra.ch/sitemap.xml
+- Robots file: https://intentra.ch/robots.txt
 
-These files help crawlers discover the site but do not guarantee Google indexing or search ranking. Search performance and URL indexing status should be checked in the owner's Google Search Console account.
+Google Search Console is used to verify ownership and submit the sitemap. Submission does not guarantee indexing or ranking.
 
-## Ownership and security
+## Privacy and source visibility
 
-This is a public GitHub repository: anyone can read its published source. Only accounts or apps with appropriate GitHub permissions can push changes. Review **Settings → Collaborators** and **Settings → Integrations / GitHub Apps**, restrict app access where possible, and enable two-factor authentication for your GitHub account.
-
-## Project status
-
-Early development. See [PROJECT.md](PROJECT.md) for the project vision.
+The public website uses the INTENTRA brand. This repository, its owner profile and its commit history are public and may identify contributors. A custom domain does not make the repository anonymous.
