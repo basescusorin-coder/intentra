@@ -74,12 +74,42 @@ jobs:
             await page.locator('#search').click();
             console.log('Hotel search submitted');
             if(!(await page.locator('#cards').innerText()).includes('Booking.com')) throw Error('Hotel category detection failed');
+            if(await page.locator('#exploreCards button').count()!==5) throw Error('Missing visual categories');
+            await page.locator('#exploreCards button').filter({hasText:'Joburi'}).click();
+            await page.locator('#search').click();
+            if(!(await page.locator('#cards').innerText()).includes('jobs.ch')) throw Error('Visual job category failed');
+            await page.locator('#query').fill('apartament în Zürich');
+            await page.locator('#autoCategory').click();
+            await page.locator('#search').click();
+            if(!(await page.locator('#cards').innerText()).includes('Homegate')) throw Error('Automatic category reset failed');
+            for(const width of [390,320,768,1440]){
+              await page.setViewportSize({width,height:900});
+              for(const lang of ['ro','de','en']){
+                await page.locator('[data-lang="'+lang+'"]').click();
+                if(await page.evaluate(()=>document.documentElement.scrollWidth>document.documentElement.clientWidth+1)) throw Error('Horizontal overflow at '+width+' '+lang);
+                if(!await page.locator('#search').isVisible()) throw Error('Search hidden at '+width);
+                await page.locator('#examples button').first().click();
+                if(await page.locator('#cards a').count()!==3) throw Error('Example search failed at '+width+' '+lang);
+              }
+            }
+            await page.setViewportSize({width:390,height:844});
+            await page.locator('[data-lang="ro"]').click();
+            await page.reload();
+            await page.screenshot({path:'intentra-mobile.png',fullPage:true});
+            await page.setViewportSize({width:1440,height:1000});
+            await page.screenshot({path:'intentra-desktop.png',fullPage:true});
             if(errors.length) throw Error('JavaScript errors: '+errors.join('; '));
             console.log('PASS: language switching, car and hotel searches, budget parsing, external links, no JS exceptions');
             await browser.close();
             await new Promise(resolve=>server.close(resolve));
           })().catch(e=>{console.error(e);process.exit(1)});
           NODE
+
+      - name: Save design previews
+        uses: actions/upload-artifact@v4
+        with:
+          name: intentra-design-previews
+          path: intentra-*.png
 
   public_site:
     name: Test deployed public GitHub Pages site
@@ -96,7 +126,7 @@ jobs:
         run: |
           node - <<'NODE'
           const { chromium } = require('playwright');
-          const SITE_URL='https://basescusorin-coder.github.io/intentra/';
+          const SITE_URL='https://intentra.ch/';
           (async () => {
             const browser=await chromium.launch({headless:true});
             try {
