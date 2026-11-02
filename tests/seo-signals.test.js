@@ -9,6 +9,7 @@ test("uses INTENTRA.CH consistently in titles and share metadata", () => {
   assert.match(html, /<title>INTENTRA\.CH — Găsește platforme de căutare potrivite<\/title>/);
   assert.match(html, /property="og:site_name" content="INTENTRA\.CH"/);
   assert.match(html, /property="og:title" content="INTENTRA\.CH — Găsește platforme de căutare potrivite"/);
+  assert.match(html, /property="og:description" content="INTENTRA\.CH te ajută să găsești platforme potrivite/);
   assert.match(html, /aria-label="INTENTRA\.CH"/);
 });
 
