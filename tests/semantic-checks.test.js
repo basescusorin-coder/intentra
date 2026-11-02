@@ -8,74 +8,46 @@ const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
 const script = html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
 assert.ok(script, "index.html should contain its application script");
 
-function getRuleApi() {
-  const elements = new Map();
-  const getElementById = id => {
-    if (!elements.has(id)) {
-      elements.set(id, {
-        value: "", textContent: "", hidden: false, className: "", disabled: false,
-        addEventListener() {}, setAttribute() {}, focus() {}, scrollIntoView() {},
-        replaceChildren() {}, appendChild() {}
-      });
-    }
-    return elements.get(id);
-  };
-  const context = {
-    document: { getElementById, createElement: () => ({}) },
-    fetch: async () => { throw new Error("offline in unit test"); }
-  };
-  vm.createContext(context);
-  vm.runInContext(`${script}\nglobalThis.ruleApi = { extractConstraints, detectLocalViolations };`, context);
-  return context.ruleApi;
+function extractFunction(name) {
+  const start = script.indexOf(`function ${name}(`);
+  assert.notEqual(start, -1, `index.html should define ${name}`);
+  const end = script.indexOf("\nfunction ", start + 1);
+  assert.notEqual(end, -1, `${name} should have a following function boundary`);
+  return script.slice(start, end);
 }
 
-function hasViolation(request, result) {
-  const { extractConstraints, detectLocalViolations } = getRuleApi();
-  return detectLocalViolations(extractConstraints(request), result).length > 0;
-}
+const sandbox = {};
+vm.createContext(sandbox);
+vm.runInContext([
+  extractFunction("extractRequirements"),
+  extractFunction("inferCategory"),
+  extractFunction("searchUrl"),
+  "globalThis.intentra = { extractRequirements, inferCategory, searchUrl };"
+].join("\n"), sandbox);
+const api = sandbox.intentra;
 
-test("detects an explicit direct-flight contradiction", () => {
-  assert.equal(hasViolation(
-    "Find a direct flight from Zurich to Bucharest. Do not include stopovers.",
-    "I found a flight from Zurich to Bucharest with one stop in Vienna."
-  ), true);
+test("classifies Romanian, German and English searches into the five categories", () => {
+  assert.equal(api.inferCategory("Mercedes în Elveția"), "auto");
+  assert.equal(api.inferCategory("Apartament de închiriat în Zürich"), "housing");
+  assert.equal(api.inferCategory("Hotel în Zürich"), "hotels");
+  assert.equal(api.inferCategory("Joburi în Wohlen"), "jobs");
+  assert.equal(api.inferCategory("Laptop günstig kaufen"), "products");
 });
 
-test("does not flag an answer that confirms no stopovers", () => {
-  assert.equal(hasViolation("No stopovers.", "There are no stopovers or transfers."), false);
+test("extracts budget, year and place details from search text", () => {
+  const requirements = api.extractRequirements("Caut Mercedes sub 10000 CHF din 2020 în Zürich");
+  assert.ok(requirements.some(([kind, value]) => kind === "budget" && value.includes("10000")));
+  assert.ok(requirements.some(([kind, value]) => kind === "year" && value === "2020"));
+  assert.ok(requirements.some(([kind, value]) => kind === "place" && value === "Zürich"));
 });
 
-test("compares written stop counts to the maximum", () => {
-  assert.equal(hasViolation("Allow at most 2 stops.", "The itinerary has 3 stops."), true);
-  assert.equal(hasViolation("Allow at most 2 stops.", "The itinerary has 1 stop."), false);
-});
+test("uses direct original platform search links with the user's query", () => {
+  const car = new URL(api.searchUrl("AutoScout24", "https://fallback.example/", "Mercedes Zürich"));
+  assert.equal(car.origin, "https://www.autoscout24.ch");
+  assert.equal(car.pathname, "/de/s");
+  assert.equal(car.searchParams.get("query"), "Mercedes Zürich");
 
-test("recognizes Romanian direct-trip constraints and stop counts", () => {
-  assert.equal(hasViolation("Găsește un zbor direct spre Zürich, fără escale.", "Am găsit un zbor cu o escală la Viena."), true);
-  assert.equal(hasViolation("Acceptă cel mult două escale.", "Traseul include trei escale."), true);
-});
-
-test("still detects a contradiction when the answer explains the request", () => {
-  assert.equal(hasViolation("Do not include stopovers.", "The request forbids stops, but the answer contains one stop in Vienna."), true);
-});
-
-test("detects language mismatches in English and Romanian", () => {
-  assert.equal(hasViolation("Răspunde în română.", "The answer is yes, and this is the result."), true);
-  assert.equal(hasViolation("Answer in English.", "The answer is yes, and this is the result."), false);
-});
-
-test("checks exact bullet counts", () => {
-  assert.equal(hasViolation("Use exactly 3 bullet points.", "- One\n- Two\n- Three\n- Four"), true);
-  assert.equal(hasViolation("Folosește exact 3 puncte.", "- Unu\n- Doi\n- Trei"), false);
-});
-
-test("checks maximum word counts", () => {
-  assert.equal(hasViolation("Keep the answer under 4 words.", "This answer has exactly five words."), true);
-  assert.equal(hasViolation("Răspunde în maxim 5 cuvinte.", "Acesta are doar trei cuvinte."), false);
-});
-
-test("checks required and forbidden quoted phrases", () => {
-  assert.equal(hasViolation('Include the phrase "available today".', "The item is ready."), true);
-  assert.equal(hasViolation('Nu include „adresa privată”.', "Am trimis adresa privată ieri."), true);
-  assert.equal(hasViolation('Include the phrase "available today".', "It is available today."), false);
+  const job = new URL(api.searchUrl("jobs.ch", "https://fallback.example/", "Pflegefachfrau Muri"));
+  assert.equal(job.origin, "https://www.jobs.ch");
+  assert.equal(job.searchParams.get("term"), "Pflegefachfrau Muri");
 });

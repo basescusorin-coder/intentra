@@ -3,6 +3,10 @@ on:
   push:
     paths:
       - index.html
+      - favicon.ico
+      - favicon-*.png
+      - apple-touch-icon.png
+      - tests/**
       - .github/workflows/verify.yml
   workflow_dispatch:
 jobs:
@@ -13,6 +17,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Run unit tests
+        run: node --test tests/*.test.js
       - name: Check HTML structure and JavaScript syntax
         run: |
           node - <<'NODE'
@@ -44,7 +50,7 @@ jobs:
           const http=require('node:http');
           const fs=require('node:fs');
           (async()=>{
-            const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http://localhost').pathname;const filename=pathname==='/'?'index.html':pathname.slice(1);if(!['index.html','favicon.png','intentra-logo.png'].includes(filename)&&!/^assets\/(auto|housing|hotels|jobs|products|swiss)\.webp$/.test(filename)){res.statusCode=404;return res.end()}res.setHeader('Content-Type',filename.endsWith('.png')?'image/png':filename.endsWith('.webp')?'image/webp':'text/html; charset=utf-8');res.end(fs.readFileSync(filename))});
+            const server=http.createServer((req,res)=>{const pathname=new URL(req.url,'http://localhost').pathname;const filename=pathname==='/'?'index.html':pathname.slice(1);if(!['index.html','favicon.png','favicon.ico','favicon-48.png','favicon-96.png','favicon-192.png','apple-touch-icon.png','intentra-logo.png'].includes(filename)&&!/^assets\/(auto|housing|hotels|jobs|products|swiss)\.webp$/.test(filename)){res.statusCode=404;return res.end()}res.setHeader('Content-Type',filename.endsWith('.png')?'image/png':filename.endsWith('.ico')?'image/x-icon':filename.endsWith('.webp')?'image/webp':'text/html; charset=utf-8');res.end(fs.readFileSync(filename))});
             await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
             const browser=await chromium.launch({headless:true});
             const page=await browser.newPage();
@@ -52,7 +58,11 @@ jobs:
             page.on('pageerror',e=>errors.push(e.message));
             page.on('console',msg=>console.log('BROWSER:',msg.type(),msg.text()));
             await page.goto('http://127.0.0.1:'+server.address().port+'/');
-            console.log('Loaded app over HTTP');
+            for(const icon of ['favicon.ico','favicon-48.png','favicon-96.png','favicon-192.png','apple-touch-icon.png']){
+              const response=await page.request.get('http://127.0.0.1:'+server.address().port+'/'+icon);
+              if(!response.ok()) throw Error(icon+' returned HTTP '+response.status());
+            }
+            console.log('Loaded app and favicon assets over HTTP');
             for(const lang of ['ro','de','en']){
               await page.locator('[data-lang="'+lang+'"]').click();
               console.log('Language switched:',lang);
@@ -142,6 +152,11 @@ jobs:
                 if(!html.includes('data-lang="'+lang+'"')) throw Error('Missing '+lang+' in publicly delivered HTML');
               }
               if(!html.includes('<script>')) throw Error('No JavaScript in publicly delivered HTML');
+              for(const icon of ['favicon.ico','favicon-48.png','favicon-96.png','favicon-192.png','apple-touch-icon.png']) {
+                const iconResponse=await page.request.get(SITE_URL+icon);
+                if(!iconResponse.ok()) throw Error(icon+' returned HTTP '+iconResponse.status());
+                console.log('PUBLIC ICON OK:',icon,iconResponse.status());
+              }
               const headings=[];
               for(const lang of ['ro','de','en']){
                 const btn=page.locator('[data-lang="'+lang+'"]');
