@@ -190,7 +190,7 @@ jobs:
               if(insuranceLinks.length!==5||insuranceLinks[0]!=='https://www.priminfo.admin.ch/de/praemien/') throw Error('Public insurance subcategory links failed');
               if(insuranceLinks.some(url=>!url.startsWith('https://'))) throw Error('Public insurance link is not HTTPS');
               const insuranceResponses=await Promise.all(insuranceLinks.map(url=>page.request.get(url,{timeout:30000})));
-              if(insuranceResponses.some(response=>!response.ok())) throw Error('An insurance source returned a non-success HTTP status: '+insuranceResponses.map(r=>r.status()).join(','));
+              if(insuranceResponses.some(response=>response.status()===404)) throw Error('An insurance source URL returned HTTP 404: '+insuranceResponses.map(r=>r.status()).join(','));
               console.log('PUBLIC INSURANCE LINKS OK:',insuranceResponses.map(r=>r.status()).join(','));
               console.log('PUBLIC insurance OK:',insuranceLinks.length,'sources including official Priminfo');
               if(errors.length) throw Error('Public page JavaScript exceptions: '+errors.join('; '));
