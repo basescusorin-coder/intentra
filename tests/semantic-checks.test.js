@@ -39,9 +39,9 @@ test("classifies Romanian, German and English searches into six categories", () 
 
 
 test("renders the five translated insurance subcategories and official Priminfo source", () => {
-  assert.match(html, /Priminfo\\.ch/);
-  assert.match(html, /https:\\/\\/www\\.priminfo\\.admin\\.ch\\/de\\/praemien\\//);
-  assert.match(html, /categories:\\["Auto","Locuințe","Hoteluri","Joburi","Produse","Asigurări"\\]/);
+  assert.ok(html.includes("Priminfo.ch"));
+  assert.ok(html.includes("https://www.priminfo.admin.ch/de/praemien/"));
+  assert.ok(html.includes('categories:["Auto","Locuințe","Hoteluri","Joburi","Produse","Asigurări"]'));
   for (const phrase of ["Asigurare medicală obligatorie (LAMal)", "Asigurare auto", "Asigurare pentru locuință și bunuri", "Răspundere civilă privată", "Asigurare de călătorie"]) {
     assert.ok(html.includes(phrase), `missing insurance subcategory: ${phrase}`);
   }
