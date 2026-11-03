@@ -113,7 +113,7 @@ jobs:
             await page.setViewportSize({width:390,height:844});
             await page.locator('[data-lang="ro"]').click();
             await page.reload();
-            await page.locator('.category-photo').evaluateAll(async images=>{await Promise.all(images.map(i=>i.decode()));if(images.length!==5||images.some(i=>!i.naturalWidth))throw Error('Missing category photography')});
+            await page.locator('.category-photo').evaluateAll(async images=>{await Promise.all(images.map(i=>i.decode()));if(images.length!==6||images.some(i=>!i.naturalWidth))throw Error('Missing category photography')});
             await page.screenshot({path:'intentra-mobile.png',fullPage:true});
             await page.setViewportSize({width:1440,height:1000});
             await page.screenshot({path:'intentra-desktop.png',fullPage:true});
@@ -160,6 +160,10 @@ jobs:
                 if(!html.includes('data-lang="'+lang+'"')) throw Error('Missing '+lang+' in publicly delivered HTML');
               }
               if(!html.includes('<script>')) throw Error('No JavaScript in publicly delivered HTML');
+              const sitemapResponse=await page.request.get(SITE_URL+'sitemap.xml');
+              if(!sitemapResponse.ok()) throw Error('sitemap.xml returned HTTP '+sitemapResponse.status());
+              if(!(await sitemapResponse.text()).includes('https://intentra.ch/')) throw Error('sitemap does not list the canonical domain');
+              console.log('PUBLIC SITEMAP OK:',sitemapResponse.status());
               for(const icon of ['favicon.ico','favicon-48.png','favicon-96.png','favicon-192.png','apple-touch-icon.png']) {
                 const iconResponse=await page.request.get(SITE_URL+icon);
                 if(!iconResponse.ok()) throw Error(icon+' returned HTTP '+iconResponse.status());
@@ -184,6 +188,10 @@ jobs:
               await page.locator('#search').click();
               const insuranceLinks=await page.locator('#cards a').evaluateAll(links=>links.map(a=>a.href));
               if(insuranceLinks.length!==5||insuranceLinks[0]!=='https://www.priminfo.admin.ch/de/praemien/') throw Error('Public insurance subcategory links failed');
+              if(insuranceLinks.some(url=>!url.startsWith('https://'))) throw Error('Public insurance link is not HTTPS');
+              const insuranceResponses=await Promise.all(insuranceLinks.map(url=>page.request.get(url,{timeout:30000})));
+              if(insuranceResponses.some(response=>!response.ok())) throw Error('An insurance source returned a non-success HTTP status: '+insuranceResponses.map(r=>r.status()).join(','));
+              console.log('PUBLIC INSURANCE LINKS OK:',insuranceResponses.map(r=>r.status()).join(','));
               console.log('PUBLIC insurance OK:',insuranceLinks.length,'sources including official Priminfo');
               if(errors.length) throw Error('Public page JavaScript exceptions: '+errors.join('; '));
               console.log('PASS PUBLIC SITE:',SITE_URL,'HTTP 200; delivered HTML; RO/DE/EN selector; real switching; no JS exceptions');
