@@ -34,7 +34,7 @@ jobs:
           for (const lang of ['ro','de','en']) {
             if (!html.includes('data-lang="'+lang+'"')) throw new Error('Missing language: '+lang);
           }
-          for (const cat of ['auto','housing','hotels','jobs','products']) {
+          for (const cat of ['auto','housing','hotels','jobs','products','insurance']) {
             if (!html.includes(cat+':[')) throw new Error('Missing source category: '+cat);
           }
           console.log('PASS: JavaScript parses; essential UI, languages and categories present.');
@@ -84,10 +84,18 @@ jobs:
             await page.locator('#search').click();
             console.log('Hotel search submitted');
             if(!(await page.locator('#cards').innerText()).includes('Booking.com')) throw Error('Hotel category detection failed');
-            if(await page.locator('#exploreCards button').count()!==5) throw Error('Missing visual categories');
+            if(await page.locator('#exploreCards button').count()!==6) throw Error('Missing visual categories');
             await page.locator('#exploreCards button').filter({hasText:'Joburi'}).click();
             await page.locator('#search').click();
             if(!(await page.locator('#cards').innerText()).includes('jobs.ch')) throw Error('Visual job category failed');
+            await page.locator('#exploreCards button').filter({hasText:'Asigurări'}).click();
+            await page.locator('#search').click();
+            if(await page.locator('#cards a').count()!==5) throw Error('Insurance category should expose five subcategories');
+            const insuranceLinks=await page.locator('#cards a').evaluateAll(links=>links.map(a=>a.href));
+            if(insuranceLinks[0]!=='https://www.priminfo.admin.ch/de/praemien/') throw Error('Mandatory health insurance must link to official Priminfo');
+            if(insuranceLinks.some(url=>!url.startsWith('https://'))) throw Error('Insurance links must use HTTPS');
+            if(!(await page.locator('#cards').innerText()).includes('Răspundere civilă privată')) throw Error('Liability insurance subcategory missing');
+            if(!(await page.locator('#notice').innerText()).includes('nu este broker')) throw Error('Insurance broker disclaimer missing');
             await page.locator('#query').fill('apartament în Zürich');
             await page.locator('#autoCategory').click();
             await page.locator('#search').click();
@@ -171,6 +179,12 @@ jobs:
                 console.log('PUBLIC '+lang+' OK:',headline);
               }
               if(new Set(headings).size!==3) throw Error('Headline not translated across three languages');
+              await page.locator('[data-lang="ro"]').click();
+              await page.locator('#exploreCards button').filter({hasText:'Asigurări'}).click();
+              await page.locator('#search').click();
+              const insuranceLinks=await page.locator('#cards a').evaluateAll(links=>links.map(a=>a.href));
+              if(insuranceLinks.length!==5||insuranceLinks[0]!=='https://www.priminfo.admin.ch/de/praemien/') throw Error('Public insurance subcategory links failed');
+              console.log('PUBLIC insurance OK:',insuranceLinks.length,'sources including official Priminfo');
               if(errors.length) throw Error('Public page JavaScript exceptions: '+errors.join('; '));
               console.log('PASS PUBLIC SITE:',SITE_URL,'HTTP 200; delivered HTML; RO/DE/EN selector; real switching; no JS exceptions');
             } finally { await browser.close(); }
