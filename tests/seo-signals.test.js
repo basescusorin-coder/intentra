@@ -5,12 +5,17 @@ const test = require("node:test");
 
 const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
 
-test("uses INTENTRA.CH consistently in titles and share metadata", () => {
+test("uses INTENTRA.CH consistently in titles and share metadata, including all six categories", () => {
   assert.match(html, /<title>INTENTRA\.CH — Găsește platforme de căutare potrivite<\/title>/);
   assert.match(html, /property="og:site_name" content="INTENTRA\.CH"/);
   assert.match(html, /property="og:title" content="INTENTRA\.CH — Găsește platforme de căutare potrivite"/);
   assert.match(html, /property="og:description" content="INTENTRA\.CH te ajută să găsești platforme potrivite/);
   assert.match(html, /aria-label="INTENTRA\.CH"/);
+  assert.match(html, /property="og:description" content="INTENTRA\.CH te ajută să găsești platforme pentru auto, locuințe, hoteluri, joburi, produse și asigurări în Elveția\./);
+  assert.match(html, /name="twitter:card" content="summary_large_image"/);
+  assert.match(html, /name="twitter:title" content="INTENTRA\.CH/);
+  assert.match(html, /name="twitter:description" content="INTENTRA\.CH te ajută/);
+  assert.match(html, /name="twitter:image" content="https:\/\/intentra\.ch\/intentra-logo\.png"/);
 });
 
 test("identifies INTENTRA as the alternate site name without adding personal details", () => {
