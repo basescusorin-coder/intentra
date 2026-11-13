@@ -82,6 +82,15 @@ create policy community_audit_admin_read on public.community_moderation_audit
   for select to authenticated using (public.community_is_admin());
 grant select on public.community_moderation_audit to authenticated;
 
+-- Moderators need a review queue, but members must never see pending items or
+-- report contents. These policies are MFA-gated through the admin helper.
+create policy posts_admin_review_read on public.posts
+  for select to authenticated using (public.community_is_admin());
+create policy comments_admin_review_read on public.comments
+  for select to authenticated using (public.community_is_admin());
+create policy reports_admin_read on public.reports
+  for select to authenticated using (public.community_is_admin());
+
 -- Job publication remains closed until AVG/AVV applicability is reviewed.
 create table if not exists public.community_settings (
   key text primary key,
@@ -161,7 +170,7 @@ grant select, insert on public.posts to authenticated;
 grant select on public.posts to anon;
 grant select, insert on public.comments to authenticated;
 grant select on public.comments to anon;
-grant insert on public.reports to authenticated;
+grant select, insert on public.reports to authenticated;
 grant select, insert, update on public.profiles to authenticated;
 revoke all on public.profiles from anon;
 
