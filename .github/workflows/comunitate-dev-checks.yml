@@ -1,0 +1,47 @@
+name: Comunitate DEV checks (no deployment)
+
+on:
+  push:
+    branches:
+      - feature/comunitate-mvp
+    paths:
+      - 'comunitate/**'
+      - '.github/workflows/comunitate-dev-checks.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: comunitate-dev-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    if: github.ref == 'refs/heads/feature/comunitate-mvp'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: comunitate
+    steps:
+      - name: Checkout DEV branch
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: comunitate/package-lock.json
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Validate inputs
+        run: npm test
+      - name: Check RLS in local WASM harness
+        run: npm run test:rls:wasm
+      - name: Check Edge Functions types
+        run: npm run test:edge
+      - name: Build DEV app
+        run: npm run build
