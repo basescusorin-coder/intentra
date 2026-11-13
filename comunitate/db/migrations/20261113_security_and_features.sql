@@ -45,10 +45,11 @@ revoke all on function public.community_is_admin() from public;
 grant execute on function public.community_is_admin() to authenticated;
 
 -- A narrowly scoped public projection; email and phone remain private.
+drop view if exists public.community_public_profiles;
 create or replace view public.community_public_profiles
   with (security_barrier = true)
 as
-  select user_id, username, canton, language, created_at
+  select username, canton, language, created_at
   from public.profiles;
 revoke all on public.community_public_profiles from public;
 grant select on public.community_public_profiles to anon, authenticated;
@@ -78,16 +79,20 @@ create table if not exists public.community_moderation_audit (
 );
 alter table public.community_moderation_audit enable row level security;
 revoke all on public.community_moderation_audit from public, anon, authenticated;
+drop policy if exists community_audit_admin_read on public.community_moderation_audit;
 create policy community_audit_admin_read on public.community_moderation_audit
   for select to authenticated using (public.community_is_admin());
 grant select on public.community_moderation_audit to authenticated;
 
 -- Moderators need a review queue, but members must never see pending items or
 -- report contents. These policies are MFA-gated through the admin helper.
+drop policy if exists posts_admin_review_read on public.posts;
 create policy posts_admin_review_read on public.posts
   for select to authenticated using (public.community_is_admin());
+drop policy if exists comments_admin_review_read on public.comments;
 create policy comments_admin_review_read on public.comments
   for select to authenticated using (public.community_is_admin());
+drop policy if exists reports_admin_read on public.reports;
 create policy reports_admin_read on public.reports
   for select to authenticated using (public.community_is_admin());
 

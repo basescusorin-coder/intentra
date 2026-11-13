@@ -1,6 +1,6 @@
 # INTENTRA Comunitate — proiect de informare privind confidențialitatea
 
-**Stare: proiect de lucru; nu este aprobat și nu trebuie publicat ca informare finală.** Completează câmpurile marcate `[DE COMPLETAT]` și solicită revizuire juridică înainte de orice colectare de date.
+**Stare: proiect de lucru; nu este aprobat și nu trebuie publicat ca informare finală.** Codul aplicației este în dezvoltare, dar nu există backend furnizor configurat; nu s-au colectat date reale. Completează câmpurile `[DE COMPLETAT]` și solicită revizuire juridică înainte de colectare.
 
 ## Operator și contact
 
@@ -10,7 +10,7 @@ Responsabilul proiectului nu trebuie identificat public decât după stabilirea 
 
 ## Serviciu și stare actuală
 
-Comunitatea este un panou de anunțuri și întrebări. În previzualizarea de dezvoltare nu sunt conectate conturi, nu sunt solicitate informații de la vizitatori, iar anunțurile sunt fictive. Această pagină descrie o posibilă versiune pilot și devine valabilă doar după completare, aprobare și publicare de către operator.
+Comunitatea este proiectată ca panou de anunțuri și întrebări. Codul include fluxuri pentru conturi, publicare, moderare și fotografii, dar backend-ul nu este configurat și aceste fluxuri nu sunt disponibile public. Previzualizarea statică folosește exemple fictive. Această pagină descrie o posibilă versiune pilot și devine valabilă doar după completare, aprobare și publicare de către operator.
 
 ## Date planificate și scopuri
 

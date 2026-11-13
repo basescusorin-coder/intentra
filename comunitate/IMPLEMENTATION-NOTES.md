@@ -1,69 +1,63 @@
-# INTENTRA Comunitate — arhitectură și verificări înainte de pilot
+# INTENTRA Comunitate — implementare și pregătire MVP
 
-**Status:** prototip vizual și migrare SQL pregătită; dezvoltare nepublicată. Nu este conectat la un backend și nu colectează date.
+**Stare la 13.11.2026:** codul aplicației și migrațiile sunt pregătite pentru testare locală. Nu există proiect Supabase conectat, cont de e-mail/CAPTCHA configurat sau publicare. Nu s-au folosit date reale. Aceasta nu este o aprobare juridică ori o declarație de securitate certificată.
 
-## Arhitectură propusă
+## Ce există în repo
 
-- `comunitate/index.html`: aplicație statică separată de căutarea existentă. Oferă în română/germană/engleză navigare, căutare/filtre și exemple marcate fictive. Butoanele de cont/publicare/raportare explică faptul că acțiunile nu trimit date.
-- Supabase Auth pentru OTP e-mail, configurat cu expirare, throttling, sender verificat și MFA obligatoriu pentru conturi administrative.
-- PostgreSQL cu RLS și pseudonim public separat de e-mail/telefon. `comunitate/db/migrations/20261113_security_and_features.sql` adaugă proiecția profilului public, localitate, tabele de moderare/audit și funcții MFA pentru moderare.
-- Fotografii: încărcarea nu este activă. Înainte de implementare: bucket privat, limită de bytes/dimensiuni, allowlist MIME cu verificare magic bytes, decodare și re-encodare pe server, eliminare EXIF, nume aleatoriu, antivirus/conținut și politică de acces pe autor/anunț.
-- Joburi: setarea inițială este `false`; funcția de moderare refuză publicarea categoriei `job` până la o activare deliberată după evaluarea AVG/AVV.
-- Căutarea curentă rămâne la `/`; Comunitatea este izolată în subdirector și nu modifică scripturile, CSS-ul sau datele produsului actual.
+- `index.html`, `src/`, `vite.config.js`: aplicație Vite separată, mobile-first, tradusă RO/DE/EN. Pagina publică folosește proiecțiile feed/profil/comment fără e-mail, telefon sau UUID de autentificare. Căutarea existentă de la rădăcina site-ului nu a fost modificată.
+- Supabase Auth: OTP e-mail, sesiune fără parolă, TOTP MFA pentru moderator și gate de moderare care cere AAL2.
+- PostgreSQL: profil privat, feed public limitat, anunțuri/comentarii/rapoarte, export personal, ștergere, audit moderare, rate-limit per utilizator, Joburi blocate prin trigger și API/UI.
+- Edge Functions: validarea și re-encodarea fotografiilor (JPEG/PNG/WebP, limite de dimensiune/dimensiuni, EXIF eliminat), ștergere postare și ștergere cont. Bucket privat cu acces condiționat de starea anunțului; upload direct din browser este revocat.
+- `.env.example` conține doar nume de variabile și chei client publice. Service-role, SMTP și secretul Turnstile trebuie să rămână în secret managerul furnizorului/mediului de dezvoltare.
+- `preview-stage1.html` păstrează prototipul static anterior; migrarea din `db/migrations` este păstrată, iar istoricul aplicabil Supabase este în `supabase/migrations`.
 
-## Configurare necesară, fără secrete în browser sau repository
+## Comenzi locale
 
-1. Creează un proiect Supabase de dezvoltare separat, cu regiunea și subprocessatorii validați contractual. Nu reutiliza o bază cu date personale existente.
-2. Rulează schema de bază revizuită și apoi migrarea pe o bază locală/de test; confirmă versiunea PostgreSQL, grants și rolurile Supabase. Migrarea din acest branch este draft și nu a fost executată.
-3. Activează OTP e-mail, expirare scurtă, limită de încercări, protecție anti-abuz și MFA TOTP pentru administratori; configurează SMTP dedicat și domeniu expeditor verificat.
-4. Administrează URL-ul Supabase și cheia `anon` prin build/configurație la runtime. Cheia publică anon nu acordă privilegiile service-role, însă accesul trebuie protejat prin RLS. Secretul service-role și cheile SMTP/CAPTCHA rămân exclusiv în secret manager/funcții server-side.
-5. Adaugă server/edge functions pentru rate limiting distribuit, CAPTCHA adaptiv, raportare, acces/export/ștergere cont și upload sigur. Nu activa publicarea client-side directă pentru status, audit sau roluri.
-6. Configurează alertare, rotația cheilor, backup criptat, retenție, acces administrativ și restaurare testată. Fără acestea nu porni pilotul.
+```sh
+cd comunitate
+npm ci
+npm test
+npm run test:rls:wasm
+npm run test:edge
+npm run build
+```
 
-## Matrice minimă de teste RLS și abuz
+`test:rls:wasm` execută schema și cele două migrații într-un PostgreSQL WASM (PGlite), inclusiv reaplicarea migrațiilor și aserțiuni RLS/MFA. Harnessul simulează câteva interfețe Supabase (`auth`, roluri și storage); prin urmare **nu** înlocuiește `supabase test db`, un proiect Supabase real sau testarea Auth/Storage end-to-end. `test:edge` verifică tipurile funcțiilor cu Deno. Nu sunt incluse teste reale de livrare OTP, Turnstile sau upload la furnizor.
 
-Rulați într-un proiect local/de test cu utilizatori sintetici A, B și moderator cu MFA AAL2; nu folosiți conturi reale.
+## Infrastructură gratuită — limite și condiții
 
-| Caz | Rezultat așteptat |
-|---|---|
-| Vizitator anonimizat citește anunțuri aprobate și profiluri publice | vede numai conținut aprobat și pseudonim/canton/limbă; nu vede telefon sau e-mail |
-| Vizitator citește anunț pending, respins, șters, comentariu pending, rapoarte ori audit | zero rânduri / refuz |
-| Utilizator A citește profilul său și propriul conținut pending | permis numai câmpurile sale; nu citește profilul privat ori conținutul pending al lui B |
-| Utilizator A încearcă inserare în numele lui B sau cu status publicat | refuz de RLS/check constraint |
-| Utilizator A încearcă să actualizeze/șteargă status, rol, audit sau raport | refuz |
-| A raportează de două ori același anunț | a doua inserare refuzată de constrângerea unică |
-| Moderator fără `aal2` cheamă moderarea | refuz `admin_mfa_required` |
-| Moderator MFA aprobă anunț/ascunde comentariu | schimbare permisă și eveniment audit cu actor, stare, timp și notă |
-| Moderator încearcă să publice un anunț Job cu setarea falsă | refuz; setarea rămâne oprită |
-| Autorul încearcă script HTML/XSS, markup și Unicode de control | text tratat ca text simplu, limită server-side; niciun HTML executat |
-| OTP, raportări, postări și încărcări peste limită / replay / CAPTCHA eșuat | limitare server-side și eroare fără scurgere de informații |
-| Cerere acces/ștergere cont și recuperare din backup | export minimizat; ștergere/anonymizare verificată; expirarea din backup documentată |
+- Supabase Free: $0/lună; 50.000 MAU, 500 MB bază, 1 GB storage, 5 GB egress și maximum două proiecte active. Proiectele cu activitate redusă pot fi puse pe pauză după 7 zile. Nu include backup-uri automate descărcabile; operatorul trebuie să exporte regulat și să păstreze copii separat. Limitele se pot schimba. [Prețuri](https://supabase.com/pricing) · [pauză](https://supabase.com/docs/guides/platform/free-project-pausing) · [backup](https://supabase.com/docs/guides/platform/backups)
+- Cloudflare Turnstile Free: $0, până la 20 widget-uri, provocări nelimitate și până la 10 hostnames/widget. Nu a fost creat/configurat widget. [Limite](https://developers.cloudflare.com/turnstile/plans/)
+- Resend Free: $0, până la 3.000 e-mailuri/lună și 100/zi, în limitele/condițiile curente ale furnizorului. Nu există cont, chei sau domeniu expeditor configurate. [Prețuri](https://resend.com/pricing)
+- SMTP-ul implicit Supabase este pentru testare: livrează doar către adrese autorizate ale organizației și are limită curentă de 2 e-mailuri/oră. OTP către membri reali cere un furnizor SMTP propriu și configurarea domeniului expeditor (DNS). [Documentație SMTP](https://supabase.com/docs/guides/auth/auth-smtp)
 
-Acestea sunt criterii de test, nu rezultate executate. Nicio verificare RLS sau restore nu a fost posibilă fără proiect Supabase de test.
+Estimarea recurentă pentru componentele menționate este **0 CHF/lună** dacă rămân în planurile gratuite. Taxele, depășirile, domeniul deja existent, timpul de moderare și consultanța juridică nu sunt incluse. Free nu înseamnă disponibilitate garantată, backup gestionat sau potrivire contractuală pentru date personale.
 
-## Porți juridice și operaționale
+## Pași de configurare (proprietar)
 
-- Identifică operatorul, scopurile/temeiurile, datele, destinatarii, transferurile, locațiile, retenția, drepturile și canalul pentru cereri/incidente. Completează proiectul de confidențialitate, traduce și revizuiește juridic.
-- Semnează/validează contractele de prelucrare cu fiecare furnizor și verifică subprocessatorii, regiunea datelor, transferuri, acces suport, backupuri și ștergere.
-- Stabilește dacă produsul țintește rezidenți UE/SEE și ce obligații GDPR suplimentare se aplică.
-- Revizuiește Termenii de utilizare pentru anunțuri ilegale, bunuri interzise, vânzători comerciali/privați, drepturi consumator, taxe, moderare, apel, raportări și răspunderea platformei.
-- Nu activa Joburi și nu potrivi angajatori cu candidați până la determinarea scrisă a aplicabilității Legii elvețiene privind serviciile de plasare (AVG/AVV), autorizării și obligațiilor aferente.
-- Definește responsabilul de moderare, timpul de reacție, escaladări urgente, apel, retenția probelor, politica împotriva fraudelor și acoperirea în afara programului.
+1. Decideți dacă doriți un proiect Supabase separat pentru dezvoltare; verificați regiunea, DPA/subprocesatorii, transferurile și setările de facturare astfel încât să rămână pe Free. Nu importați date reale.
+2. Configurați SMTP gratuit ales, domeniul și DNS expeditor (SPF/DKIM/DMARC), apoi setările de OTP: confirmare e-mail obligatorie, 6 cifre, expirare 10 minute, rate limits. Nu folosiți SMTP-ul implicit pentru înscrieri externe.
+3. Creați Turnstile widget pentru hostname-urile de test și puneți site key în build local și secret key în Edge Function secrets. Cheile nu se trimit prin conversație/GitHub.
+4. Rulați `supabase start` și `supabase test db` într-un mediu local cu CLI/Docker, apoi aplicați în proiect de dezvoltare numai după backup și revizuirea migrațiilor. Migrațiile CLI sunt numerotate în `supabase/migrations`.
+5. Înrolați MFA TOTP pentru contul administrator, apoi acordați rolul prin procedura sigură de administrare. Moderatorul nu trebuie activat înainte de verificarea AAL2 în Supabase real.
+6. Completați `SUPABASE_URL`, cheia anon publică și cheia publică Turnstile doar în `.env.local` ignorat de Git. Păstrați secretele Edge în secret managerul Supabase.
+7. Efectuați testare de browser cu conturi sintetice, exercițiu de backup/restaurare și revizie juridică înainte de orice pilot.
 
-## Estimare de cost
+Nu s-au creat conturi, proiecte, DNS sau secrete în această etapă. Niciun serviciu extern nu a fost pornit.
 
-Nu se pornește niciun serviciu plătit prin acest branch. Verificare orientativă la 13.11.2026, în USD: Supabase Free este $0 pentru dezvoltare, dar proiectele free pot fi puse pe pauză după o săptămână de inactivitate; Supabase Pro pornește de la $25/lună/proiect. Resend afișează Free $0 până la 3.000 e-mailuri/lună și Pro $20/lună pentru 50.000. Cloudflare Turnstile are plan gratuit. Așadar, infrastructura unui pilot poate începe la aproximativ **$25/lună** (Supabase Pro + limitele gratuite ale celorlalte componente) ori **$45/lună** cu Resend Pro, înainte de depășiri, taxe, stocare/egress suplimentar sau suport. GitHub Pages rămâne hostingul static existent; nu presupune că acesta poate furniza backend-ul.
+## Riscuri și goluri înainte de pilot
 
-Prețurile nu confirmă că furnizorii/regiunile lor sunt adecvate pentru datele comunității. Înainte de pilot, verifică oferta curentă și contractele de prelucrare, regiunea bazei, e-mail, backup și acces suport. Costurile de consultanță juridică, eventuale permise, moderare umană și gestionare incidente nu sunt incluse și trebuie cerute separat; nu le pot estima fără furnizor, volum și scop convenite.
+- Funcțiile Supabase Auth, SMTP, CAPTCHA, Storage și delete nu au fost testate end-to-end împotriva unui proiect furnizor.
+- Rate limit-urile aplicației sunt per cont în baza de date; nu există limiter distribuit suplimentar pe IP pentru funcțiile de postare/comentariu. Auth are propriile limite. CAPTCHA este opțional până la configurarea widget-ului.
+- Politica de retenție, răspunsul operațional la rapoarte, apelurile la moderare, alertarea, rotația secretelor și accesul la backup trebuie stabilite de operator.
+- Planul gratuit Supabase nu furnizează backup automat descărcabil; exportul și restaurarea trebuie efectuate și demonstrate de proprietar. Procedura propusă: `OPERATIONS.md`.
+- Nu au fost verificate transferuri internaționale, DPA-urile sau regiunea aleasă; trebuie analizate pentru Supabase, SMTP și CAPTCHA.
+- Înainte de lansare trebuie clarificate operatorul juridic și datele de contact, aplicabilitatea GDPR, DSG/FADP, obligațiile vânzătorilor, conținutul ilegal, moderarea și AVG/AVV. Categoria Joburi este blocată până la clarificarea AVG/AVV.
 
-Surse oficiale de preț: [Supabase](https://supabase.com/pricing), [Resend](https://resend.com/pricing), [Cloudflare Turnstile](https://developers.cloudflare.com/turnstile/plans/).
+## Documente de revizuit
 
-## Surse juridice oficiale de pornire
+`PRIVACY-AND-RULES-DRAFT.md`, `SECURITY-LEGAL-MVP.md` și `OPERATIONS.md` sunt proiecte tehnice/juridice pentru revizie, nu documente aprobate sau consultanță juridică.
 
-- [Legea elvețiană DSG/FADP, inclusiv art. 7, 9, 16 și 24 (Fedlex)](https://www.fedlex.admin.ch/eli/cc/2022/491/en)
-- [EDÖB: transferuri transfrontaliere de date](https://www.edoeb.admin.ch/en/cross-border-transfer-of-personal-data)
-- [EDÖB: externalizarea prelucrării](https://www.edoeb.admin.ch/en/outsourcing-of-data-processing)
-- [SECO: plasarea privată și personal leasing conform AVG](https://www.seco.admin.ch/de/private-arbeitsvermittlung-und-personalverleih)
-- [Comisia Europeană: aplicabilitatea GDPR pentru entități din afara UE](https://commission.europa.eu/law/law-topic/data-protection/information-business-and-organisations/application-gdpr_en)
+## Surse pentru limitele gratuite
 
-Sursele sunt punct de plecare pentru revizuire, nu concluzie juridică aplicată proiectului.
+Verificate la 13.11.2026: [Supabase pricing](https://supabase.com/pricing), [Supabase pauză](https://supabase.com/docs/guides/platform/free-project-pausing), [Supabase backups](https://supabase.com/docs/guides/platform/backups), [Supabase SMTP](https://supabase.com/docs/guides/auth/auth-smtp), [Cloudflare Turnstile plans](https://developers.cloudflare.com/turnstile/plans/), [Resend pricing](https://resend.com/pricing).

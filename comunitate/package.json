@@ -1,0 +1,22 @@
+{
+  "name": "intentra-comunitate",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
+    "test": "node --test tests/validation.test.js",
+    "test:rls": "supabase test db",
+    "test:edge": "npx --yes deno check --config deno.json supabase/functions/community-image-upload/index.ts supabase/functions/delete-community-post/index.ts supabase/functions/delete-community-account/index.ts",
+    "test:all": "npm test && npm run test:rls:wasm && npm run test:edge && npm run build",
+    "test:rls:wasm": "node --test tests/rls.integration.test.js"
+  },
+  "dependencies": {
+    "@imagemagick/magick-wasm": "0.0.46",
+    "@supabase/supabase-js": "2.119.0"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.16",
+    "vite": "8.3.8"
+  }
+}
