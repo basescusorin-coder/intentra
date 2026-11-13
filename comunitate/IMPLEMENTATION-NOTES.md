@@ -52,4 +52,18 @@ Acestea sunt criterii de test, nu rezultate executate. Nicio verificare RLS sau 
 
 ## Estimare de cost
 
-Nu se pornește niciun serviciu plătit prin acest branch. Costul depinde de regiunea aleasă, trafic, volum imagini, e-mailuri OTP, backup și instrumente de moderare. Înainte de pilot, obține prețuri scrise pentru instanța Supabase/hosting, SMTP, stocare/CDN și eventual CAPTCHA/scanare imagini. Include și costul revizuirii juridice, administrării, moderării și răspunsului la incidente; acestea pot depăși costul tehnic.
+Nu se pornește niciun serviciu plătit prin acest branch. Verificare orientativă la 13.11.2026, în USD: Supabase Free este $0 pentru dezvoltare, dar proiectele free pot fi puse pe pauză după o săptămână de inactivitate; Supabase Pro pornește de la $25/lună/proiect. Resend afișează Free $0 până la 3.000 e-mailuri/lună și Pro $20/lună pentru 50.000. Cloudflare Turnstile are plan gratuit. Așadar, infrastructura unui pilot poate începe la aproximativ **$25/lună** (Supabase Pro + limitele gratuite ale celorlalte componente) ori **$45/lună** cu Resend Pro, înainte de depășiri, taxe, stocare/egress suplimentar sau suport. GitHub Pages rămâne hostingul static existent; nu presupune că acesta poate furniza backend-ul.
+
+Prețurile nu confirmă că furnizorii/regiunile lor sunt adecvate pentru datele comunității. Înainte de pilot, verifică oferta curentă și contractele de prelucrare, regiunea bazei, e-mail, backup și acces suport. Costurile de consultanță juridică, eventuale permise, moderare umană și gestionare incidente nu sunt incluse și trebuie cerute separat; nu le pot estima fără furnizor, volum și scop convenite.
+
+Surse oficiale de preț: [Supabase](https://supabase.com/pricing), [Resend](https://resend.com/pricing), [Cloudflare Turnstile](https://developers.cloudflare.com/turnstile/plans/).
+
+## Surse juridice oficiale de pornire
+
+- [Legea elvețiană DSG/FADP, inclusiv art. 7, 9, 16 și 24 (Fedlex)](https://www.fedlex.admin.ch/eli/cc/2022/491/en)
+- [EDÖB: transferuri transfrontaliere de date](https://www.edoeb.admin.ch/en/cross-border-transfer-of-personal-data)
+- [EDÖB: externalizarea prelucrării](https://www.edoeb.admin.ch/en/outsourcing-of-data-processing)
+- [SECO: plasarea privată și personal leasing conform AVG](https://www.seco.admin.ch/de/private-arbeitsvermittlung-und-personalverleih)
+- [Comisia Europeană: aplicabilitatea GDPR pentru entități din afara UE](https://commission.europa.eu/law/law-topic/data-protection/information-business-and-organisations/application-gdpr_en)
+
+Sursele sunt punct de plecare pentru revizuire, nu concluzie juridică aplicată proiectului.
