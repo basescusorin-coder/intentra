@@ -4,6 +4,8 @@
 
 **Verificare Etapa 5:** proprietarul a indicat explicit proiectul DEV `wnmtrkheznrhrtpbenxh`; nu există integrare GitHub/deploy automat în proiect. Istoricul de migrații este în ordine, `job_publication_enabled=false`, iar toate cele 9 tabele comunitare verificate au RLS activ. Auth arată OTP cu 6 cifre/600 secunde și TOTP activ; nu există utilizatori în proiect. Supabase CLI 3.1.0 poate fi rulat prin `npx`, dar comenzile Management API se opresc cu `AccessTokenRequiredError`: nu există PAT disponibil în mediul securizat. Nu creați token în cod, GitHub sau conversație. Edge Functions rămân nepublicate și nu au fost testate prin HTTP. Fără cheia publică Turnstile, aplicația nu se configurează în client; fără SMTP particular, OTP nu poate fi folosit pentru membri externi.
 
+Workflow-ul `.github/workflows/comunitate-dev-checks.yml` validează numai branch-ul Comunității; are permisiunea `contents: read`, nu folosește secrete și nu publică/deployează. Acțiunile GitHub și Deno sunt fixate la versiuni exacte.
+
 ## Ce există în repo
 
 - `index.html`, `src/`, `vite.config.js`: aplicație Vite separată, mobile-first, tradusă RO/DE/EN. Pagina publică folosește proiecțiile feed/profil/comment fără e-mail, telefon sau UUID de autentificare. Căutarea existentă de la rădăcina site-ului nu a fost modificată.
