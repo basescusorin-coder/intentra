@@ -1,5 +1,5 @@
 # INTENTRA Comunitate — MVP security and legal design (DRAFT)
-Status: development source only; no Supabase project, mail provider, Turnstile widget or public deployment is configured. No real user data has been collected. The documents are drafts, not legal approval or a security certification.
+Status: development only. The owner-created Supabase Free project `intentra-comunitate-dev` (West EU/Ireland, PostgreSQL 17.11) has the three reviewed schema migrations applied and recorded. No real user data has been collected; no Edge Function is deployed, no custom SMTP or Turnstile widget is configured, and the website has not been published. Documents are drafts, not legal approval or a security certification. The dashboard labels the project's branch `main PRODUCTION`; verify project separation before any future data collection.
 
 ## Product
 - Categories: **Ofer gratuit**, **Vând**, **Întrebări**. Job publication is disabled in UI, request validation, and a database trigger until Swiss AVG/AVV review is complete.
@@ -16,7 +16,7 @@ Status: development source only; no Supabase project, mail provider, Turnstile w
 - New posts/comments enter pending moderation by default; no unreviewed publication until automated safeguards have been tested.
 - Per-account database limits, Supabase Auth limits, configurable CAPTCHA, OTP expiry and attempt controls, abuse reporting, and image validation/re-encoding/EXIF removal are implemented in source. Per-IP distributed throttling is not implemented for community write APIs.
 - TOTP MFA-gated moderation, audited moderation actions, export/deletion functions and storage access policies are implemented in source. Backup/restore procedure is documented, but no provider backup or restore has been run.
-- RLS and repeatable migrations have been exercised against an isolated PostgreSQL WASM harness with Supabase auth/storage stubs. This is not testing against hosted Supabase. Never rely only on front-end hiding.
+- RLS has been exercised in the hosted development database using synthetic users and `anon`/`authenticated` roles, including cross-user reads/writes, job rejection, private field projection, and MFA-gated moderation. A separate PGlite/PostgreSQL-WASM harness also passes. Neither substitutes for Auth, Edge Function, or image upload HTTP end-to-end testing. Never rely only on front-end hiding.
 - Configure custom email provider, verified sender domain and secret management before pilot.
 - Set retention periods, account export/deletion workflow, incident response and data-subject request process.
 
@@ -30,7 +30,7 @@ Status: development source only; no Supabase project, mail provider, Turnstile w
 - No claims of legal compliance until configuration and documents are independently reviewed.
 
 ## Deployment gate
-1. Owner creates/configures free development provider accounts and SMTP/DNS/CAPTCHA settings; accepts provider contracts only after review.
+1. Confirm the Supabase project is isolated from production despite the dashboard's `main PRODUCTION` branch label. Configure SMTP/DNS/CAPTCHA only after reviewing provider contracts and data transfers.
 2. Resolve operator identity, notices, processor contracts, regions/transfers, retention, seller obligations, GDPR applicability and AVG/AVV.
 3. Run Supabase CLI/PostgreSQL integration tests, Auth OTP, CAPTCHA, Storage upload, MFA moderation, deletion, and backup restoration with synthetic users.
 4. Review remediation findings and only then plan a private pilot. The existing site remains untouched.
