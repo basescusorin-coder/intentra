@@ -73,7 +73,10 @@ Deno.serve(async (request) => {
     const files = fileEntries as File[];
     if (files.some((entry) => entry.size < 1 || entry.size > MAX_FILE)) return json(request, { error: "file_too_large" }, 413);
     if (typeof captcha !== "string" || !(await verifyTurnstile(captcha, request))) return json(request, { error: "captcha_failed" }, 403);
-    const { data: post, error: postError } = await client.from("posts").select("id,status").eq("id", postId).eq("author_id", user.id).maybeSingle();
+    // `author_id` is intentionally not selectable by clients. RLS returns an
+    // owner's pending post here and only published posts belonging to others;
+    // the status check rejects the latter before the service-role upload.
+    const { data: post, error: postError } = await client.from("posts").select("id,status").eq("id", postId).maybeSingle();
     if (postError || !post || post.status !== "pending") return json(request, { error: "post_not_uploadable" }, 403);
     const { count, error: countError } = await client.from("post_images").select("id", { count: "exact", head: true }).eq("post_id", postId);
     if (countError || (count || 0) + files.length > 3) return json(request, { error: "image_limit_exceeded" }, 400);
