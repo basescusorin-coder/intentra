@@ -7,7 +7,7 @@
     "build": "vite build",
     "test": "node --test tests/validation.test.js",
     "test:rls": "supabase test db",
-    "test:edge": "npx --yes deno check --config deno.json supabase/functions/community-image-upload/index.ts supabase/functions/delete-community-post/index.ts supabase/functions/delete-community-account/index.ts",
+    "test:edge": "npx --yes deno@2.9.6 check --config deno.json supabase/functions/community-image-upload/index.ts supabase/functions/delete-community-post/index.ts supabase/functions/delete-community-account/index.ts",
     "test:all": "npm test && npm run test:rls:wasm && npm run test:edge && npm run build",
     "test:rls:wasm": "node --test tests/rls.integration.test.js"
   },
