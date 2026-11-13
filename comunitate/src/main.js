@@ -1,10 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 import { CANTONS, CATEGORIES, validateProfile, validatePost, validateReport, validateImageFile } from './validation.js';
+import { resolveCommunityRuntimeConfig } from './runtime-config.js';
 
 const $ = id => document.getElementById(id);
 const config = import.meta.env;
-const configured = Boolean(config.VITE_SUPABASE_URL && config.VITE_SUPABASE_ANON_KEY && config.VITE_TURNSTILE_SITE_KEY);
-const supabase = configured ? createClient(config.VITE_SUPABASE_URL, config.VITE_SUPABASE_ANON_KEY, {
+const runtimeConfig = resolveCommunityRuntimeConfig(config, window.location.origin);
+const configured = Boolean(runtimeConfig);
+const supabase = runtimeConfig ? createClient(runtimeConfig.url, runtimeConfig.anonKey, {
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce', storage: window.sessionStorage },
 }) : null;
 
@@ -34,7 +36,7 @@ function renderCantons(){for(const id of ['cantonFilter','profileCanton','postCa
 function enableUi(){const canAct=Boolean(supabase&&user&&profile);$('newPostButton').disabled=!configured||!canAct;$('exportButton').disabled=!configured||!user;$('deleteAccountButton').classList.toggle('hidden',!user);$('adminCard').classList.toggle('hidden',!user||!profile);$('signInButton').classList.toggle('hidden',Boolean(user));$('signOutButton').classList.toggle('hidden',!user);if(!configured){$('setupNotice').textContent=tr('setup');$('setupNotice').classList.remove('hidden')}else $('setupNotice').classList.add('hidden')}
 function captchaReady(slot){return Boolean(captchaTokens.get(slot))}
 function resetCaptcha(slot){captchaTokens.delete(slot);const widget=turnstileIds.get(slot);if(window.turnstile&&widget!==undefined)window.turnstile.reset(widget)}
-async function loadCaptcha(slot){if(!configured)return;const target=$(slot);if(!target)throw new Error('captcha_slot_missing');if(!captchaLoaded){captchaLoaded=true;await new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';s.async=true;s.defer=true;s.onload=resolve;s.onerror=reject;document.head.append(s)})}if(turnstileIds.has(slot))return;target.replaceChildren();const node=document.createElement('div');target.append(node);const widget=window.turnstile.render(node,{sitekey:config.VITE_TURNSTILE_SITE_KEY,callback:token=>captchaTokens.set(slot,token),'expired-callback':()=>captchaTokens.delete(slot),'error-callback':()=>captchaTokens.delete(slot)});turnstileIds.set(slot,widget)}
+async function loadCaptcha(slot){if(!configured)return;const target=$(slot);if(!target)throw new Error('captcha_slot_missing');if(!captchaLoaded){captchaLoaded=true;await new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';s.async=true;s.defer=true;s.onload=resolve;s.onerror=reject;document.head.append(s)})}if(turnstileIds.has(slot))return;target.replaceChildren();const node=document.createElement('div');target.append(node);const widget=window.turnstile.render(node,{sitekey:runtimeConfig.turnstileSiteKey,callback:token=>captchaTokens.set(slot,token),'expired-callback':()=>captchaTokens.delete(slot),'error-callback':()=>captchaTokens.delete(slot)});turnstileIds.set(slot,widget)}
 async function ensureCaptcha(slot){if(!configured)return false;try{await loadCaptcha(slot);return captchaReady(slot)}catch{toast(tr('captchaNotReady'));return false}}
 async function refreshIdentity(){if(!supabase){enableUi();return}const {data:{session}}=await supabase.auth.getSession();user=session?.user||null;profile=null;if(user){const {data,error}=await supabase.from('profiles').select('user_id,username,canton,city,language,phone').eq('user_id',user.id).maybeSingle();if(!error)profile=data||null;if(!profile){$('profileDialog').showModal()}else $('profileDialog').close();await checkAdmin()}else $('adminCard').classList.add('hidden');enableUi();await refreshFeed()}
 function setStatus(message){const el=$('stateNotice');if(!message){el.textContent='';el.classList.add('hidden');return}el.textContent=message;el.className='notice info';el.classList.remove('hidden')}
