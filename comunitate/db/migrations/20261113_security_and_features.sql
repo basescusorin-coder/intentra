@@ -17,7 +17,7 @@ begin
     alter table public.posts add constraint posts_city_length_check
       check (city is null or char_length(city) between 2 and 80) not valid;
   end if;
-end
+end;
 $migration$;
 
 -- Do not use an admin flag in user-editable profile metadata. Membership changes
@@ -111,8 +111,9 @@ create or replace function public.community_moderate_post(
 language plpgsql security definer
 set search_path = ''
 as $$
-declare old_value text;
-declare post_category text;
+declare
+  old_value text;
+  post_category text;
 begin
   if (select auth.uid()) is null or not public.community_is_admin() then
     raise exception 'admin_mfa_required' using errcode = '42501';
@@ -163,9 +164,10 @@ grant execute on function public.community_moderate_post(uuid,text,text) to auth
 grant execute on function public.community_moderate_comment(uuid,text,text) to authenticated;
 
 -- Explicitly remove any direct client write route for status changes and reports.
-revoke update, delete on public.posts from anon, authenticated;
-revoke update, delete on public.comments from anon, authenticated;
-revoke select, update, delete on public.reports from anon, authenticated;
+revoke all on public.posts from public, anon, authenticated;
+revoke all on public.comments from public, anon, authenticated;
+revoke all on public.reports from public, anon, authenticated;
+revoke all on public.profiles from public, anon, authenticated;
 grant select, insert on public.posts to authenticated;
 grant select on public.posts to anon;
 grant select, insert on public.comments to authenticated;
