@@ -1,6 +1,6 @@
 # INTENTRA Comunitate — implementare și pregătire MVP
 
-**Stare la 13.11.2026:** codul aplicației și migrațiile sunt pregătite pentru testare locală. Nu există proiect Supabase conectat, cont de e-mail/CAPTCHA configurat sau publicare. Nu s-au folosit date reale. Aceasta nu este o aprobare juridică ori o declarație de securitate certificată.
+**Stare la 13.11.2026:** cele trei migrații Supabase sunt aplicate și înregistrate în proiectul de dezvoltare `intentra-comunitate-dev` din West EU (Irlanda), PostgreSQL 17.11. Testele RLS/MFA cu utilizatori sintetici au trecut direct în baza găzduită și în PGlite. Auth OTP este configurat pentru confirmare e-mail, cod de 6 cifre și expirare de 10 minute; MFA TOTP este activ. Nu există utilizatori reali, SMTP personalizat, widget Turnstile sau funcții Edge deployate. Site-ul nu a fost publicat. Aceasta nu este o aprobare juridică ori o declarație de securitate certificată. Dashboardul Supabase afișează eticheta ramurii `main PRODUCTION`; verificați izolarea proiectului înainte de orice colectare de date.
 
 ## Ce există în repo
 
@@ -22,7 +22,7 @@ npm run test:edge
 npm run build
 ```
 
-`test:rls:wasm` execută schema și cele două migrații într-un PostgreSQL WASM (PGlite), inclusiv reaplicarea migrațiilor și aserțiuni RLS/MFA. Harnessul simulează câteva interfețe Supabase (`auth`, roluri și storage); prin urmare **nu** înlocuiește `supabase test db`, un proiect Supabase real sau testarea Auth/Storage end-to-end. `test:edge` verifică tipurile funcțiilor cu Deno. Nu sunt incluse teste reale de livrare OTP, Turnstile sau upload la furnizor.
+`test:rls:wasm` execută schema și cele două migrații într-un PostgreSQL WASM (PGlite), inclusiv reaplicarea migrațiilor și aserțiuni RLS/MFA. În plus, în proiectul Supabase găzduit au trecut 10 aserțiuni de izolare/RLS și 4 aserțiuni MFA/moderare, folosind exclusiv utilizatori sintetici într-o tranzacție anulată. Harnessul WASM simulează câteva interfețe Supabase (`auth`, roluri și storage); nu înlocuiește `supabase test db` sau testarea fluxurilor HTTP. `test:edge` verifică tipurile funcțiilor cu Deno. Nu au fost livrate OTP-uri, nu s-a testat Turnstile, iar funcțiile Edge și încărcarea fotografiilor nu au fost testate în proiectul găzduit.
 
 ## Infrastructură gratuită — limite și condiții
 
@@ -35,23 +35,23 @@ Estimarea recurentă pentru componentele menționate este **0 CHF/lună** dacă 
 
 ## Pași de configurare (proprietar)
 
-1. Decideți dacă doriți un proiect Supabase separat pentru dezvoltare; verificați regiunea, DPA/subprocesatorii, transferurile și setările de facturare astfel încât să rămână pe Free. Nu importați date reale.
-2. Configurați SMTP gratuit ales, domeniul și DNS expeditor (SPF/DKIM/DMARC), apoi setările de OTP: confirmare e-mail obligatorie, 6 cifre, expirare 10 minute, rate limits. Nu folosiți SMTP-ul implicit pentru înscrieri externe.
+1. Confirmați separarea proiectului de dezvoltare de producție, în special deoarece dashboardul îl etichetează `main PRODUCTION`; verificați regiunea, DPA/subprocesatorii, transferurile și planul Free. Nu importați date reale.
+2. Auth este configurat cu confirmare e-mail obligatorie, OTP de 6 cifre cu expirare 10 minute, iar MFA TOTP este activ. Configurați SMTP gratuit ales și domeniul/DNS expeditor (SPF/DKIM/DMARC) înainte de testarea livrării către utilizatori externi. Nu folosiți SMTP-ul implicit pentru înscrieri externe.
 3. Creați Turnstile widget pentru hostname-urile de test și puneți site key în build local și secret key în Edge Function secrets. Cheile nu se trimit prin conversație/GitHub.
-4. Rulați `supabase start` și `supabase test db` într-un mediu local cu CLI/Docker, apoi aplicați în proiect de dezvoltare numai după backup și revizuirea migrațiilor. Migrațiile CLI sunt numerotate în `supabase/migrations`.
+4. Rulați `supabase start` și `supabase test db` într-un mediu local cu CLI/Docker înaintea următoarei migrații. Migrațiile numerotate în `supabase/migrations` sunt deja aplicate în proiectul de dezvoltare; confirmați istoricul și creați backup înainte de orice schimbare nouă.
 5. Înrolați MFA TOTP pentru contul administrator, apoi acordați rolul prin procedura sigură de administrare. Moderatorul nu trebuie activat înainte de verificarea AAL2 în Supabase real.
 6. Completați `SUPABASE_URL`, cheia anon publică și cheia publică Turnstile doar în `.env.local` ignorat de Git. Păstrați secretele Edge în secret managerul Supabase.
 7. Efectuați testare de browser cu conturi sintetice, exercițiu de backup/restaurare și revizie juridică înainte de orice pilot.
 
-Nu s-au creat conturi, proiecte, DNS sau secrete în această etapă. Niciun serviciu extern nu a fost pornit.
+Nu au fost create conturi externe, DNS sau secrete. Proiectul Supabase Free existent a fost folosit pentru migrații și teste cu utilizatori sintetici; nu a fost pornit niciun serviciu plătit.
 
 ## Riscuri și goluri înainte de pilot
 
-- Funcțiile Supabase Auth, SMTP, CAPTCHA, Storage și delete nu au fost testate end-to-end împotriva unui proiect furnizor.
+- Auth settings au fost inspectate/configurate, însă OTP nu a fost trimis către o adresă reală. Funcțiile Edge, SMTP, CAPTCHA, uploadul Storage și ștergerea contului nu au fost testate end-to-end împotriva API-urilor găzduite.
 - Rate limit-urile aplicației sunt per cont în baza de date; nu există limiter distribuit suplimentar pe IP pentru funcțiile de postare/comentariu. Auth are propriile limite. CAPTCHA este opțional până la configurarea widget-ului.
 - Politica de retenție, răspunsul operațional la rapoarte, apelurile la moderare, alertarea, rotația secretelor și accesul la backup trebuie stabilite de operator.
-- Planul gratuit Supabase nu furnizează backup automat descărcabil; exportul și restaurarea trebuie efectuate și demonstrate de proprietar. Procedura propusă: `OPERATIONS.md`.
-- Nu au fost verificate transferuri internaționale, DPA-urile sau regiunea aleasă; trebuie analizate pentru Supabase, SMTP și CAPTCHA.
+- Planul gratuit Supabase nu furnizează backup automat descărcabil; nu era configurat niciun backup înainte de migrare. Exportul și restaurarea trebuie efectuate și demonstrate de proprietar înainte de pilot. Procedura propusă: `OPERATIONS.md`.
+- Regiunea proiectului este West EU (Irlanda), dar DPA-urile, subprocessatorii și transferurile internaționale nu au fost verificate juridic pentru Supabase, SMTP și CAPTCHA.
 - Înainte de lansare trebuie clarificate operatorul juridic și datele de contact, aplicabilitatea GDPR, DSG/FADP, obligațiile vânzătorilor, conținutul ilegal, moderarea și AVG/AVV. Categoria Joburi este blocată până la clarificarea AVG/AVV.
 
 ## Documente de revizuit
