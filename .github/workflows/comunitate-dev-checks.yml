@@ -45,3 +45,10 @@ jobs:
         run: npm run test:edge
       - name: Build DEV app
         run: npm run build
+      - name: Package desktop preview (not public)
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: intentra-comunitate-dev-preview
+          path: comunitate/dist/
+          if-no-files-found: error
+          retention-days: 7
