@@ -177,10 +177,10 @@ revoke all on function public.community_guard_post() from public,anon,authentica
 revoke all on function public.community_guard_post_image() from public,anon,authenticated;
 revoke all on function public.community_limit_comment() from public,anon,authenticated;
 revoke all on function public.community_limit_report() from public,anon,authenticated;
-do $ begin
+do $revoke_optional$ begin
   if to_regprocedure('public.rls_auto_enable()') is not null then
     execute 'revoke all on function public.rls_auto_enable() from public,anon,authenticated';
   end if;
-end $;
+end; $revoke_optional$;
 
 commit;
