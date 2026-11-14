@@ -1,10 +1,22 @@
-// The browser client is intentionally limited to the DEV project and localhost.
+// The browser client is intentionally limited to the DEV project and explicitly approved preview origins.
 // VITE_* values are embedded in the public bundle, so only anon/publishable keys
 // are accepted here. Never put a service-role or secret key in browser config.
 export const COMMUNITY_DEV_PROJECT_REF = 'wnmtrkheznrhrtpbenxh';
 
 const DEV_URL = `https://${COMMUNITY_DEV_PROJECT_REF}.supabase.co`;
 const LOCAL_ORIGINS = new Set(['http://127.0.0.1:5173', 'http://localhost:5173']);
+
+function isAllowedOrigin(env, origin) {
+  if (LOCAL_ORIGINS.has(origin)) return true;
+  const preview = env?.VITE_COMMUNITY_PREVIEW_ORIGIN;
+  if (typeof preview !== 'string' || !preview) return false;
+  try {
+    const url = new URL(preview);
+    return url.protocol === 'https:' && url.origin === preview && origin === preview &&
+      url.hostname !== 'intentra.ch' && !url.hostname.endsWith('.intentra.ch') &&
+      !url.username && !url.password && !url.search && !url.hash;
+  } catch { return false; }
+}
 
 function isPublicClientKey(value) {
   if (typeof value !== 'string' || value.length < 20 || value.length > 4096) return false;
@@ -22,9 +34,9 @@ function isPublicClientKey(value) {
   }
 }
 
-/** Resolve a safe browser configuration only for local DEV testing. */
+/** Resolve a safe browser configuration only for local DEV or explicitly configured HTTPS preview testing. */
 export function resolveCommunityRuntimeConfig(env, origin) {
-  if (!LOCAL_ORIGINS.has(origin)) return null;
+  if (!isAllowedOrigin(env, origin)) return null;
 
   let url;
   try {
