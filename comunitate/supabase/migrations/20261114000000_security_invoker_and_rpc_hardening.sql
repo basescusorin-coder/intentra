@@ -84,8 +84,7 @@ drop view if exists public.community_feed;
 create view public.community_feed with (security_invoker=true,security_barrier=true) as
   select p.id,p.category,p.title,p.body,p.city,p.canton,p.price_chf,p.status,p.created_at,
          p.author_username
-  from public.posts p
-  where p.status='published' or p.author_id=(select auth.uid());
+  from public.posts p;
 revoke all on public.community_feed from public;
 grant select on public.community_feed to anon,authenticated;
 
