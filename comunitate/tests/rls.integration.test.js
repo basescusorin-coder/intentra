@@ -18,7 +18,7 @@ test('migrations are repeatable and RLS isolates users, images, jobs and MFA mod
  await exec(schema);
  await exec(await fs.readFile(root+'/supabase/migrations/20261113000100_security_and_features.sql','utf8'));
  await exec(await fs.readFile(root+'/supabase/migrations/20261113000200_mvp_hardening.sql','utf8'));
- await exec(await fs.readFile(root+'/supabase/migrations/20261114000000_security_invoker_and_rpc_hardening.sql','utf8'));
+ await exec(await fs.readFile(root+'/supabase/migrations/20261114183202_security_invoker_and_rpc_hardening.sql','utf8'));
  await exec(await fs.readFile(root+'/supabase/migrations/20261113000100_security_and_features.sql','utf8'));
  await exec(await fs.readFile(root+'/supabase/migrations/20261113000200_mvp_hardening.sql','utf8'));
  await exec(`INSERT INTO auth.users(id,aud,role,email,email_confirmed_at,raw_app_meta_data,raw_user_meta_data) VALUES
