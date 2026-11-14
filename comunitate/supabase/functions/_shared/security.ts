@@ -1,8 +1,6 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 const allowedOrigins = new Set([
-  "https://intentra.ch",
-  "https://www.intentra.ch",
   "http://127.0.0.1:5173",
   "http://localhost:5173",
 ]);
