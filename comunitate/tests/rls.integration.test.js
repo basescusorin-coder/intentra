@@ -18,6 +18,7 @@ test('migrations are repeatable and RLS isolates users, images, jobs and MFA mod
  await exec(schema);
  await exec(await fs.readFile(root+'/supabase/migrations/20261113000100_security_and_features.sql','utf8'));
  await exec(await fs.readFile(root+'/supabase/migrations/20261113000200_mvp_hardening.sql','utf8'));
+ await exec(await fs.readFile(root+'/supabase/migrations/20261114000000_security_invoker_and_rpc_hardening.sql','utf8'));
  await exec(await fs.readFile(root+'/supabase/migrations/20261113000100_security_and_features.sql','utf8'));
  await exec(await fs.readFile(root+'/supabase/migrations/20261113000200_mvp_hardening.sql','utf8'));
  await exec(`INSERT INTO auth.users(id,aud,role,email,email_confirmed_at,raw_app_meta_data,raw_user_meta_data) VALUES
@@ -38,15 +39,15 @@ test('migrations are repeatable and RLS isolates users, images, jobs and MFA mod
  await exec(`SELECT set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000003',false); SELECT set_config('request.jwt.claims','{\"sub\":\"10000000-0000-4000-8000-000000000003\",\"role\":\"authenticated\",\"aal\":\"aal2\"}',false); SELECT public.community_moderate_post('20000000-0000-4000-8000-000000000001','published','fixture');`);
  const check=(condition,message)=>assert.ok(condition,message);
  await exec(`SET ROLE anon; SELECT set_config('request.jwt.claims','{"role":"anon"}',false);`);
- let res=await db.query('select id,author_username,is_mine from public.community_feed');
- check(res.rows.length===1 && res.rows[0].is_mine===false,'anonymous feed includes published rows only');
+ let res=await db.query('select id,author_username,status from public.community_feed');
+ check(res.rows.length===1 && res.rows[0].author_username==='user_a','anonymous feed includes published rows only');
  check(!('author_id' in res.rows[0]),'public feed omits auth UUID');
  res=await db.query("select count(*)::int as n from storage.objects where name='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa.jpg'");check(res.rows[0].n===1,'anonymous can access published image');
  let anonUploadDenied=false;try{await db.query("insert into storage.objects(bucket_id,name) values ('community-images','cccccccc-cccc-4ccc-8ccc-cccccccccccc.jpg')")}catch(e){anonUploadDenied=e.code==='42501'}check(anonUploadDenied,'anonymous cannot upload objects directly');
  check(!(await db.query("select column_name from information_schema.columns where table_name='community_public_profiles' and column_name in ('user_id','phone','email')")).rows.length,'public profile view omits IDs and contact fields');
  await exec('RESET ROLE; SET ROLE authenticated; SELECT set_config(\'request.jwt.claim.sub\',\'10000000-0000-4000-8000-000000000001\',false); SELECT set_config(\'request.jwt.claims\',\'{"sub":"10000000-0000-4000-8000-000000000001","role":"authenticated","aal":"aal1"}\',false);');
- res=await db.query('select id,is_mine,status from public.community_feed order by id');
- check(res.rows.length===2 && res.rows.some(r=>r.is_mine && r.status==='pending') && !res.rows.some(r=>r.status==='pending' && !r.is_mine),'member sees own pending content but no other pending rows');
+ res=await db.query('select id,author_username,status from public.community_feed order by id');
+ check(res.rows.length===2 && res.rows.some(r=>r.author_username==='user_a' && r.status==='pending') && !res.rows.some(r=>r.status==='pending' && r.author_username!=='user_a'),'member sees own pending content but no other pending rows');
  res=await db.query("select count(*)::int as n from public.profiles"); check(res.rows[0].n===1,'member profile RLS restricts rows to self');
  res=await db.query("select count(*)::int as n from public.reports"); check(res.rows[0].n===0,'member cannot see another member reports');
  res=await db.query("select count(*)::int as n from public.post_images where post_id='20000000-0000-4000-8000-000000000002'");check(res.rows[0].n===0,'member cannot read another member image reference');

@@ -1,6 +1,6 @@
 -- Run only against a disposable local Supabase stack after applying all migrations.
 begin;
-select plan(22);
+select plan(26);
 
 insert into auth.users(id,instance_id,aud,role,email,encrypted_password,email_confirmed_at,raw_app_meta_data,raw_user_meta_data,created_at,updated_at)
 values
@@ -48,6 +48,10 @@ select is((select count(*)::integer from public.posts),1,'anonymous sees only pu
 select is((select count(*)::integer from public.comments),1,'anonymous sees only public comments');
 select is((select count(*)::integer from storage.objects where name='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa.jpg'),1,'anonymous can read image only after post publication');
 select is((select count(*)::integer from public.community_public_profiles where username='rls_user_a'),1,'public pseudonym projection is readable');
+select is((select count(*)::integer from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relname in ('community_public_profiles','community_feed','community_public_comments') and c.reloptions @> array['security_invoker=true']),3,'all community views use SECURITY INVOKER');
+select ok(not has_function_privilege('anon','public.community_guard_post()','execute'),'anon cannot invoke trigger handlers as RPC');
+select ok(not has_function_privilege('anon','public.community_moderate_post(uuid,text,text)','execute'),'anon cannot invoke moderation RPC');
+select ok(not (select prosecdef from pg_proc where oid='public.community_moderate_post(uuid,text,text)'::regprocedure),'public moderation wrapper is SECURITY INVOKER');
 select ok(not exists(select 1 from information_schema.columns where table_schema='public' and table_name='community_public_profiles' and column_name in ('phone','email','user_id')),'public profile projection has no contact identifiers');
 select ok(not has_column_privilege('anon','public.posts','author_id','select'),'public table grant hides internal author UUIDs');
 select ok(not has_column_privilege('authenticated','public.posts','author_id','select'),'member table grant hides internal author UUIDs');

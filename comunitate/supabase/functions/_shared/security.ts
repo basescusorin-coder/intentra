@@ -64,6 +64,12 @@ export async function verifiedUser(client: SupabaseClient, token: string) {
   return data.user;
 }
 
+export function isTurnstileResultValid(result: unknown): boolean {
+  if (typeof result !== "object" || result === null) return false;
+  const payload = result as { success?: unknown; hostname?: unknown };
+  return payload.success === true && (payload.hostname === "localhost" || payload.hostname === "127.0.0.1");
+}
+
 export async function verifyTurnstile(token: string, request: Request): Promise<boolean> {
   const secret = Deno.env.get("TURNSTILE_SECRET_KEY");
   if (!secret || !token || token.length > 2048) return false;
@@ -79,7 +85,7 @@ export async function verifyTurnstile(token: string, request: Request): Promise<
     });
     if (!response.ok) return false;
     const result = await response.json();
-    return result.success === true;
+    return isTurnstileResultValid(result);
   } catch {
     return false;
   }
