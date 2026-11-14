@@ -30,3 +30,16 @@ test('legacy JWT key must have the anon role; service role is rejected', () => {
   assert.ok(resolveCommunityRuntimeConfig({ ...env, VITE_SUPABASE_ANON_KEY: jwtFor('anon') }, origin));
   assert.equal(resolveCommunityRuntimeConfig({ ...env, VITE_SUPABASE_ANON_KEY: jwtFor('service_role') }, origin), null);
 });
+
+
+test('explicit HTTPS preview origin is allowed only for DEV and never production', () => {
+  const preview = 'https://intentra-community-preview.example.net';
+  const configured = { ...env, VITE_COMMUNITY_PREVIEW_ORIGIN: preview };
+  assert.equal(resolveCommunityRuntimeConfig(configured, preview)?.url, env.VITE_SUPABASE_URL);
+  assert.equal(resolveCommunityRuntimeConfig(configured, 'https://another.example.net'), null);
+  assert.equal(resolveCommunityRuntimeConfig({ ...configured, VITE_SUPABASE_URL: 'https://other.supabase.co' }, preview), null);
+  assert.equal(resolveCommunityRuntimeConfig({ ...env, VITE_COMMUNITY_PREVIEW_ORIGIN: 'https://intentra.ch' }, 'https://intentra.ch'), null);
+  assert.equal(resolveCommunityRuntimeConfig({ ...env, VITE_COMMUNITY_PREVIEW_ORIGIN: 'https://test.intentra.ch' }, 'https://test.intentra.ch'), null);
+  assert.equal(resolveCommunityRuntimeConfig({ ...env, VITE_COMMUNITY_PREVIEW_ORIGIN: 'http://example.net' }, 'http://example.net'), null);
+  assert.equal(resolveCommunityRuntimeConfig({ ...env, VITE_COMMUNITY_PREVIEW_ORIGIN: 'https://example.net/path' }, 'https://example.net'), null);
+});
