@@ -2,8 +2,8 @@ export function createAuthClientOptions(storage) {
   return { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce', storage };
 }
 
-export function createOtpRequestOptions(captchaToken, origin) {
-  return { shouldCreateUser: true, captchaToken, emailRedirectTo: origin };
+export function createOtpRequestOptions(captchaToken) {
+  return { shouldCreateUser: true, captchaToken };
 }
 
 export function isEmailRateLimited(error) {

@@ -13,12 +13,11 @@ test('PKCE auth uses shared durable storage and parses callback URLs', () => {
   });
 });
 
-test('OTP magic links return to the origin that started auth', () => {
+test('OTP requests use a six-digit code instead of a magic-link redirect', () => {
   const captchaToken = 'opaque-test-token';
-  assert.deepEqual(createOtpRequestOptions(captchaToken, 'http://localhost:5173'), {
+  assert.deepEqual(createOtpRequestOptions(captchaToken), {
     shouldCreateUser: true,
     captchaToken,
-    emailRedirectTo: 'http://localhost:5173',
   });
 });
 
