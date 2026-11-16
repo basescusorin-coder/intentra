@@ -3,6 +3,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 const allowedOrigins = new Set([
   "http://127.0.0.1:5173",
   "http://localhost:5173",
+  "https://intentra-comunitate-preview.vercel.app",
 ]);
 
 export function corsHeaders(origin: string | null): HeadersInit {

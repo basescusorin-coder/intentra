@@ -1,5 +1,5 @@
 import { ImageMagick, initializeImageMagick, MagickFormat } from "@imagemagick/magick-wasm";
-import { json, preflight, serviceClient, userClient, verifiedUser, verifyTurnstile } from "../_shared/security.ts";
+import { json, preflight, serviceClient, userClient, verifiedUser } from "../_shared/security.ts";
 
 const wasmBytes = await Deno.readFile(new URL("magick.wasm", import.meta.resolve("@imagemagick/magick-wasm")));
 await initializeImageMagick(wasmBytes);
@@ -67,12 +67,12 @@ Deno.serve(async (request) => {
     if (declaredLength > MAX_REQUEST) return json(request, { error: "request_too_large" }, 413);
     const form = await request.formData();
     const postId = form.get("post_id");
-    const captcha = form.get("captcha_token");
     const fileEntries = form.getAll("files");
     if (typeof postId !== "string" || !/^[0-9a-f-]{36}$/i.test(postId) || fileEntries.length < 1 || fileEntries.length > 3 || fileEntries.some((entry) => !(entry instanceof File))) return json(request, { error: "invalid_upload" }, 400);
     const files = fileEntries as File[];
     if (files.some((entry) => entry.size < 1 || entry.size > MAX_FILE)) return json(request, { error: "file_too_large" }, 413);
-    if (typeof captcha !== "string" || !(await verifyTurnstile(captcha, request))) return json(request, { error: "captcha_failed" }, 403);
+    // Authentication is required above; email verification is part of the OTP sign-in flow.
+    // A second CAPTCHA here blocked legitimate uploads without protecting a public endpoint.
     // `author_id` is intentionally not selectable by clients. RLS returns an
     // owner's pending post here and only published posts belonging to others;
     // the status check rejects the latter before the service-role upload.
