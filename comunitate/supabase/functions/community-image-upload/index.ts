@@ -26,7 +26,7 @@ Deno.serve(async (request) => {
     // owner's pending post here and only published posts belonging to others;
     // the status check rejects the latter before the service-role upload.
     const { data: post, error: postError } = await client.from("posts").select("id,status,author_id").eq("id", postId).maybeSingle();
-    if (postError || !post || post.status !== "pending" || post.author_id !== user.id) return json(request, { error: "post_not_uploadable" }, 403);
+    if (postError || !post || !["pending", "published"].includes(post.status) || post.author_id !== user.id) return json(request, { error: "post_not_uploadable" }, 403);
     const { count, error: countError } = await client.from("post_images").select("id", { count: "exact", head: true }).eq("post_id", postId);
     if (countError || (count || 0) + files.length > 3) return json(request, { error: "image_limit_exceeded" }, 400);
     const cleanImages: ReturnType<typeof sanitizeImage>[] = [];
