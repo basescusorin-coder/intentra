@@ -12,7 +12,7 @@ export const COMMUNITY_PRODUCTION_ORIGIN = 'https://intentra.ch';
 function productionBackendUrl(env, origin) {
   if (env?.VITE_COMMUNITY_MODE !== 'production' || origin !== COMMUNITY_PRODUCTION_ORIGIN) return null;
   const ref = env?.VITE_COMMUNITY_PRODUCTION_PROJECT_REF;
-  if (typeof ref !== 'string' || !/^[a-z]{20}$/.test(ref) || ref === COMMUNITY_DEV_PROJECT_REF) return null;
+  if (typeof ref !== 'string' || !/^[a-z0-9]{20}$/.test(ref) || ref === COMMUNITY_DEV_PROJECT_REF) return null;
   return `https://${ref}.supabase.co`;
 }
 const LOCAL_ORIGINS = new Set(['http://127.0.0.1:5173', 'http://localhost:5173']);
