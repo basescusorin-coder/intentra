@@ -4,6 +4,7 @@ const allowedOrigins = new Set([
   "http://127.0.0.1:5173",
   "http://localhost:5173",
   "https://intentra-comunitate-preview.vercel.app",
+  "https://intentra-comunitate-preview-git-featur-620154-basescusorin-7695.vercel.app",
 ]);
 
 export function corsHeaders(origin: string | null): HeadersInit {
