@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Assemble the existing GitHub Pages home page and the compiled Vite community
 // into one uploadable static-site directory. Does not deploy or change main.
-import { cp, mkdir, readdir, rm, stat } from 'node:fs/promises';
+import { cp, mkdir, readFile, readdir, rm, stat } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -22,6 +22,16 @@ if (production) {
   if (process.env.COMMUNITY_RELEASE_APPROVED !== 'yes') {
     throw new Error('Refusing production build without COMMUNITY_RELEASE_APPROVED=yes.');
   }
+  // Do not publish a real member-service with placeholder legal terms.
+  for (const document of ['privacy.html', 'rules.html']) {
+    const legalPath = join(communityRoot, 'public', document);
+    let text;
+    try { text = await readFile(legalPath, 'utf8'); }
+    catch { throw new Error(`Missing approved public legal document: ${document}`); }
+    if (text.length < 500 || /\[DE COMPLETAT\]|\[TO BE COMPLETED\]|\bDRAFT\b|\bTODO\b/i.test(text)) {
+      throw new Error(`Incomplete public legal document: ${document}`);
+    }
+  }
 } else if (process.env.VITE_COMMUNITY_MODE === 'production') {
   throw new Error('Refusing staging build with production configuration.');
 }
@@ -35,7 +45,7 @@ if (!rootFiles.some(entry => entry.isFile() && entry.name === 'index.html')) {
 await rm(outputDir, { recursive: true, force: true });
 await mkdir(outputDir, { recursive: true });
 for (const entry of rootFiles) {
-  if (entry.isFile() && allowed.test(entry.name)) {
+  if (entry.isFile() && (allowed.test(entry.name) || entry.name === 'CNAME')) {
     // Files in the root are the original published search-site assets.
     await cp(join(repositoryRoot, entry.name), join(outputDir, entry.name));
   }
