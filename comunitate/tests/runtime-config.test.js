@@ -45,11 +45,11 @@ test('explicit HTTPS preview origin is allowed only for DEV and never production
 });
 
 
-test('scoped immutable Vercel DEV deployment can read but never enables live site', () => {
-  const deploy = 'https://intentra-comunitate-preview-e3n7zlawg-basescusorin-7695.vercel.app';
-  const result = resolveCommunityRuntimeConfig({ ...env, VITE_TURNSTILE_SITE_KEY: undefined }, deploy);
+test('only stable Vercel DEV preview alias may connect; missing CAPTCHA remains read-only', () => {
+  const stable = 'https://intentra-comunitate-preview-git-featur-620154-basescusorin-7695.vercel.app';
+  const result = resolveCommunityRuntimeConfig({ ...env, VITE_TURNSTILE_SITE_KEY: undefined, VITE_COMMUNITY_PREVIEW_ORIGIN: stable }, stable);
   assert.equal(result?.url, env.VITE_SUPABASE_URL);
   assert.equal(result?.turnstileSiteKey, null);
-  assert.equal(resolveCommunityRuntimeConfig(env, 'https://unrelated-preview-e3n7zlawg-basescusorin-7695.vercel.app'), null);
+  assert.equal(resolveCommunityRuntimeConfig(env, 'https://intentra-comunitate-preview-e3n7zlawg-basescusorin-7695.vercel.app'), null);
   assert.equal(resolveCommunityRuntimeConfig(env, 'https://intentra.ch'), null);
 });
