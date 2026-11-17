@@ -16,13 +16,13 @@ test('DEV client config works only from local development origins', () => {
   assert.equal(resolveCommunityRuntimeConfig(env, 'https://intentra.ch'), null);
 });
 
-test('rejects other projects, URL tricks, secret keys and missing CAPTCHA config', () => {
+test('rejects other projects, URL tricks and secret keys; missing CAPTCHA is read-only', () => {
   assert.equal(resolveCommunityRuntimeConfig({ ...env, VITE_SUPABASE_URL: 'https://other.supabase.co' }, origin), null);
   assert.equal(resolveCommunityRuntimeConfig({ ...env, VITE_SUPABASE_URL: `${env.VITE_SUPABASE_URL}/rest/v1` }, origin), null);
   assert.equal(resolveCommunityRuntimeConfig({ ...env, VITE_SUPABASE_URL: `${env.VITE_SUPABASE_URL}?redirect=evil` }, origin), null);
   assert.equal(resolveCommunityRuntimeConfig({ ...env, VITE_SUPABASE_ANON_KEY: `sb_secret_${'x'.repeat(40)}` }, origin), null);
   assert.equal(resolveCommunityRuntimeConfig({ ...env, VITE_SUPABASE_ANON_KEY: 'not-a-valid-client-key-value' }, origin), null);
-  assert.equal(resolveCommunityRuntimeConfig({ ...env, VITE_TURNSTILE_SITE_KEY: '' }, origin), null);
+  assert.equal(resolveCommunityRuntimeConfig({ ...env, VITE_TURNSTILE_SITE_KEY: '' }, origin)?.turnstileSiteKey, null);
 });
 
 test('legacy JWT key must have the anon role; service role is rejected', () => {
@@ -42,4 +42,14 @@ test('explicit HTTPS preview origin is allowed only for DEV and never production
   assert.equal(resolveCommunityRuntimeConfig({ ...env, VITE_COMMUNITY_PREVIEW_ORIGIN: 'https://test.intentra.ch' }, 'https://test.intentra.ch'), null);
   assert.equal(resolveCommunityRuntimeConfig({ ...env, VITE_COMMUNITY_PREVIEW_ORIGIN: 'http://example.net' }, 'http://example.net'), null);
   assert.equal(resolveCommunityRuntimeConfig({ ...env, VITE_COMMUNITY_PREVIEW_ORIGIN: 'https://example.net/path' }, 'https://example.net'), null);
+});
+
+
+test('scoped immutable Vercel DEV deployment can read but never enables live site', () => {
+  const deploy = 'https://intentra-comunitate-preview-e3n7zlawg-basescusorin-7695.vercel.app';
+  const result = resolveCommunityRuntimeConfig({ ...env, VITE_TURNSTILE_SITE_KEY: undefined }, deploy);
+  assert.equal(result?.url, env.VITE_SUPABASE_URL);
+  assert.equal(result?.turnstileSiteKey, null);
+  assert.equal(resolveCommunityRuntimeConfig(env, 'https://unrelated-preview-e3n7zlawg-basescusorin-7695.vercel.app'), null);
+  assert.equal(resolveCommunityRuntimeConfig(env, 'https://intentra.ch'), null);
 });
