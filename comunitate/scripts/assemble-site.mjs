@@ -36,7 +36,7 @@ if (production) {
   throw new Error('Refusing staging build with production configuration.');
 }
 
-const allowed = /\.(html|css|js|mjs|png|jpe?g|webp|svg|ico|xml|txt|webmanifest|json)$/i;
+const allowed = /\.(html|css|js|mjs|png|jpe?g|webp|svg|ico|xml|txt|webmanifest)$/i;
 const rootFiles = await readdir(repositoryRoot, { withFileTypes: true });
 if (!rootFiles.some(entry => entry.isFile() && entry.name === 'index.html')) {
   throw new Error('Root INTENTRA index.html is missing.');
