@@ -19,9 +19,9 @@ test('migrations are repeatable and RLS isolates users, images, jobs and MFA mod
  await exec(await fs.readFile(root+'/supabase/migrations/20261113000100_security_and_features.sql','utf8'));
  await exec(await fs.readFile(root+'/supabase/migrations/20261113000200_mvp_hardening.sql','utf8'));
  await exec(await fs.readFile(root+'/supabase/migrations/20261114183202_security_invoker_and_rpc_hardening.sql','utf8'));
- await exec(await fs.readFile(root+'/supabase/migrations/20261116220000_reports_insert_integrity.sql','utf8'));
  await exec(await fs.readFile(root+'/supabase/migrations/20261113000100_security_and_features.sql','utf8'));
  await exec(await fs.readFile(root+'/supabase/migrations/20261113000200_mvp_hardening.sql','utf8'));
+ await exec(await fs.readFile(root+'/supabase/migrations/20261116220000_reports_insert_integrity.sql','utf8'));
  await exec(`INSERT INTO auth.users(id,aud,role,email,email_confirmed_at,raw_app_meta_data,raw_user_meta_data) VALUES
  ('10000000-0000-4000-8000-000000000001','authenticated','authenticated','a@example.invalid',now(),'{}','{}'),
  ('10000000-0000-4000-8000-000000000002','authenticated','authenticated','b@example.invalid',now(),'{}','{}'),
@@ -68,6 +68,7 @@ test('migrations are repeatable and RLS isolates users, images, jobs and MFA mod
  await exec(`RESET ROLE; SET ROLE authenticated; SELECT set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',false); SELECT set_config('request.jwt.claims','{"sub":"10000000-0000-4000-8000-000000000001","role":"authenticated","aal":"aal1"}',false);`);
  let spoofDenied=false; try { await db.query(`insert into public.reports(post_id,reporter_id,reason,resolved_at,resolved_by) values ('20000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000001','Valid test report',now(),'10000000-0000-4000-8000-000000000001')`) } catch(e) { spoofDenied=e.code==='42501' }; check(spoofDenied,'reporter cannot spoof resolution metadata');
  await db.query(`insert into public.reports(post_id,reporter_id,reason) values ('20000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000001','Valid test report')`);
+ await exec('RESET ROLE');
  res=await db.query(`select status,resolved_at,resolved_by from public.reports where reporter_id='10000000-0000-4000-8000-000000000001'`);
  check(res.rows.length===1&&res.rows[0].status==='open'&&res.rows[0].resolved_at===null&&res.rows[0].resolved_by===null,'valid report starts open and unresolved');
   } finally {
