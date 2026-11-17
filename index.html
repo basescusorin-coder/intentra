@@ -62,6 +62,11 @@ label{color:#f0f6ff}.auto-toggle{color:#92dafa}textarea{background:#08172b;color
 @media(prefers-reduced-motion:reduce){.category-photo,.category-tile,.discover-cta{transition:none}}
 
 @media(min-width:801px){.category-tile:nth-child(n){grid-column:span 2;aspect-ratio:1.65}}@media(max-width:800px){.category-tile:nth-child(n){grid-column:span 1;aspect-ratio:1.35}}@media(max-width:480px){.category-tile:nth-child(6){grid-column:1/-1;aspect-ratio:auto;min-height:110px}}
+
+.community-shortcut{display:none;text-decoration:none;border:1px solid #3884af;background:#14324d;color:#e4f7ff;border-radius:10px;padding:10px 12px;font-size:12px;font-weight:700;white-space:nowrap}
+.community-shortcut:focus-visible{outline:3px solid #32c6ff;outline-offset:4px}
+@media(max-width:800px){.community-shortcut{display:inline-flex;align-items:center}.header-right{gap:9px}.community-shortcut{padding:9px 10px}}
+@media(max-width:390px){.community-shortcut{font-size:10px;padding:8px}.languages button{padding:6px}}
 </style></head>
 
 <body><a class="skip" href="#searchPanel" data-ui="skip">Mergi la căutare</a>
@@ -69,7 +74,7 @@ label{color:#f0f6ff}.auto-toggle{color:#92dafa}textarea{background:#08172b;color
 <header class="topbar">
 <a class="brand" href="https://intentra.ch/" aria-label="INTENTRA.CH"><img src="./favicon.png" alt="Logo INTENTRA.CH" width="44" height="44"><span>INTENTRA<b>.CH</b></span></a>
 <div class="header-right"><nav class="nav-links" aria-label="INTENTRA"><a href="#explore" data-ui="navExplore">Explorează</a><a href="#how" data-ui="navHow">Cum funcționează</a><a href="#about" data-ui="navAbout">Despre</a><a href="/comunitate/" data-ui="navCommunity">Comunitate</a></nav>
-<nav class="languages" aria-label="Language"><button type="button" data-lang="ro"><span class="language-icon">🇷🇴</span>RO</button><button type="button" data-lang="de"><span class="language-icon">🇩🇪</span>DE</button><button type="button" data-lang="en"><span class="language-icon">🇬🇧</span>EN</button></nav></div>
+<a class="community-shortcut" href="/comunitate/" data-ui="navCommunity">Comunitate</a><nav class="languages" aria-label="Language"><button type="button" data-lang="ro"><span class="language-icon">🇷🇴</span>RO</button><button type="button" data-lang="de"><span class="language-icon">🇩🇪</span>DE</button><button type="button" data-lang="en"><span class="language-icon">🇬🇧</span>EN</button></nav></div>
 </header>
 <main>
 <section class="hero" aria-labelledby="headline">
