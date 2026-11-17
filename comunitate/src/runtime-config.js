@@ -8,14 +8,6 @@ const LOCAL_ORIGINS = new Set(['http://127.0.0.1:5173', 'http://localhost:5173']
 
 function isAllowedOrigin(env, origin) {
   if (LOCAL_ORIGINS.has(origin)) return true;
-  // Immutable URLs belonging to this project's Vercel Preview deployments.
-  // Never admit arbitrary *.vercel.app or production intentra.ch.
-  try {
-    const deployment = new URL(origin);
-    if (deployment.protocol === 'https:' &&
-        /^intentra-comunitate-preview-[a-z0-9]+-basescusorin-7695\.vercel\.app$/.test(deployment.hostname) &&
-        deployment.origin === origin) return true;
-  } catch { return false; }
   const preview = env?.VITE_COMMUNITY_PREVIEW_ORIGIN;
   if (typeof preview !== 'string' || !preview) return false;
   try {
