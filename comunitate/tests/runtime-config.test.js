@@ -53,3 +53,25 @@ test('only stable Vercel DEV preview alias may connect; missing CAPTCHA remains 
   assert.equal(resolveCommunityRuntimeConfig(env, 'https://intentra-comunitate-preview-e3n7zlawg-basescusorin-7695.vercel.app'), null);
   assert.equal(resolveCommunityRuntimeConfig(env, 'https://intentra.ch'), null);
 });
+
+test('production is explicit, rejects DEV and unrelated origins, and requires CAPTCHA', () => {
+  const prodRef = 'abcdefghijklmnopqrst';
+  const prodOrigin = 'https://intentra.ch';
+  const prod = {
+    ...env,
+    VITE_COMMUNITY_MODE: 'production',
+    VITE_COMMUNITY_PRODUCTION_PROJECT_REF: prodRef,
+    VITE_SUPABASE_URL: `https://${prodRef}.supabase.co`,
+  };
+  assert.equal(resolveCommunityRuntimeConfig(prod, prodOrigin)?.url, prod.VITE_SUPABASE_URL);
+  assert.equal(resolveCommunityRuntimeConfig(prod, 'https://www.intentra.ch'), null);
+  assert.equal(resolveCommunityRuntimeConfig(prod, origin), null);
+  assert.equal(resolveCommunityRuntimeConfig(prod, 'https://fake-intentra.ch'), null);
+  assert.equal(resolveCommunityRuntimeConfig({ ...prod, VITE_SUPABASE_URL: `https://${COMMUNITY_DEV_PROJECT_REF}.supabase.co` }, prodOrigin), null);
+  assert.equal(resolveCommunityRuntimeConfig({ ...prod, VITE_COMMUNITY_PRODUCTION_PROJECT_REF: COMMUNITY_DEV_PROJECT_REF }, prodOrigin), null);
+  assert.equal(resolveCommunityRuntimeConfig({ ...prod, VITE_COMMUNITY_PRODUCTION_PROJECT_REF: 'not-a-ref' }, prodOrigin), null);
+  assert.equal(resolveCommunityRuntimeConfig({ ...prod, VITE_TURNSTILE_SITE_KEY: '' }, prodOrigin), null);
+  assert.equal(resolveCommunityRuntimeConfig({ ...prod, VITE_SUPABASE_ANON_KEY: `sb_secret_${'x'.repeat(40)}` }, prodOrigin), null);
+  assert.equal(resolveCommunityRuntimeConfig({ ...prod, VITE_SUPABASE_URL: prod.VITE_SUPABASE_URL + '/rest/v1' }, prodOrigin), null);
+  assert.equal(resolveCommunityRuntimeConfig({ ...prod, VITE_COMMUNITY_MODE: 'dev' }, prodOrigin), null);
+});
