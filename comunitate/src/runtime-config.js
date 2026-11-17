@@ -4,6 +4,17 @@
 export const COMMUNITY_DEV_PROJECT_REF = 'wnmtrkheznrhrtpbenxh';
 
 const DEV_URL = `https://${COMMUNITY_DEV_PROJECT_REF}.supabase.co`;
+
+// Production is an explicit, opt-in build with a separate backend.
+// Never make the DEV database available on the public INTENTRA domain.
+export const COMMUNITY_PRODUCTION_ORIGIN = 'https://intentra.ch';
+
+function productionBackendUrl(env, origin) {
+  if (env?.VITE_COMMUNITY_MODE !== 'production' || origin !== COMMUNITY_PRODUCTION_ORIGIN) return null;
+  const ref = env?.VITE_COMMUNITY_PRODUCTION_PROJECT_REF;
+  if (typeof ref !== 'string' || !/^[a-z]{20}$/.test(ref) || ref === COMMUNITY_DEV_PROJECT_REF) return null;
+  return `https://${ref}.supabase.co`;
+}
 const LOCAL_ORIGINS = new Set(['http://127.0.0.1:5173', 'http://localhost:5173']);
 
 function isAllowedOrigin(env, origin) {
@@ -36,7 +47,11 @@ function isPublicClientKey(value) {
 
 /** Resolve a safe browser configuration only for local DEV or explicitly configured HTTPS preview testing. */
 export function resolveCommunityRuntimeConfig(env, origin) {
-  if (!isAllowedOrigin(env, origin)) return null;
+  const production = env?.VITE_COMMUNITY_MODE === 'production';
+  // A production build is trusted only at the public domain, with a distinct project.
+  // A DEV build continues to work exclusively on localhost / approved previews.
+  const expectedUrl = production ? productionBackendUrl(env, origin) : (isAllowedOrigin(env, origin) ? DEV_URL : null);
+  if (!expectedUrl) return null;
 
   let url;
   try {
@@ -44,12 +59,13 @@ export function resolveCommunityRuntimeConfig(env, origin) {
   } catch {
     return null;
   }
-  if (url.origin !== DEV_URL || !['', '/'].includes(url.pathname) || url.search || url.hash || url.username || url.password) return null;
+  if (url.origin !== expectedUrl || !['', '/'].includes(url.pathname) || url.search || url.hash || url.username || url.password) return null;
 
   const anonKey = env?.VITE_SUPABASE_ANON_KEY;
   const turnstileSiteKey = env?.VITE_TURNSTILE_SITE_KEY;
   if (!isPublicClientKey(anonKey)) return null;
   // CAPTCHA is mandatory for sign-in, not for reading public community listings.
   const validSiteKey = typeof turnstileSiteKey === 'string' && turnstileSiteKey.length >= 10 && turnstileSiteKey.length <= 1024;
-  return Object.freeze({ url: DEV_URL, anonKey, turnstileSiteKey: validSiteKey ? turnstileSiteKey : null });
+  if (production && !validSiteKey) return null;
+  return Object.freeze({ url: expectedUrl, anonKey, turnstileSiteKey: validSiteKey ? turnstileSiteKey : null });
 }
