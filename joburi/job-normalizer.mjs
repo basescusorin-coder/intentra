@@ -27,8 +27,8 @@ export function normalizeJob(record, now = new Date()) {
   const canton = String(record.location?.canton ?? '').toUpperCase();
   const location = String(record.location?.city ?? '').trim().slice(0, 150);
   const applyUrl = safeHttpsUrl(record.apply?.url) || safeHttpsUrl(record.external_url);
-  const workloadMin = Number(record.workload_min);
-  const workloadMax = Number(record.workload_max);
+  const workloadMin = record.workload_min == null || record.workload_min === '' ? NaN : Number(record.workload_min);
+  const workloadMax = record.workload_max == null || record.workload_max === '' ? NaN : Number(record.workload_max);
   return {
     source: 'job-room-via-apish', external_id: id, source_url: sourceUrl,
     apply_url: applyUrl, title, employer, city: location,
