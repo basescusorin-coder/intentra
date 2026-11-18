@@ -4,6 +4,8 @@ const allowedOrigins = new Set([
   "http://127.0.0.1:5173",
   "http://localhost:5173",
   "https://intentra-comunitate-preview.vercel.app",
+  "https://intentra.ch",
+  "https://www.intentra.ch",
   "https://intentra-comunitate-preview-git-featur-620154-basescusorin-7695.vercel.app",
 ]);
 
@@ -67,7 +69,7 @@ export async function verifiedUser(client: SupabaseClient, token: string) {
 export function isTurnstileResultValid(result: unknown): boolean {
   if (typeof result !== "object" || result === null) return false;
   const payload = result as { success?: unknown; hostname?: unknown };
-  return payload.success === true && (payload.hostname === "localhost" || payload.hostname === "127.0.0.1");
+  return payload.success === true && (["localhost", "127.0.0.1", "intentra.ch", "www.intentra.ch"].includes(String(payload.hostname)));
 }
 
 export async function verifyTurnstile(token: string, request: Request): Promise<boolean> {
