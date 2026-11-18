@@ -23,7 +23,7 @@ small{color:#b7c9d9}.item h2{font-size:20px;margin:0}.tag{display:inline-block;p
 <div><label for="q">Profesie sau cuvânt-cheie</label><input id="q" type="search" placeholder="ex. Pflegehelferin, Lager, Chauffeur" autocomplete="off"></div>
 <div><label for="canton">Canton</label><select id="canton"><option value="">Toate cantoanele</option><option>AG</option><option>ZH</option><option>LU</option><option>ZG</option><option>BE</option><option>BS</option><option>BL</option><option>SG</option><option>TG</option><option>SO</option><option>VD</option><option>GE</option><option>TI</option></select></div>
 <div><label for="sector">Domeniu</label><select id="sector"><option value="">Toate domeniile</option><option value="medical">Îngrijire / sănătate</option><option value="logistica">Logistică / producție</option><option value="general">General</option></select></div>
-</div><p><button id="go" type="button">Pregătește căutarea</button></p><small id="hint" role="status" aria-live="polite">Selectează criteriile și deschide sursa dorită.</small></div>
+</div><p><button id="go" type="button">Pregătește căutarea</button> <a class="link" id="direct" href="https://www.jobs.ch/" target="_blank" rel="noopener noreferrer">Caută pe jobs.ch ↗</a></p><small id="hint" role="status" aria-live="polite">Completează profesia și apasă «Caută pe jobs.ch» pentru a vedea rezultate la sursă.</small></div>
 <section aria-label="Surse de locuri de muncă" id="sources"></section>
 <p class="notice"><strong>Transparență:</strong> INTENTRA nu este angajator sau agenție de recrutare. Nu garantăm disponibilitatea posturilor externe. Nu colectăm CV-uri aici. Verifică întotdeauna anunțul original înainte să aplici.</p>
 </main><script>
@@ -41,7 +41,7 @@ function render(){
 const sector=$('sector').value;
 const q=$('q').value.trim();const canton=$('canton').value;
 $('hint').textContent='Criterii pentru căutarea la sursă: '+(q||'orice profesie')+(canton?', canton '+canton:'')+'. Deschide un portal și introdu criteriile acolo.';
-const root=$('sources');root.replaceChildren();
+const terms=[q,canton].filter(Boolean).join(' ');$('direct').href='https://www.jobs.ch/de/?term='+encodeURIComponent(terms);$('direct').textContent='Caută '+(q||'joburi')+' pe jobs.ch ↗';const root=$('sources');root.replaceChildren();
 const filtered=sources.filter(s=>!sector||s.sectors.includes(sector));
 filtered.forEach(s=>{
 const article=document.createElement('article');article.className='item';
@@ -52,5 +52,5 @@ const link=document.createElement('a');link.className='link';link.href=s.url;lin
 article.append(title,tag,desc,link);root.append(article);
 });
 }
-$('go').addEventListener('click',render);$('sector').addEventListener('change',render);render();
+$('go').addEventListener('click',()=>{render();$('hint').textContent+=' Folosește butonul «Caută pe jobs.ch» pentru a deschide rezultate externe.';});$('q').addEventListener('input',render);$('canton').addEventListener('change',render);$('sector').addEventListener('change',render);render();
 </script></body></html>
