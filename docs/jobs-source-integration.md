@@ -36,6 +36,11 @@ Status: discovery / integration planning. No automatic ingestion is enabled.
 ## First acceptance test
 Using an approved feed with no paid usage, import a small fixture, verify filtering, provenance, duplicate handling and expiration, then test the mobile UI in DEV. Do not claim live vacancies until a licensed connector is working.
 
+## DEV interface status (2026-11-18)
+The Vercel preview serves `/joburi/` from the Vite public directory. It provides Romanian, German and English labels; profession, canton, locality and sector criteria; a copyable search summary; and outbound source links. The filters prepare search criteria and filter source categories, but they do not search external portals or verify individual vacancies. The DEV database currently has five disabled sources with `rights_status=pending` and zero listings. The page explicitly shows an empty verified-offers state; no fixture or sample vacancy is displayed as real.
+
+The normalizer tests validate approved Job-Room records and reject restricted, expired, future, unsafe-host and duplicate records. They do not establish provider rights or enable ingestion. Adding a live feed still requires documented permission, an authorized read endpoint, a server-side adapter and a separate integration/security test.
+
 ## References
 - https://www.arbeit.swiss/en/employers/faq-on-the-job-registration-requirement
 - https://test-api.job-room.ch/api-docs/jobAdvertisements/v1/index.html
