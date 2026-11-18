@@ -23,7 +23,12 @@ function isAllowedOrigin(env, origin) {
   if (typeof preview !== 'string' || !preview) return false;
   try {
     const url = new URL(preview);
-    return url.protocol === 'https:' && url.origin === preview && origin === preview &&
+    const trustedStableAlias = url.hostname === 'intentra-comunitate-preview-git-featur-620154-basescusorin-7695.vercel.app';
+    const requested = new URL(origin);
+    const trustedDeployment = trustedStableAlias && /^intentra-comunitate-preview-[a-z0-9]+-basescusorin-7695\.vercel\.app$/.test(requested.hostname);
+    return url.protocol === 'https:' && url.origin === preview &&
+      (origin === preview || trustedDeployment) &&
+      requested.protocol === 'https:' && !requested.username && !requested.password &&
       url.hostname !== 'intentra.ch' && !url.hostname.endsWith('.intentra.ch') &&
       !url.username && !url.password && !url.search && !url.hash;
   } catch { return false; }
