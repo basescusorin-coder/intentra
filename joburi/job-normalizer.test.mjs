@@ -26,3 +26,8 @@ test('filters by canton and profession',()=> {
  assert.equal(filterJobs(jobs,{query:'pflege',canton:'AG'}).length,1);
  assert.equal(filterJobs(jobs,{query:'lager',canton:'AG'}).length,0);
 });
+
+test('missing workload stays unknown rather than 0%',()=>{
+ const job=normalizeJob({...sample,workload_min:null,workload_max:undefined},now);
+ assert.equal(job.workload_min,null);assert.equal(job.workload_max,null);
+});
