@@ -75,3 +75,11 @@ test('production is explicit, rejects DEV and unrelated origins, and requires CA
   assert.equal(resolveCommunityRuntimeConfig({ ...prod, VITE_SUPABASE_URL: prod.VITE_SUPABASE_URL + '/rest/v1' }, prodOrigin), null);
   assert.equal(resolveCommunityRuntimeConfig({ ...prod, VITE_COMMUNITY_MODE: 'dev' }, prodOrigin), null);
 });
+
+test('trusted Vercel project deployments work with stable alias configuration, other hosts are blocked', () => {
+  const stable = 'https://intentra-comunitate-preview-git-featur-620154-basescusorin-7695.vercel.app';
+  const configured = { ...env, VITE_COMMUNITY_PREVIEW_ORIGIN: stable };
+  assert.ok(resolveCommunityRuntimeConfig(configured, 'https://intentra-comunitate-preview-jmkv07l9g-basescusorin-7695.vercel.app'));
+  assert.equal(resolveCommunityRuntimeConfig(configured, 'https://intentra-comunitate-preview-evil.vercel.app'), null);
+  assert.equal(resolveCommunityRuntimeConfig(configured, 'https://intentra.ch'), null);
+});
