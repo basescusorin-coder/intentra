@@ -69,7 +69,7 @@ export async function verifiedUser(client: SupabaseClient, token: string) {
 export function isTurnstileResultValid(result: unknown): boolean {
   if (typeof result !== "object" || result === null) return false;
   const payload = result as { success?: unknown; hostname?: unknown };
-  return payload.success === true && (["localhost", "127.0.0.1", "intentra.ch", "www.intentra.ch"].includes(String(payload.hostname)));
+  return payload.success === true && (["localhost", "127.0.0.1", "intentra.ch", "www.intentra.ch", "intentra-comunitate-preview-git-featur-620154-basescusorin-7695.vercel.app"].includes(String(payload.hostname)));
 }
 
 export async function verifyTurnstile(token: string, request: Request): Promise<boolean> {
