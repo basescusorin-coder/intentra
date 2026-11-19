@@ -20,15 +20,20 @@ Deno.serve(async (request) => {
     if (typeof postId !== "string" || !/^[0-9a-f-]{36}$/i.test(postId) || fileEntries.length < 1 || fileEntries.length > 3 || fileEntries.some((entry) => !(entry instanceof File))) return json(request, { error: "invalid_upload" }, 400);
     const files = fileEntries as File[];
     if (files.some((entry) => entry.size < 1 || entry.size > MAX_FILE)) return json(request, { error: "file_too_large" }, 413);
-    // Authentication is required above; email verification is part of the OTP sign-in flow.
-    // A second CAPTCHA here blocked legitimate uploads without protecting a public endpoint.
-    // `author_id` is intentionally not selectable by clients. RLS returns an
-    // owner's pending post here and only published posts belonging to others;
-    // the status check rejects the latter before the service-role upload.
-    const { data: post, error: postError } = await client.from("posts").select("id,status").eq("id", postId).maybeSingle();
-    if (postError || !post || !["pending", "published"].includes(post.status)) return json(request, { error: "post_not_uploadable" }, 403);
-    const { count, error: countError } = await client.from("post_images").select("id", { count: "exact", head: true }).eq("post_id", postId);
-    if (countError || (count || 0) + files.length > 3) return json(request, { error: "image_limit_exceeded" }, 400);
+    // A published post is visible to everyone; visibility is not ownership.
+    // Verify the author server-side before any storage operation.
+    service = serviceClient();
+    const { data: post, error: postError } = await service.from("posts")
+      .select("author_id,status").eq("id", postId).maybeSingle();
+    if (postError || !post || post.author_id !== user.id ||
+        !["pending", "published"].includes(post.status)) {
+      return json(request, { error: "post_not_uploadable" }, 403);
+    }
+    const { count, error: countError } = await service.from("post_images")
+      .select("id", { count: "exact", head: true }).eq("post_id", postId);
+    if (countError || (count || 0) + files.length > 3) {
+      return json(request, { error: "image_limit_exceeded" }, 400);
+    }
     const cleanImages: ReturnType<typeof sanitizeImage>[] = [];
     for (const entry of files) {
       const input = new Uint8Array(await entry.arrayBuffer());
@@ -40,7 +45,6 @@ Deno.serve(async (request) => {
         return json(request, { error: "unsupported_or_invalid_image" }, 415);
       }
     }
-    service = serviceClient();
     const rows: { post_id: string; object_path: string; display_order: number }[] = [];
     for (const image of cleanImages) {
       const objectPath = `${crypto.randomUUID()}.${image.extension}`;
