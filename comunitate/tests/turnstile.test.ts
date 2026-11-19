@@ -11,6 +11,8 @@ Deno.test("Turnstile accepts successful challenges only for explicitly allowed h
   assertEquals(isTurnstileResultValid({ success: true, hostname: "127.0.0.1" }), true);
   assertEquals(isTurnstileResultValid({ success: true, hostname: "intentra.ch" }), true);
   assertEquals(isTurnstileResultValid({ success: true, hostname: "www.intentra.ch" }), true);
+  assertEquals(isTurnstileResultValid({ success: true, hostname: "intentra-comunitate-preview-git-featur-620154-basescusorin-7695.vercel.app" }), true);
+  assertEquals(isTurnstileResultValid({ success: true, hostname: "intentra-comunitate-preview-evil.vercel.app" }), false);
   assertEquals(isTurnstileResultValid({ success: true, hostname: "localhost.evil.example" }), false);
   assertEquals(isTurnstileResultValid({ success: false, hostname: "localhost" }), false);
   assertEquals(isTurnstileResultValid(null), false);
