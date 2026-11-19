@@ -52,7 +52,7 @@ for (const entry of rootFiles) {
 }
 
 const build = spawnSync(process.platform === 'win32' ? 'npm.cmd' : 'npm',
-  ['run', 'build'], { cwd: communityRoot, env: process.env, stdio: 'inherit' });
+  ['run', 'build'], { cwd: communityRoot, env: { ...process.env, INTENTRA_PUBLIC_BUILD: '1' }, stdio: 'inherit' });
 if (build.status !== 0) throw new Error('Vite community build failed.');
 const dist = join(communityRoot, 'dist');
 if (!(await stat(join(dist, 'index.html'))).isFile()) throw new Error('Community Vite HTML missing.');
