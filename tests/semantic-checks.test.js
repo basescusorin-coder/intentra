@@ -66,4 +66,20 @@ test("uses direct original platform search links with the user's query", () => {
   const job = new URL(api.searchUrl("jobs.ch", "https://fallback.example/", "Pflegefachfrau Muri"));
   assert.equal(job.origin, "https://www.jobs.ch");
   assert.equal(job.searchParams.get("term"), "Pflegefachfrau Muri");
+
+  for (const [name, domain] of [["Homegate", "www.homegate.ch"], ["ImmoScout24", "www.immoscout24.ch"], ["Flatfox", "flatfox.ch"], ["tutti.ch", "www.tutti.ch"], ["anibis.ch", "www.anibis.ch"]]) {
+    const url = new URL(api.searchUrl(name, "https://fallback.example/", "Wohnung Zürich"));
+    assert.equal(url.origin, "https://www.google.com", `${name} fallback should open a query-focused search`);
+    assert.equal(url.searchParams.get("q"), `site:${domain} Wohnung Zürich`, `${name} query should be scoped to its portal`);
+  }
+
+  assert.equal(api.searchUrl("Unknown", "https://fallback.example/", "test"), "https://fallback.example/");
+});
+
+test("keeps exactly one accessible three-language selector in the primary interface", () => {
+  assert.equal((html.match(/class="languages"/g) || []).length, 1);
+  assert.equal((html.match(/data-lang="(?:ro|de|en)"/g) || []).length, 3);
+  assert.match(html, /languageLabel:"Alege limba"/);
+  assert.match(html, /languageLabel:"Sprache wählen"/);
+  assert.match(html, /languageLabel:"Choose language"/);
 });

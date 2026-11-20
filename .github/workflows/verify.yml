@@ -68,6 +68,9 @@ jobs:
               console.log('Language switched:',lang);
               if(await page.locator('html').getAttribute('lang')!==lang) throw Error('Language failed: '+lang);
               if(!(await page.locator('#headline').innerText()).trim()) throw Error('Heading missing: '+lang);
+              if(await page.locator('nav.languages').count()!==1||await page.locator('[data-lang]').count()!==3) throw Error('Language selector duplicated or incomplete: '+lang);
+              const label={ro:'Alege limba',de:'Sprache wählen',en:'Choose language'}[lang];
+              if(await page.locator('nav.languages').getAttribute('aria-label')!==label) throw Error('Language selector label failed: '+lang);
             }
             await page.locator('[data-lang="ro"]').click();
             await page.locator('#query').fill('Caut un Mercedes sub 10000 CHF în Elveția');
@@ -100,6 +103,26 @@ jobs:
             await page.locator('#autoCategory').click();
             await page.locator('#search').click();
             if(!(await page.locator('#cards').innerText()).includes('Homegate')) throw Error('Automatic category reset failed');
+            const searchCases=[
+              {q:'Mercedes Zürich',name:'AutoScout24',count:3},
+              {q:'Wohnung Zürich',name:'Homegate',count:3},
+              {q:'Hotel Ticino',name:'Booking.com',count:3},
+              {q:'Job Zürich',name:'jobs.ch',count:3},
+              {q:'Laptop Zürich',name:'Galaxus',count:3},
+              {q:'Krankenkasse Schweiz',name:'Priminfo.ch',count:5}
+            ];
+            for(const lang of ['ro','de','en']){
+              await page.locator('[data-lang="'+lang+'"]').click();
+              for(const testCase of searchCases){
+                await page.locator('#query').fill(testCase.q);
+                await page.locator('#autoCategory').click();
+                await page.locator('#search').click();
+                if(await page.locator('#cards .result-card').count()!==testCase.count) throw Error('Wrong result count for '+lang+' '+testCase.q);
+                if(!(await page.locator('#cards').innerText()).includes(testCase.name)) throw Error('Search category failed for '+lang+' '+testCase.q);
+                const first=await page.locator('#cards .result-card a').first().getAttribute('href');
+                if(testCase.name==='Homegate'&&!new URL(first).searchParams.get('q')?.includes('site:www.homegate.ch')) throw Error('Housing search lost its query');
+              }
+            }
             for(const width of [390,320,768,1440]){
               await page.setViewportSize({width,height:900});
               for(const lang of ['ro','de','en']){
@@ -113,7 +136,7 @@ jobs:
             await page.setViewportSize({width:390,height:844});
             await page.locator('[data-lang="ro"]').click();
             await page.reload();
-            await page.locator('.category-photo').evaluateAll(async images=>{await Promise.all(images.map(i=>i.decode()));if(images.length!==6||images.some(i=>!i.naturalWidth))throw Error('Missing category photography')});
+            await page.locator('.category-photo').evaluateAll(async images=>{await Promise.all(images.map(i=>i.decode()));if(images.length!==7||images.some(i=>!i.naturalWidth))throw Error('Missing category photography')});
             await page.screenshot({path:'intentra-mobile.png',fullPage:true});
             await page.setViewportSize({width:1440,height:1000});
             await page.screenshot({path:'intentra-desktop.png',fullPage:true});
