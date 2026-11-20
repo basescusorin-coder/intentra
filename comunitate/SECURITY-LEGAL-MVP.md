@@ -1,5 +1,8 @@
-# INTENTRA Comunitate — MVP security and legal design (DRAFT)
-Status: development only. The owner-created Supabase Free project `intentra-comunitate-dev` (West EU/Ireland, PostgreSQL 17.11) has the three reviewed schema migrations applied and recorded. No real user data has been collected; no Edge Function is deployed, no custom SMTP or Turnstile widget is configured, and the website has not been published. Documents are drafts, not legal approval or a security certification. The dashboard labels the project's branch `main PRODUCTION`; verify project separation before any future data collection.
+# INTENTRA Comunitate — proiect de securitate și informare juridică
+
+Stare actualizată la 2026-11-20: backend-ul DEV și Supabase PROD există separat; PROD are schema Comunității și funcțiile Edge active. Hardening RPC PROD a fost aplicat fără copiere de date DEV. Paginile legale multilingve sunt proiecte preliminare, nu aprobate pentru lansare. Adresa aprobată este **contact@intentra.ch**. Operatorul este persoană fizică; numele public, adresa de domiciliu și telefonul personal nu sunt incluse.
+
+Nu publica documentele ca versiuni finale și nu colecta date reale prin Comunitatea publică până la completarea identității operatorului, contactului juridic, retenției, furnizorilor/transferurilor și aprobării legale. Supabase PROD este în Ireland; setările SMTP/OTP și Turnstile de producție trebuie validate end-to-end.
 
 ## Product
 - Categories: **Ofer gratuit**, **Vând**, **Întrebări**. Job publication is disabled in UI, request validation, and a database trigger until Swiss AVG/AVV review is complete.

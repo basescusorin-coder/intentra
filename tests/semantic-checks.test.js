@@ -83,3 +83,16 @@ test("keeps exactly one accessible three-language selector in the primary interf
   assert.match(html, /languageLabel:"Sprache wählen"/);
   assert.match(html, /languageLabel:"Choose language"/);
 });
+
+
+test("publishes contact and three-language legal routes without personal address data", () => {
+  const contact = fs.readFileSync(path.join(__dirname, "..", "contact", "index.html"), "utf8");
+  const privacy = fs.readFileSync(path.join(__dirname, "..", "comunitate", "public", "privacy.html"), "utf8");
+  const rules = fs.readFileSync(path.join(__dirname, "..", "comunitate", "public", "rules.html"), "utf8");
+  for (const source of [html, contact, privacy, rules]) assert.match(source, /mailto:contact@intentra\.ch/);
+  for (const page of [contact, privacy, rules]) {
+    for (const locale of ["ro", "de", "en"]) assert.match(page, new RegExp('lang="' + locale + '"'));
+    assert.doesNotMatch(page, /Lerchenweg|077 998 05 69/);
+  }
+  for (const link of ["/contact/", "/comunitate/privacy.html", "/comunitate/rules.html"]) assert.ok(html.includes(link));
+});

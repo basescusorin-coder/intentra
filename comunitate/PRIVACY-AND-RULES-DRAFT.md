@@ -5,7 +5,7 @@
 ## Operator și contact
 
 Operatorul de date: `[NUME LEGAL / FORMĂ JURIDICĂ / ADRESĂ / ȚARĂ]`  
-Contact pentru protecția datelor și cereri: `[ADRESĂ E-MAIL ȘI ADRESĂ POȘTALĂ]`  
+Contact pentru protecția datelor și cereri: [contact@intentra.ch](mailto:contact@intentra.ch). Adresa poștală și identitatea completă a operatorului rămân de completat înainte de lansare.  
 Responsabilul proiectului nu trebuie identificat public decât după stabilirea formei de operare și a cerințelor de publicare aplicabile.
 
 ## Serviciu și stare actuală
@@ -62,3 +62,8 @@ Versiunile română, germană și engleză trebuie revizuite împreună și să 
 6. Categoria Joburi rămâne dezactivată până la evaluarea și aprobarea aplicabilității AVG/AVV și a rolului juridic al operatorului. Nu încărca CV-uri sau date despre candidați.
 7. Nu publica imagini cu persoane fără permisiune și nu include fețe, plăcuțe, documente, locuințe identificabile ori metadate de localizare. Backend-ul are funcție de încărcare și politici de stocare pentru imagini; funcționarea lor end-to-end și informarea utilizatorilor trebuie confirmate înainte de lansare.
 8. Operatorul trebuie să definească procedura pentru raportări urgente, conținut ilegal, conservarea dovezilor, notificări, moderare și contestații înainte de lansare.
+
+
+## Contact confirmat
+
+Adresa funcțională confirmată este **contact@intentra.ch**. Este inclusă în paginile de contact, confidențialitate și reguli RO/DE/EN. Nu au fost adăugate nume personal, domiciliu sau telefon personal.
