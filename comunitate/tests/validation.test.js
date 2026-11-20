@@ -30,7 +30,10 @@ test('post rejects missing location, excessive text and unsupported Job category
 test('report and image constraints reject empty, oversized and executable content types', () => {
   assert.equal(validateReport({ reason:'spam listing' }).ok, true);
   assert.equal(validateReport({ reason:'no' }).ok, false);
-  assert.equal(validateImageFile({ type:'image/jpeg', size: 1024 }), true);
-  assert.equal(validateImageFile({ type:'image/svg+xml', size: 1024 }), false);
-  assert.equal(validateImageFile({ type:'image/jpeg', size: 6 * 1024 * 1024 }), false);
+  assert.equal(validateImageFile({ name:'photo.jpg', type:'image/jpeg', size: 1024 }), true);
+  assert.equal(validateImageFile({ name:'photo.png', type:'', size: 1024 }), true);
+  assert.equal(validateImageFile({ name:'photo.webp', type:'application/octet-stream', size: 1024 }), true);
+  assert.equal(validateImageFile({ name:'photo.svg', type:'', size: 1024 }), false);
+  assert.equal(validateImageFile({ name:'photo.svg', type:'image/svg+xml', size: 1024 }), false);
+  assert.equal(validateImageFile({ name:'photo.jpg', type:'image/jpeg', size: 6 * 1024 * 1024 }), false);
 });
