@@ -1,33 +1,34 @@
-# INTENTRA Comunitate — release gate for /comunitate/
+# INTENTRA Comunitate — gate de lansare pentru /comunitate/
 
-Status: **STAGING ONLY — DO NOT MERGE INTO main YET.**
+Status la 2026-11-20: **NO-GO pentru publicare PROD**.
 
-## Verified hosting boundary
+## Arhitectură și schimbări confirmate
 
-- Public `intentra.ch`: GitHub Pages, repository `basescusorin-coder/intentra`, main branch, root directory.
-- Community DEV: Vercel Preview built from `feature/comunitate-mvp`, Supabase DEV `wnmtrkheznrhrtpbenxh`.
-- The repository contains `comunitate/index.html` as **Vite source**, not as a deployable GitHub Pages artifact. A direct merge into main would expose a broken app because imports and `import.meta.env` require a build.
-- Staging-only navigation has been prepared in root `index.html` and points to `/comunitate/`. Do not merge or expose this navigation before that route is ready.
+- Site-ul public `intentra.ch` este GitHub Pages din branch `main`; aplicația Comunitate este sursă Vite sub `comunitate/`.
+- `node comunitate/scripts/assemble-site.mjs` creează local pachetul complet în `site-release/`, cu homepage și `/comunitate/`; nu publică.
+- Supabase PROD `jvtpmsabjjrvfuwnsckd` are schema instalată și a primit migrația de hardening RPC din 2026-11-20. Nu s-au copiat date DEV.
+- Branch `feature/comunitate-mvp` conține corecția selectorului de limbă accesibil și unic, traducerile UI, query-uri de căutare păstrate în fallback-uri portal și testele asociate.
+- Ultimul artifact Vercel este preview, nu deployment public; `READY` singur nu validează produsul sau backend-ul PROD.
 
-## Required release architecture
+## PASS locale/CI observate
 
-1. Choose a **separate production Supabase project** (not `wnmtrkheznrhrtpbenxh`) and production Turnstile site/secret with authorized `intentra.ch` hostname.
-2. Implement production runtime configuration that validates the explicit production project URL and permits `https://intentra.ch`, without weakening DEV-only runtime restrictions.
-3. Set up verified CORS origins for production Edge Functions. Do not wildcard `*.vercel.app` or remove JWT checks.
-4. Produce a static Vite build for GitHub Pages with `base: '/comunitate/'`; deploy only the built `dist` output at `/comunitate/`. Keep development source out of the published directory.
-5. Ensure links from both desktop and mobile navigation lead to the route, with working back-navigation to INTENTRA search.
-6. Complete privacy information and operating identity; the current `PRIVACY-AND-RULES-DRAFT.md` has placeholders and outdated factual statements. Publish approved RO/DE/EN versions instead of linking to a GitHub draft.
-7. Remove identified synthetic DEV content before any migration; do not migrate DEV user accounts/OTP sessions into production. Never delete genuine profiles or posts during cleanup without identifying each row and explicit scoped authorization.
-8. Verify backup/restore, admin MFA, report handling, separate-user RLS denial, image upload/delete (JPEG/PNG/WebP), email OTP, automatic post/comment publication, account export/deletion, abuse controls and rollback.
-9. Stage release, review the resulting build and its exact runtime configuration, then approve the main-branch release. Add the `/comunitate/` URL to `sitemap.xml` only **after** launch is successful.
+- Testele unitare ale paginii principale și Comunității trec local; testele RLS prin PGlite trec local.
+- Build-ul Vite și asamblarea pachetului de staging au trecut; pachetul nu a fost publicat.
+- Pagina principală a fost testată în RO/DE/EN și pentru căutările pe 6 categorii; selector unic. Comunitatea schimbă traducerile RO/DE/EN și categoriile.
+- Testul desktop/mobile GitHub Actions trebuie să treacă și pe commitul curent înainte ca remedierea overflow-ului să fie considerată verificată.
+- Testele Deno/Edge Functions nu au rulat local: accesul la registry npm a fost refuzat în runner-ul curent. Rezultatul este BLOCKED, nu PASS.
 
-## Current evidence
+## Gate-uri rămase obligatorii
 
-- DEV: basic sign-in, posting, comment creation, image display and owner-post deletion observed through manual user tests.
-- DEV: DB RLS enabled on all nine tables; selected policies reviewed; performance indexes added.
-- Not yet verified: full multi-user authorization, admin MFA, abuse review, backup restore, compliance sign-off.
-- No production deployment or DNS modification authorized by this checklist.
+1. Validare end-to-end OTP/SMTP și redirect-uri în PROD; flux test în DEV numai cu adresă de test autorizată, fără a repeta OTP-uri neaprobate.
+2. Validare Turnstile end-to-end pentru origin-ul public exact și verificarea secretului server-side; fără dezactivarea protecției.
+3. E2E funcțional pentru publicare, fotografie (încărcare/afișare/ștergere), comentarii și ștergerea înregistrării de test; verificarea RLS între utilizatori, export/ștergere cont și moderarea MFA.
+4. Confirmarea Auth/OTP, CORS exact `https://intentra.ch`, variabilele client-side PROD și separarea cheii anonime de secretele server-side.
+5. Backup/restore testat și procedură de rollback.
+6. Publicarea paginilor legale aprobate RO/DE/EN. Lipsesc identitatea operatorului, contactul public, termenele de retenție, inventarul furnizorilor/transferurilor și procedurile aprobate; proiectul actual nu poate fi folosit ca informare finală.
+7. Build PROD cu configurația distinctă jvtpmsabjjrvfuwnsckd; verificarea bundle-ului și testarea rutei publice după deployment.
+8. Integrarea pe `main` și publicarea `/comunitate/` numai după PASS la toate gate-urile esențiale și confirmarea că nu există costuri noi.
 
-## Rollback
+## Date și rollback
 
-If the new route fails, remove/hide the Community navigation and restore the previous GitHub Pages release. Preserve the database, isolate write activity during a recovery and do not roll back schema without analyzing migrations.
+Nu copia membri, sesiuni OTP, anunțuri, fotografii sau comentarii din DEV în PROD. Folosește exclusiv date temporare create pentru un test explicit și curăță doar înregistrările identificate de test după verificarea rezultatului. Dacă ruta publică nu trece verificările, retrage/hidește ruta Comunității din site și revino la artifactul GitHub Pages anterior; păstrează backend-ul și analizează schema înainte de orice rollback DB.

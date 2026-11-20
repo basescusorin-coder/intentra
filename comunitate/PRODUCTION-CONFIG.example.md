@@ -1,43 +1,46 @@
-# INTENTRA Community: production deployment contract
+# INTENTRA Comunitate: contract de configurare PROD
 
-This is **documentation**, not an environment file. Never paste credentials into a public commit.
+Document de configurare, nu fișier de mediu. Nu introduce credențiale în commituri.
 
-The public site `https://intentra.ch/comunitate/` is served through GitHub Pages, while its data/auth backend must be a dedicated Supabase **production** project. The DEV project `wnmtrkheznrhrtpbenxh` is intentionally rejected in production.
+Backend-ul PROD existent este Supabase `intentra-comunitate-prod`, project ref `jvtpmsabjjrvfuwnsckd`, API origin `https://jvtpmsabjjrvfuwnsckd.supabase.co`. Projectul DEV `wnmtrkheznrhrtpbenxh` este separat și runtime-ul de producție îl respinge.
 
-## Required build-time environment names
+## Valori necesare pentru build-ul public
 
-- `VITE_COMMUNITY_MODE=production` — mandatory for a production bundle.
-- `VITE_COMMUNITY_PRODUCTION_PROJECT_REF` — the separate, new 20-character Supabase production project ID.
-- `VITE_SUPABASE_URL` — exactly `https://<production-project-ref>.supabase.co`.
-- `VITE_SUPABASE_ANON_KEY` — the project's **publishable** public browser key, never a `service_role` or `sb_secret_` key.
-- `VITE_TURNSTILE_SITE_KEY` — production Cloudflare Turnstile **public** site key authorized for `intentra.ch`.
-- `COMMUNITY_RELEASE_APPROVED=yes` — explicit release gate. Leave unset during development.
+- `VITE_COMMUNITY_MODE=production` — obligatoriu în build-ul public.
+- `VITE_COMMUNITY_PRODUCTION_PROJECT_REF=jvtpmsabjjrvfuwnsckd`.
+- `VITE_SUPABASE_URL=https://jvtpmsabjjrvfuwnsckd.supabase.co`.
+- `VITE_SUPABASE_ANON_KEY` — numai cheie publică publishable/anon a PROD; niciodată `service_role` sau `sb_secret_`.
+- `VITE_TURNSTILE_SITE_KEY` — cheie publică Turnstile autorizată pentru hostname-ul `intentra.ch`.
+- `COMMUNITY_RELEASE_APPROVED=yes` — se setează numai în workflow-ul de release după PASS la gate-uri.
+- Secretul Turnstile rămâne server-side în configurarea Edge Function; nu se pune în nicio variabilă `VITE_`.
 
-All `VITE_` variables become visible in client assets; do not set any secret here.
+Aceste valori nu sunt încă verificate într-un build public. Configurarea preview Vercel este doar pentru DEV și nu trebuie folosită drept configurație PROD.
 
-## Release command
+## Build și publicare
 
-From the repository root after `npm ci` in `comunitate/` and successful unit/security tests, run:
+De la rădăcina repository-ului, după `npm ci` în `comunitate/` și după testele de release:
 
 ```bash
 node comunitate/scripts/assemble-site.mjs --production
 ```
 
-The script rejects invalid production configuration, missing reviewed `comunitate/public/privacy.html` and `comunitate/public/rules.html`, or missing explicit release approval. It builds `site-release/index.html` and `site-release/comunitate/index.html` together, plus assets and CNAME. This **does not** deploy to GitHub Pages.
+Scriptul respinge configurația greșită, lipsa documentelor aprobate `comunitate/public/privacy.html` și `rules.html`, sau lipsa aprobării explicite de release. Creează `site-release/index.html` și `site-release/comunitate/index.html`; nu face deployment.
 
-For a credential-free test artifact (safe and deliberately unable to connect to DEV on `intentra.ch`):
+Build-ul credential-free de staging este:
 
 ```bash
 node comunitate/scripts/assemble-site.mjs
 ```
 
-## Before public deployment
+Workflow-ul `.github/workflows/community-staging.yml` produce un artifact de verificare. Nu publică pe GitHub Pages. În repository nu există încă workflow automat de release PROD; publicarea se face numai după validarea bundle-ului și aprobarea gate-urilor.
 
-1. Provision a distinct production Supabase project, schema migrations, RLS, auth SMTP, Turnstile CAPTCHA and Edge Functions. Define exact CORS origin `https://intentra.ch`.
-2. Configure the production project's allowed auth redirect URLs and test OTP without rate-limit bypass.
-3. Obtain an approved privacy policy with legally responsible operator, contact, data-retention, processing locations and incident response. Replace the DEV draft; add both required reviewed HTML pages.
-4. Complete two-user RLS, MFA admin, image, reporting, deletion/export, backup/restore and rollback tests; document results.
-5. Deploy only the verified `site-release/` contents via reviewed Pages release, after explicit approval. Do **not** merge Vite source directly into GitHub Pages root or publish DEV tokens/accounts.
-6. Confirm `https://intentra.ch/comunitate/` is correct before adding it to `sitemap.xml`.
+## Gate înainte de deployment
 
-The staging workflow `.github/workflows/community-staging.yml` builds an **artifact only**, not a public deployment.
+1. Confirma configurarea OTP/SMTP, redirect-urile Auth, limitele și Turnstile pentru domeniul exact `https://intentra.ch`; rulează testele fără ocolirea protecțiilor.
+2. Rulează în PROD fluxurile autorizate pentru autentificare, RLS cu doi utilizatori, anunț, fotografie, comentariu, raportare, export și ștergere, fără a importa conținut din DEV.
+3. Obține și publică versiunile aprobate RO/DE/EN ale regulilor și informării de confidențialitate, cu operator, contact, furnizori/transferuri, retenție și proceduri completate.
+4. Demonstrează MFA administrator, backup/restore, protecție imagini, moderare/abuz și rollback.
+5. Construiește, inspectează și testează artifactul de producție cu proiectul PROD și Turnstile; apoi publică numai fișierele din `site-release/` pe GitHub Pages.
+6. Verifică direct `https://intentra.ch/comunitate/` după publicare. Adaugă ruta în sitemap numai după PASS.
+
+Nu publica codul Vite sursă direct în GitHub Pages root și nu publica chei DEV, sesiuni sau conturi de test.
