@@ -1,40 +1,23 @@
-# INTENTRA Comunitate — verificare PROD (2026-11-18)
+# INTENTRA Comunitate — stare PROD (2026-11-20)
 
-## Proiect creat și verificat
+## Infrastructură verificată
 
-- Supabase **production**: `intentra-comunitate-prod`
-- Project reference: `jvtpmsabjjrvfuwnsckd`
-- API origin: `https://jvtpmsabjjrvfuwnsckd.supabase.co`
-- Organization: `INTENTRA` (`xfmfqfmjcmjuqizdpvix`)
-- Region: `eu-west-1` (Ireland)
-- Verified status: `ACTIVE_HEALTHY`
-- Supabase quoted cost: **USD 0/month**, confirmed before creation
-- Security and health advisors: **no findings** on the empty project
-- Publishable and legacy anon keys exist; **no keys committed**
-- Public tables: **zero**; migrations: **zero**; Edge Functions: **zero**
-- No DEV user accounts, listings, comments, photos or sessions copied
-- Existing DEV: `wnmtrkheznrhrtpbenxh`, separate and `ACTIVE_HEALTHY`
+- Supabase PROD: `intentra-comunitate-prod`, ref `jvtpmsabjjrvfuwnsckd`, `ACTIVE_HEALTHY`, regiunea `eu-west-1` (Ireland).
+- PROD are schema Comunității instalată: 9 tabele publice, politici RLS, bucket-ul de fotografii și 3 Edge Functions active cu verificarea JWT activată. Migrațiile instalate sunt în istoricul remote Supabase; istoricul curent conține 12 intrări.
+- PROD a fost inițializat fără rânduri de membri, anunțuri, comentarii sau fotografii provenite din DEV. Nicio copie de date DEV nu a fost efectuată.
+- La 2026-11-20, hardening-ul RPC pentru PROD a mutat 8 implementări privilegiate în schema `community_private` și a lăsat în `public` numai wrapper-e `SECURITY INVOKER`. Verificarea catalogului a confirmat că acești wrapper-e nu sunt executabili de `anon`, sunt executabili de `authenticated`, iar avertismentul advisor privind funcții `SECURITY DEFINER` accesibile utilizatorilor autentificați a dispărut.
+- Advisor mai raportează 3 elemente INFO `rls_enabled_no_policy` pentru tabele interne de setări/administrare/limitare. Accesul acestora este intenționat prin funcții controlate; nu reprezintă o constatare de severitate ridicată.
+- Migrația aplicată PROD este păstrată separat, în `supabase/production-migrations/20261120095939_production_rpc_private_hardening.sql`; nu se execută automat în lanțul de migrații DEV.
 
-## Gate: NO LIVE RELEASE
+## Ce nu este încă certificat pentru lansare
 
-Do **not** deploy this project publicly yet. This is a healthy empty backend, not an installed application.
+- Nu a fost creat un cont real de utilizator în PROD și nu au fost trimise OTP-uri de test; configurarea și livrarea SMTP/OTP, redirect-urile și limitele Auth nu sunt validate end-to-end.
+- Nu a fost validată end-to-end asocierea cheii site Turnstile cu hostname-ul de producție și secretul verificat server-side.
+- Nu au fost rulate în PROD scenariile de publicare, upload/ștergere fotografie, comentarii, ștergerea contului și verificarea RLS între doi utilizatori. Nu se folosesc date DEV pentru aceste teste.
+- Nu există încă bundle-ul public `/comunitate/` configurat și validat pentru proiectul PROD. Preview-ul Vercel este doar mediu de verificare și nu este un deployment public.
+- Documentele juridice rămân proiecte neaprobate și conțin câmpuri lipsă pentru operator, contact, termene de păstrare, furnizori/transferuri, proceduri și versiuni RO/DE/EN.
+- Backup/restore, MFA pentru administrator și procesul complet de raportare/contestație trebuie demonstrate înainte de lansare.
 
-The repository's original historical migrations explicitly describe themselves as development-only or draft. Several migrations that exist in the DEV migration history are **not present as SQL files in GitHub**. Running only the available migrations would create an incomplete backend. Before any production schema installation:
+## Decizie
 
-1. Build and review a single reconciled baseline representing current DEV structure, RLS, views, RPCs, triggers, storage bucket and Edge Functions **without copying member data**.
-2. Confirm per-user RLS and MFA moderation, server-side image validation/deletion and automatic publishing for safe content.
-3. Apply reviewed schema to the new production project, then run security/performance advisors and dedicated permission tests.
-4. Configure SMTP, OTP, project redirects, a dedicated Cloudflare Turnstile site/secret and exact origin CORS at `https://intentra.ch`. Secrets must never be put in `VITE_` fields.
-5. Finish approved legal terms and privacy pages, data retention, backup and restore validation, incident procedures and contact details.
-6. Prepare a verified production GitHub Pages bundle targeting the distinct backend and public domain. Only publish `/comunitate/` after acceptance.
-
-## Vercel warning
-
-The existing Vercel Preview project contains environment variable entries targeting `production` and `preview`. Do not assume the production entries point to the new Supabase PROD; they have not been verified as safe. The Vercel project reports `live: false`. Never promote that environment without inspecting and replacing configuration and running release checks.
-
-## Current change policy
-
-- Continue development exclusively in `feature/comunitate-mvp`.
-- Do not modify `main`, `intentra.ch` or DNS.
-- Do not add costs without explicit consent; user approved only USD 0/month.
-- Do not copy private DEV member content into production.
+**NO-GO pentru publicare la 2026-11-20.** Lansarea rămâne condiționată de trecerea verificărilor esențiale PROD și completarea/aprobarea documentelor juridice. Statusul Vercel `READY` nu este criteriu suficient de lansare.

@@ -1,6 +1,6 @@
 # INTENTRA Comunitate — proiect de informare privind confidențialitatea
 
-**Stare: proiect de lucru; nu este aprobat și nu trebuie publicat ca informare finală.** Codul aplicației este în dezvoltare, dar nu există backend furnizor configurat; nu s-au colectat date reale. Completează câmpurile `[DE COMPLETAT]` și solicită revizuire juridică înainte de colectare.
+**Stare: proiect de lucru; nu este aprobat și nu trebuie publicat ca informare finală.** Schema Supabase PROD și funcțiile backend sunt instalate, însă fluxurile PROD nu au trecut încă testarea end-to-end și paginile publice nu sunt lansate. Acest document rămâne incomplet și neaprobat; completează câmpurile `[DE COMPLETAT]` și solicită revizuire juridică înainte de colectarea datelor reale.
 
 ## Operator și contact
 
@@ -10,7 +10,7 @@ Responsabilul proiectului nu trebuie identificat public decât după stabilirea 
 
 ## Serviciu și stare actuală
 
-Comunitatea este proiectată ca panou de anunțuri și întrebări. Codul include fluxuri pentru conturi, publicare, moderare și fotografii, dar backend-ul nu este configurat și aceste fluxuri nu sunt disponibile public. Previzualizarea statică folosește exemple fictive. Această pagină descrie o posibilă versiune pilot și devine valabilă doar după completare, aprobare și publicare de către operator.
+Comunitatea este proiectată ca panou de anunțuri și întrebări. Backend-ul PROD include schema, politici RLS și funcții pentru conturi, anunțuri, comentarii și fotografii. El nu este încă expus public, iar autentificarea, Turnstile și operațiile utilizatorilor nu au fost validate end-to-end în PROD. Previzualizarea statică folosește exemple fictive. Această pagină descrie o versiune pilot și devine valabilă numai după completare, aprobare și publicare de către operator.
 
 ## Date planificate și scopuri
 
@@ -30,7 +30,7 @@ Temeiurile de prelucrare conform DSG elvețian și, dacă se aplică, GDPR, scop
 
 ## Publicare, moderare și destinatari
 
-Anunțurile și comentariile trec prin moderare înainte de afișare. Pseudonimul, cantonul și conținutul aprobat sunt publice și pot fi indexate ori copiate de terți. Nu publica numere de telefon, e-mailuri, adrese exacte, acte, date de sănătate sau alte date sensibile. Operatorul va descrie procesul de raportare, contestare, blocare și eliminare.
+Conținutul sigur poate fi publicat automat; conținutul cu risc este reținut pentru verificare sau respingere. Acest comportament trebuie descris complet și aprobat de operator înainte de lansare. Pseudonimul, cantonul și conținutul aprobat sunt publice și pot fi indexate ori copiate de terți. Nu publica numere de telefon, e-mailuri, adrese exacte, acte, date de sănătate sau alte date sensibile. Operatorul va descrie procesul de raportare, contestare, blocare și eliminare.
 
 ## Păstrare, acces și ștergere
 
@@ -60,5 +60,5 @@ Versiunile română, germană și engleză trebuie revizuite împreună și să 
 4. Nu cere și nu trimite plata prin platformă. Verifică bunurile și persoana în mod rezonabil; evită plata în avans și raportează tentativele de fraudă.
 5. Comentariile sunt publice și moderate. Nu există mesagerie privată în MVP. Abuzurile pot fi raportate; moderatorul poate ascunde, respinge sau elimina conținutul și poate suspenda conturi, cu un canal de contestare care trebuie definit înainte de pilot.
 6. Categoria Joburi rămâne dezactivată până la evaluarea și aprobarea aplicabilității AVG/AVV și a rolului juridic al operatorului. Nu încărca CV-uri sau date despre candidați.
-7. Nu publica imagini cu persoane fără permisiune și nu include fețe, plăcuțe, documente, locuințe identificabile ori metadate de localizare. Până când procesarea sigură a imaginilor este configurată, încărcarea fotografiilor rămâne oprită.
+7. Nu publica imagini cu persoane fără permisiune și nu include fețe, plăcuțe, documente, locuințe identificabile ori metadate de localizare. Backend-ul are funcție de încărcare și politici de stocare pentru imagini; funcționarea lor end-to-end și informarea utilizatorilor trebuie confirmate înainte de lansare.
 8. Operatorul trebuie să definească procedura pentru raportări urgente, conținut ilegal, conservarea dovezilor, notificări, moderare și contestații înainte de lansare.
