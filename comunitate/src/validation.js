@@ -15,7 +15,7 @@ export function validateProfile(input) {
   if (!/^[A-Za-z0-9_]{3,30}$/.test(username)) errors.username = 'username';
   if (!CANTONS.includes(canton)) errors.canton = 'canton';
   if (city.length < 2 || city.length > 80) errors.city = 'city';
-  if (phone && !/^\\+?[0-9 ()\\-./]{7,25}$/.test(phone)) errors.phone = 'phone';
+  if (phone && !/^\+?[0-9 ()\-./]{7,25}$/.test(phone)) errors.phone = 'phone';
   return { ok: Object.keys(errors).length === 0, value: { username, canton, city, phone: phone || null }, errors };
 }
 
@@ -48,9 +48,9 @@ export function validateImageFile(file) {
   const allowedExtensions = new Set(['jpg','jpeg','png','webp']);
   const type = typeof file?.type === 'string' ? file.type.toLowerCase() : '';
   const extension = typeof file?.name === 'string' ? file.name.split('.').pop().toLowerCase() : '';
-  // Some browser file pickers provide an empty/generic MIME type for valid images.
-  // Permit a known image extension in that case; the Edge Function still verifies
-  // the actual file signature and dimensions before accepting or storing the bytes.
+  // Browser pickers may supply an empty or generic MIME type for valid images.
+  // In those cases allow only a known image extension; the Edge Function still
+  // checks the image signature and dimensions before storage.
   const typeAccepted = allowedTypes.has(type) ||
     ((!type || type === 'application/octet-stream') && allowedExtensions.has(extension));
   return Boolean(file && typeAccepted && file.size > 0 && file.size <= 5 * 1024 * 1024);
