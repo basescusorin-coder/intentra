@@ -17,7 +17,7 @@ Status la 2026-11-20: **NO-GO pentru publicare PROD**.
 
 ## Constatare PROD actuală
 
-- Auth Email este activ cu confirmare obligatorie. **SMTP custom este OFF** în dashboard; livrarea OTP către utilizatori externi nu este PASS. Adresa contact@intentra.ch funcționează pentru corespondență, dar SMTP nu este configurat în Supabase.
+- Auth Email este activ cu confirmare obligatorie; am setat și redeschis configurația pentru a confirma OTP de 6 cifre cu expirare 600 secunde. **SMTP custom este OFF** în dashboard; livrarea OTP către utilizatori externi nu este PASS. Adresa contact@intentra.ch funcționează pentru corespondență, dar SMTP nu este configurat în Supabase.
 - În Supabase Auth > Attack Protection, **CAPTCHA protection este Disabled** la momentul verificării. Turnstile PROD nu este PASS și nu este sigur să se deschidă signup-ul public.
 - Nu am introdus ori expus credențiale. Infomaniak SMTP: host `mail.infomaniak.com`, port `587` cu STARTTLS, username adresa completă; parola trebuie introdusă direct de operator în dashboard. Activarea custom SMTP poate modifica limitele de trimitere Supabase.
 - Corecția PNG este încă NEVALIDATĂ end-to-end pe noul preview. Vechiul test s-a oprit în browser înainte de orice request Supabase. Nicio înregistrare de test nu a fost creată.
