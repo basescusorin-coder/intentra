@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ro"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>INTENTRA — Joburi în Elveția (DEV)</title>
+<meta name="robots" content="noindex,nofollow">
+<style>
+:root{font-family:system-ui,-apple-system,sans-serif;color:#eef6ff;background:#081321}*{box-sizing:border-box}
+body{margin:0}.wrap{max-width:1000px;margin:auto;padding:28px 20px}header{display:flex;justify-content:space-between;align-items:center;gap:12px}
+a{color:#8fe3ff}h1{font-size:clamp(30px,5vw,48px);margin:36px 0 10px}p{color:#bfd0df;line-height:1.6}
+.panel,.item{background:#13243a;border:1px solid #34485c;border-radius:16px;padding:20px;margin:16px 0}
+.filters{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:12px}
+label{display:block;font-size:13px;margin-bottom:7px;color:#d4e5f5}
+input,select{width:100%;background:#071422;border:1px solid #637a91;border-radius:9px;color:white;padding:12px;font:inherit}
+button,.link{display:inline-block;border:0;border-radius:9px;background:#9ce6ff;color:#051523;font-weight:700;padding:11px 16px;text-decoration:none;cursor:pointer}
+button:focus-visible,a:focus-visible{outline:3px solid orange;outline-offset:3px}
+small{color:#b7c9d9}.item h2{font-size:20px;margin:0}.tag{display:inline-block;padding:4px 8px;border-radius:6px;background:#254158;color:#d9f2ff;font-size:12px;margin:8px 6px 8px 0}
+.notice{border-left:4px solid #9ce6ff;padding-left:14px}
+@media(max-width:700px){.filters{grid-template-columns:1fr}header{align-items:flex-start;flex-direction:column}}
+</style></head>
+<body><main class="wrap"><header><strong>INTENTRA <span style="color:#9ce6ff">/ JOBURI</span></strong><a href="../">Înapoi la INTENTRA</a></header>
+<h1>Găsește de lucru în Elveția</h1>
+<p>Pornește de la surse oficiale și portaluri de recrutare. Căutarea de mai jos filtrează <strong>sursele</strong>, nu pretinde că verifică în timp real posturile disponibile.</p>
+<div class="panel"><div class="filters">
+<div><label for="q">Profesie sau cuvânt-cheie</label><input id="q" type="search" placeholder="ex. Pflegehelferin, Lager, Chauffeur" autocomplete="off"></div>
+<div><label for="city">Localitate</label><input id="city" type="search" placeholder="ex. Bremgarten" autocomplete="address-level2"></div>
+<div><label for="canton">Canton</label><select id="canton"><option value="">Toate cantoanele</option><option>AG</option><option>ZH</option><option>LU</option><option>ZG</option><option>BE</option><option>BS</option><option>BL</option><option>SG</option><option>TG</option><option>SO</option><option>VD</option><option>GE</option><option>TI</option></select></div>
+<div><label for="sector">Domeniu</label><select id="sector"><option value="">Toate domeniile</option><option value="medical">Îngrijire / sănătate</option><option value="logistica">Logistică / producție</option><option value="general">General</option></select></div>
+</div><p><button id="go" type="button">Caută locuri de muncă ↗</button> <a class="link" id="direct" href="https://www.jobs.ch/de/stellenangebote/" target="_blank" rel="noopener noreferrer">Deschide căutarea pe jobs.ch ↗</a></p><small id="hint" role="status" aria-live="polite">Completează profesia și apasă «Caută pe jobs.ch» pentru a vedea rezultate la sursă.</small></div>
+<section aria-label="Surse de locuri de muncă" id="sources"></section>
+<p class="notice"><strong>Transparență:</strong> INTENTRA nu este angajator sau agenție de recrutare. Nu garantăm disponibilitatea posturilor externe. Nu colectăm CV-uri aici. Verifică întotdeauna anunțul original înainte să aplici.</p>
+</main><script>
+'use strict';
+const sources=[
+{name:'Job-Room (SECO)',url:'https://www.job-room.ch/',type:'Portal public oficial',sectors:['general','medical','logistica'],note:'Platforma publică elvețiană pentru căutarea ofertelor de muncă.'},
+{name:'jobs.ch',url:'https://www.jobs.ch/',type:'Portal de recrutare',sectors:['general','medical','logistica'],note:'Caută oferte după profesie și localitate direct la sursă.'},
+{name:'jobup.ch',url:'https://www.jobup.ch/',type:'Portal de recrutare',sectors:['general','medical','logistica'],note:'Portal de recrutare, inclusiv pentru Elveția francofonă.'},
+{name:'Adecco Elveția',url:'https://www.adecco.com/en-ch',type:'Agenție de recrutare',sectors:['general','medical','logistica'],note:'Oferte și candidaturi prin agenție.'},
+{name:'Randstad Elveția',url:'https://www.randstad.ch/',type:'Agenție de recrutare',sectors:['general','medical','logistica'],note:'Oferte în mai multe domenii, inclusiv logistică.'},
+{name:'Spitex Schweiz',url:'https://www.spitex.ch/',type:'Organizație profesională',sectors:['medical'],note:'Punct de pornire pentru identificarea organizațiilor de îngrijire la domiciliu; nu este un flux de anunțuri.'}
+];
+const $=id=>document.getElementById(id);
+function render(){
+const sector=$('sector').value;
+const q=$('q').value.trim();const canton=$('canton').value;const city=$('city').value.trim();
+$('hint').textContent='Criterii pentru căutarea la sursă: '+(q||'orice profesie')+(city?', '+city:'')+(canton?', canton '+canton:'')+'. Butonul de căutare deschide jobs.ch cu termenii introduși. Filtrele exacte se pot ajusta la sursă.';
+const terms=[q,city,canton].filter(Boolean).join(' ');const url='https://www.jobs.ch/de/stellenangebote/'+(terms?'?term='+encodeURIComponent(terms):'');$('direct').href=url;$('direct').textContent='Deschide rezultatele pe jobs.ch ↗';const root=$('sources');root.replaceChildren();
+const filtered=sources.filter(s=>!sector||s.sectors.includes(sector));
+filtered.forEach(s=>{
+const article=document.createElement('article');article.className='item';
+const title=document.createElement('h2');title.textContent=s.name;
+const tag=document.createElement('span');tag.className='tag';tag.textContent=s.type;
+const desc=document.createElement('p');desc.textContent=s.note;
+const link=document.createElement('a');link.className='link';link.href=s.url;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Deschide sursa oficială';
+article.append(title,tag,desc,link);root.append(article);
+});
+}
+$('go').addEventListener('click',()=>{render();window.open($('direct').href,'_blank','noopener,noreferrer');});$('q').addEventListener('input',render);$('city').addEventListener('input',render);$('canton').addEventListener('change',render);$('sector').addEventListener('change',render);render();
+</script></body></html>

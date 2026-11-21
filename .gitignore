@@ -1,0 +1,5 @@
+site-release/
+node_modules/
+.env
+.env.*
+!.env.example
