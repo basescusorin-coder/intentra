@@ -50,9 +50,12 @@ for (const entry of rootFiles) {
     await cp(join(repositoryRoot, entry.name), join(outputDir, entry.name));
   }
 }
-const contactDir = join(repositoryRoot, 'contact');
-try { await stat(contactDir); await cp(contactDir, join(outputDir, 'contact'), { recursive: true }); }
-catch (error) { if (error.code !== 'ENOENT') throw error; }
+for (const directory of ['assets', 'contact', 'joburi']) {
+  await cp(join(repositoryRoot, directory), join(outputDir, directory), {
+    recursive: true,
+    filter: source => !source.endsWith('.test.mjs') && !source.endsWith('.md'),
+  });
+}
 
 const build = spawnSync(process.platform === 'win32' ? 'npm.cmd' : 'npm',
   ['run', 'build'], { cwd: communityRoot, env: { ...process.env, INTENTRA_PUBLIC_BUILD: '1' }, stdio: 'inherit' });

@@ -35,6 +35,9 @@ jobs:
           test -s site-release/comunitate/index.html
           test -d site-release/comunitate/assets
           test -s site-release/contact/index.html
+          test -s site-release/assets/swiss.webp
+          test -s site-release/joburi/index.html
+          test -s site-release/joburi/job-normalizer.mjs
           test -s site-release/comunitate/privacy.html
           test -s site-release/comunitate/rules.html
           grep -q 'mailto:contact@intentra.ch' site-release/index.html
