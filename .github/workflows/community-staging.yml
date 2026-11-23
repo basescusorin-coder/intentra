@@ -27,6 +27,12 @@ jobs:
       - name: Run application and configuration tests
         working-directory: comunitate
         run: npm test
+      - name: Verify community database RLS in isolated WASM tests
+        working-directory: comunitate
+        run: npm run test:rls:wasm
+      - name: Verify public jobs normalizer
+        working-directory: comunitate
+        run: npm run test:jobs
       - name: Assemble staging artifact without production credentials
         run: node comunitate/scripts/assemble-site.mjs
       - name: Verify compiled /comunitate route
