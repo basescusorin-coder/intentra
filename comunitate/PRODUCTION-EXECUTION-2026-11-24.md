@@ -91,3 +91,18 @@ No GitHub Pages deployment was performed. If a future `/comunitate/` smoke test
 fails after publication, restore only the previous static site artifact or
 remove the Community route; do not roll back the PROD database schema without
 review.
+
+
+## Live production route and test access check (24 November 2026)
+
+- Opened the exact public route `https://intentra.ch/comunitate/`. It currently
+  serves the static “Pregătim lansarea publică” page and states that registration
+  and listing are unavailable. No auth form or Turnstile widget is present on
+  this route, so a production-host OTP/CAPTCHA test cannot start without
+  publishing the app route first.
+- The connected Gmail identity is not the official `contact@intentra.ch`
+  mailbox. The official inbox was not read. No OTP was sent, no CAPTCHA was
+  solved, and no test account/content was created. No production test data
+  requires cleanup.
+- Do not use a Vercel preview origin for this check: the production Turnstile
+  hostname allowlist remains restricted to the official domain.
