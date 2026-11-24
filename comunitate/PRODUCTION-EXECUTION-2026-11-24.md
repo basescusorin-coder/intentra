@@ -6,11 +6,14 @@
 
 ## Verified and changed
 
-- GitHub PR #10 remains a draft. Branch `feature/comunitate-mvp` was at
-  `9d6bccea92dead7ef6cdc3e2e27c880b7a2d2d32`; `main` remains the public
-  baseline. No public deployment or merge was performed.
+- GitHub PR #10 remains a draft. The reviewed fixes and this execution record
+  are on `feature/comunitate-mvp` at
+  `eca0e1cff2cbb17cf17c9dec040b64102579d9b2`; `main` remains the public
+  baseline at `8127bd22…`. The Vercel preview for this commit is READY at
+  deployment `dpl_9bjbPxzUkweKXtr7QgLNUJaTJFYw`. No public deployment or merge
+  was performed.
 - Supabase DEV is `ACTIVE_HEALTHY`, with 21 migrations. PROD is
-  `ACTIVE_HEALTHY`, with 12 migrations and nine core Community tables. The
+  `ACTIVE_HEALTHY`, with 13 migrations and nine core Community tables. The
   two DEV-only jobs registry tables remain absent from PROD, consistent with
   the restricted Joburi category.
 - The core table columns match except `posts.author_username` and
@@ -45,12 +48,18 @@
   DEV Supabase URL.
 - Automated tests passed: 4 image-sanitizer, 22 app/config/legal, 9 Joburi, and
   1 RLS/WASM test (36 total). Vite production build passed.
+- GitHub Actions for commit `eca0e1c` passed: Joburi DEV tests, Community
+  staging package, and Community DEV checks. The latter includes the CI edge
+  checks; a local Deno type-check is still blocked by the runtime's registry
+  connection failure noted below.
 
 ## Remaining launch blockers
 
-- Auth URL configuration is wrong in PROD: Site URL is
-  `http://localhost:3000` and Redirect URLs is empty. No OTP delivery/receipt
-  was tested. SMTP settings are present, but successful email delivery is not
+- Auth URL configuration is now corrected in PROD: Site URL is
+  `https://intentra.ch`; Redirect URLs are restricted to
+  `https://intentra.ch/comunitate` and `https://intentra.ch/comunitate/`.
+  Dashboard save confirmations were observed. No OTP delivery/receipt was
+  tested. SMTP settings are present, but successful email delivery is not
   established.
 - Production Turnstile challenge and authorized hostname were not exercised.
   The application CAPTCHA requires a human challenge; no challenge was solved
