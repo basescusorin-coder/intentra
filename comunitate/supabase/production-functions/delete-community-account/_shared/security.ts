@@ -3,6 +3,8 @@ import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 const allowedOrigins = new Set([
   "https://intentra.ch",
   "https://www.intentra.ch",
+  // Only the SSO-protected feature-branch alias is allowed for the short PROD test.
+  "https://intentra-comunitate-preview-git-featur-620154-basescusorin-7695.vercel.app",
 ]);
 
 export function corsHeaders(origin: string | null): HeadersInit {
@@ -65,7 +67,7 @@ export async function verifiedUser(client: SupabaseClient, token: string) {
 export function isTurnstileResultValid(result: unknown): boolean {
   if (typeof result !== "object" || result === null) return false;
   const payload = result as { success?: unknown; hostname?: unknown };
-  return payload.success === true && (["intentra.ch", "www.intentra.ch"].includes(String(payload.hostname)));
+  return payload.success === true && (["intentra.ch", "www.intentra.ch", "intentra-comunitate-preview-git-featur-620154-basescusorin-7695.vercel.app"].includes(String(payload.hostname)));
 }
 
 export async function verifyTurnstile(token: string, request: Request): Promise<boolean> {

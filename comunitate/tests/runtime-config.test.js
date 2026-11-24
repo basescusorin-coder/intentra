@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { COMMUNITY_DEV_PROJECT_REF, resolveCommunityRuntimeConfig } from '../src/runtime-config.js';
+import { COMMUNITY_DEV_PROJECT_REF, COMMUNITY_PRODUCTION_TEST_ORIGIN, resolveCommunityRuntimeConfig } from '../src/runtime-config.js';
 
 const origin = 'http://127.0.0.1:5173';
 const env = {
@@ -74,6 +74,21 @@ test('production is explicit, rejects DEV and unrelated origins, and requires CA
   assert.equal(resolveCommunityRuntimeConfig({ ...prod, VITE_SUPABASE_ANON_KEY: `sb_secret_${'x'.repeat(40)}` }, prodOrigin), null);
   assert.equal(resolveCommunityRuntimeConfig({ ...prod, VITE_SUPABASE_URL: prod.VITE_SUPABASE_URL + '/rest/v1' }, prodOrigin), null);
   assert.equal(resolveCommunityRuntimeConfig({ ...prod, VITE_COMMUNITY_MODE: 'dev' }, prodOrigin), null);
+});
+
+test('production test config is limited to the exact SSO-protected branch alias', () => {
+  const prodRef = 'abcdefghijklmnopqrst';
+  const testConfig = {
+    ...env,
+    VITE_COMMUNITY_MODE: 'production',
+    VITE_COMMUNITY_PRODUCTION_PROJECT_REF: prodRef,
+    VITE_COMMUNITY_PRODUCTION_TEST_ORIGIN: COMMUNITY_PRODUCTION_TEST_ORIGIN,
+    VITE_SUPABASE_URL: `https://${prodRef}.supabase.co`,
+  };
+  assert.equal(resolveCommunityRuntimeConfig(testConfig, COMMUNITY_PRODUCTION_TEST_ORIGIN)?.url, testConfig.VITE_SUPABASE_URL);
+  assert.equal(resolveCommunityRuntimeConfig(testConfig, 'https://intentra-comunitate-preview-evil.vercel.app'), null);
+  assert.equal(resolveCommunityRuntimeConfig({ ...testConfig, VITE_COMMUNITY_PRODUCTION_TEST_ORIGIN: 'https://attacker.example' }, COMMUNITY_PRODUCTION_TEST_ORIGIN), null);
+  assert.equal(resolveCommunityRuntimeConfig({ ...testConfig, VITE_SUPABASE_URL: `https://${COMMUNITY_DEV_PROJECT_REF}.supabase.co` }, COMMUNITY_PRODUCTION_TEST_ORIGIN), null);
 });
 
 test('only the exact stable Vercel DEV alias may connect; deployment URLs are denied', () => {

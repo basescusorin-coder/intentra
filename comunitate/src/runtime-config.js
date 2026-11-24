@@ -8,9 +8,15 @@ const DEV_URL = `https://${COMMUNITY_DEV_PROJECT_REF}.supabase.co`;
 // Production is an explicit, opt-in build with a separate backend.
 // Never make the DEV database available on the public INTENTRA domain.
 export const COMMUNITY_PRODUCTION_ORIGIN = 'https://intentra.ch';
+// One SSO-protected Vercel branch alias is allowed only when the deployment
+// explicitly opts in with this exact origin. Per-deployment URLs stay denied.
+export const COMMUNITY_PRODUCTION_TEST_ORIGIN = 'https://intentra-comunitate-preview-git-featur-620154-basescusorin-7695.vercel.app';
 
 function productionBackendUrl(env, origin) {
-  if (env?.VITE_COMMUNITY_MODE !== 'production' || origin !== COMMUNITY_PRODUCTION_ORIGIN) return null;
+  const publicOrigin = origin === COMMUNITY_PRODUCTION_ORIGIN;
+  const protectedTestOrigin = origin === COMMUNITY_PRODUCTION_TEST_ORIGIN &&
+    env?.VITE_COMMUNITY_PRODUCTION_TEST_ORIGIN === COMMUNITY_PRODUCTION_TEST_ORIGIN;
+  if (env?.VITE_COMMUNITY_MODE !== 'production' || (!publicOrigin && !protectedTestOrigin)) return null;
   const ref = env?.VITE_COMMUNITY_PRODUCTION_PROJECT_REF;
   if (typeof ref !== 'string' || !/^[a-z0-9]{20}$/.test(ref) || ref === COMMUNITY_DEV_PROJECT_REF) return null;
   return `https://${ref}.supabase.co`;
