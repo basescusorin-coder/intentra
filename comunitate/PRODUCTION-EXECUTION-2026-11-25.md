@@ -25,18 +25,26 @@ Surse Infomaniak:
 - Ultima verificare publică din 25.11 a găsit pagina `/comunitate/` în starea „Pregătim lansarea publică”; nu există flux OTP public. CI/build nu reprezintă test E2E PROD.
 - Nu s-a făcut merge, deploy public, migrare nouă sau copiere de date DEV în PROD.
 
-## Operator — opțiune fără domiciliul personal și fără taxă nouă
+## Operator — alternative juridice (pentru decizia proprietarului)
 
-Legea federală elvețiană privind protecția datelor cere informarea persoanei despre identitatea și datele de contact ale operatorului (DSG/FADP art. 19). SECO arată, pentru ofertele online de bunuri/servicii care intră sub art. 3 alin. 1 lit. s UWG, obligația de a indica identitatea și o adresă de contact, inclusiv e-mail; aplicabilitatea exactă la un panou comunitar gratuit trebuie confirmată juridic înainte de lansare.
+Legea federală elvețiană privind protecția datelor cere comunicarea identității și datelor de contact ale operatorului. Pentru ofertele online de bunuri/servicii care intră sub art. 3 alin. 1 lit. s UWG, SECO cere identitate și adresă de contact, inclusiv e-mail. Aplicabilitatea UWG la funcțiile concrete ale unei comunități gratuite trebuie confirmată juridic înainte de lansare.
 
-O variantă de verificat este un **c/o pentru corespondență**, oferit gratuit de o persoană de încredere, cu acord scris al titularului și cu acceptarea reală a corespondenței legale și a cererilor utilizatorilor. Pentru o entitate înscrisă în registrul comerțului, HRegV art. 117 recunoaște o adresă c/o ca domiciliu juridic, cu declarația titularului adresei. Aceasta nu transformă automat orice adresă informală într-un domiciliu comercial valid și nu garantează că operatorul poate rămâne anonim: identitatea juridică trebuie declarată.
+| Variantă | Cost nou | Adresă personală publică? | Potrivire pentru INTENTRA |
+|---|---:|---|---|
+| **Adresă c/o oferită gratuit de o persoană de încredere** | Posibil zero, numai dacă titularul o oferă fără cost | Poate evita afișarea domiciliului, dacă este acceptată ca adresă de corespondență și primește efectiv comunicările | Cea mai apropiată de constrângerile proprietarului; necesită acord scris și confirmarea autorității competente dacă se folosește drept domiciliu comercial. Pentru o entitate înregistrată, HRegV art. 117 cere declarația titularului când adresa c/o este domiciliul juridic. |
+| **Operator persoană fizică / întreprindere individuală** | Fără capital minim; unele înregistrări/obligații pot costa | Numele legal nu poate fi ascuns; adresa de corespondență trebuie stabilită separat. Nu înscrie domiciliul personal ca adresă publică fără decizie | Poate fi cea mai simplă formă dacă activitatea și veniturile permit. Înscrierea devine obligatorie pentru activitate comercială cu venit anual peste CHF 100’000; denumirea firmei în registru include numele proprietarului, iar răspunderea este personală. |
+| **Asociație** | Nu cere capital inițial; administrarea are totuși obligații | Asociația tot trebuie să aibă identitate și adresă de contact | Necesită cel puțin două persoane și un scop real neeconomic/de utilitate. Activitatea comercială poate finanța scopul neprofit, dar profitul nu poate fi scopul. Nu este o soluție potrivită dacă INTENTRA este operată ca afacere orientată spre profit; nu o recomand ca simplu paravan. |
+| **GmbH** | Nu corespunde cerinței „zero cost”: capital minim CHF 20’000 plus notar și înregistrare | Publică identitatea entității și domiciliul ei; nu garantează anonimatul administratorului | Poate separa răspunderea societății, dar cere capital și costuri de constituire, deci nu este alternativa fără cost solicitată. |
 
-SECO precizează că o întreprindere individuală nu cere capital minim; înscrierea în registrul comerțului devine obligatorie când activitatea are formă comercială și venitul anual depășește CHF 100'000, iar denumirea include numele proprietarului. Forma implică răspundere personală nelimitată și pot exista obligații AHV/fiscale. Aceste condiții trebuie verificate în raport cu activitatea efectivă INTENTRA; nu se afirmă că înregistrarea sau operarea sunt automat gratuite.
+**Evaluare preliminară:** dacă proprietarul dorește să evite un cost nou și să nu publice domiciliul, opțiunea de investigat prima este o adresă c/o gratuită, folosită transparent ca adresă reală de corespondență, împreună cu identitatea legală corectă a operatorului. Aceasta depinde de acordul titularului și de acceptarea adresei pentru forma concretă de operare. Un nume comercial, o adresă de e-mail sau un căsuță poștală singure nu înlocuiesc identitatea operatorului; un c/o nu garantează anonimat și nu înlocuiește verificarea cantonului/registrului.
 
 Surse oficiale:
 - [DSG/FADP, art. 19](https://www.fedlex.admin.ch/eli/cc/2022/491/en)
+- [FDPIC — obligația de informare](https://www.edoeb.admin.ch/en/duty-to-provide-information)
 - [SECO — comerț online și UWG](https://www.seco.admin.ch/de/onlinehandel)
-- [HRegV, art. 117 — c/o](https://www.fedlex.admin.ch/eli/cc/2007/686/de)
+- [HRegV, art. 117 — adresă c/o](https://www.fedlex.admin.ch/eli/cc/2007/686/de)
 - [SECO — întreprindere individuală](https://www.kmu.admin.ch/en/legal-form-sole-proprietorships)
+- [SECO — asociații și scop neeconomic](https://www.kmu.admin.ch/en/associations-another-type-of-business-structure)
+- [SECO — costurile și capitalul unei GmbH](https://www.kmu.admin.ch/en/legal-form-limited-liability-company)
 
 **Decizie necesară proprietarului înainte de publicarea documentelor finale:** există o adresă c/o non-rezidențială disponibilă gratuit, cu acord scris și primirea corespondenței? Proprietarul acceptă publicarea identității legale necesare? Până la completarea acestor elemente, documentele RO/DE/EN rămân proiecte și nu se colectează date reale pe Comunitatea publică. Domiciliul și telefonul personal nu sunt incluse în această notă.
