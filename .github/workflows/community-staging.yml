@@ -48,6 +48,14 @@ jobs:
           test -s site-release/comunitate/rules.html
           grep -q 'mailto:contact@intentra.ch' site-release/index.html
           ! grep -q 'https://wnmtrkheznrhrtpbenxh.supabase.co' site-release/comunitate/index.html
+      - name: Install pinned Chromium smoke-test tooling
+        run: |
+          npm install --prefix "$RUNNER_TEMP/intentra-playwright" --no-save --no-package-lock playwright@1.58.2
+          "$RUNNER_TEMP/intentra-playwright/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Check staging layout in Chromium at mobile and desktop widths
+        env:
+          PLAYWRIGHT_PACKAGE: ${{ runner.temp }}/intentra-playwright/node_modules/playwright
+        run: node comunitate/tests/static-package-layout.mjs
       - name: Upload staging artifact (NOT deployed)
         uses: actions/upload-artifact@v4
         with:
