@@ -53,13 +53,23 @@ try {
         scrollWidth: document.documentElement.scrollWidth,
       }));
       if (dimensions.scrollWidth > dimensions.width + 1) {
-        const offenders = await page.evaluate(() => [...document.querySelectorAll('body *')]
-          .map(element => {
+        const offenders = await page.evaluate(() => ({
+          viewport: innerWidth,
+          html: { width: document.documentElement.clientWidth, scroll: document.documentElement.scrollWidth },
+          body: { width: document.body.clientWidth, scroll: document.body.scrollWidth,
+            rect: Math.round(document.body.getBoundingClientRect().width),
+            minWidth: getComputedStyle(document.body).minWidth,
+            padding: getComputedStyle(document.body).padding },
+          elements: [...document.querySelectorAll('body *')].map(element => {
             const rect = element.getBoundingClientRect();
             return { tag: element.tagName, id: element.id, className: String(element.className).slice(0, 80),
-              right: Math.round(rect.right), width: Math.round(rect.width),
+              left: Math.round(rect.left), right: Math.round(rect.right), width: Math.round(rect.width),
+              client: element.clientWidth, scroll: element.scrollWidth,
+              position: getComputedStyle(element).position, whiteSpace: getComputedStyle(element).whiteSpace,
               text: (element.textContent ?? '').trim().slice(0, 60) };
-          }).filter(item => item.width > 0 && item.right > innerWidth + 1).slice(0, 8));
+          }).filter(item => (item.width > 0 && (item.left < -1 || item.right > innerWidth + 1)) ||
+            item.scroll > item.client + 1).slice(0, 12)
+        }));
         failures.push(`${route}: horizontal overflow at ${width}px (${dimensions.scrollWidth}px): ${JSON.stringify(offenders)}`);
       }
     }
