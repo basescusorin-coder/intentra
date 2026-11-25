@@ -29,7 +29,7 @@ Record the exact PR head SHA, current main SHA, run URLs, artifact digest, and d
    - `npm run test:edge`
    - `npm run build`
    - `node comunitate/scripts/assemble-site.mjs --production`
-5. Inspect the artifact contents: root site files plus `comunitate/`, `comunitate/joburi/`, legal pages, contact page, images and CNAME. Confirm every internal asset path resolves, the production bundle contains no DEV Supabase URL, and the GitHub Pages target path is `/comunitate/`. Retain the artifact digest and a copy of the pre-release main tree.
+5. Inspect the artifact contents: root site files plus `comunitate/`, `comunitate/joburi/`, legal pages, contact page, images and CNAME. Confirm all static HTML/CSS asset paths resolve, the production build selects only the distinct PROD Supabase URL at `intentra.ch`, and the browser bundle contains no service-role or `sb_secret_` key. The staging build intentionally retains a public DEV project-ref constant for its runtime-origin guard; that identifier is not a credential, and the staging bundle has no DEV credentials or active backend configuration. Keep DEV data isolated from PROD. Verify the GitHub Pages target path is `/comunitate/`. Retain the artifact digest and a copy of the pre-release main tree.
 6. Merge PR #10 only after the final checks and owner GO. GitHub Pages publication follows the repository’s configured main-branch source; monitor its deployment result. Do not change DNS unless the hosting check proves a DNS correction is necessary and the owner approves it.
 
 ## 3. Post-publication checks
