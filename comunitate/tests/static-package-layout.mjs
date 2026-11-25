@@ -68,7 +68,22 @@ try {
               position: getComputedStyle(element).position, whiteSpace: getComputedStyle(element).whiteSpace,
               text: (element.textContent ?? '').trim().slice(0, 60) };
           }).filter(item => (item.width > 0 && (item.left < -1 || item.right > innerWidth + 1)) ||
-            item.scroll > item.client + 1).slice(0, 12)
+            item.scroll > item.client + 1).slice(0, 12),
+          textNodes: (() => {
+            const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+            const out = [];
+            while (walker.nextNode()) {
+              const node = walker.currentNode;
+              if (!node.textContent.trim() || !node.parentElement.getClientRects().length) continue;
+              const range = document.createRange(); range.selectNodeContents(node);
+              const rects = [...range.getClientRects()];
+              for (const rect of rects) if (rect.right > innerWidth + 1 || rect.left < -1) {
+                out.push({ text: node.textContent.trim().slice(0, 100), right: Math.round(rect.right),
+                  parent: node.parentElement.tagName + '.' + String(node.parentElement.className).slice(0, 50) });
+              }
+            }
+            return out.slice(0, 12);
+          })()
         }));
         failures.push(`${route}: horizontal overflow at ${width}px (${dimensions.scrollWidth}px): ${JSON.stringify(offenders)}`);
       }
