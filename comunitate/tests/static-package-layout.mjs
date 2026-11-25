@@ -97,7 +97,8 @@ try {
       for (const element of document.querySelectorAll('a,button,input,select,textarea')) {
         if (!element.getClientRects().length || getComputedStyle(element).visibility === 'hidden') continue;
         const name = element.getAttribute('aria-label') || element.getAttribute('title') ||
-          element.innerText?.trim() || [...(element.querySelectorAll?.('img[alt]') ?? [])].map(image => image.alt).join(' ').trim();
+          element.innerText?.trim() || [...(element.labels ?? [])].map(label => label.innerText.trim()).join(' ').trim() ||
+          [...(element.querySelectorAll?.('img[alt]') ?? [])].map(image => image.alt).join(' ').trim();
         if (!name) issues.push(element.tagName.toLowerCase() + ' has no accessible name');
         if (/^(INPUT|SELECT|TEXTAREA)$/.test(element.tagName) &&
             !element.getAttribute('aria-label') && !element.labels?.length) {
