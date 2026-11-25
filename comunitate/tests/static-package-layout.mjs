@@ -88,6 +88,25 @@ try {
         failures.push(`${route}: horizontal overflow at ${width}px (${dimensions.scrollWidth}px): ${JSON.stringify(offenders)}`);
       }
     }
+    const accessibilityIssues = await page.evaluate(() => {
+      const issues = [];
+      if (!document.documentElement.lang) issues.push('document language is missing');
+      for (const image of document.querySelectorAll('img')) {
+        if (!image.hasAttribute('alt')) issues.push('image missing alt text');
+      }
+      for (const element of document.querySelectorAll('a,button,input,select,textarea')) {
+        if (!element.getClientRects().length || getComputedStyle(element).visibility === 'hidden') continue;
+        const name = element.getAttribute('aria-label') || element.getAttribute('title') ||
+          element.innerText?.trim() || [...(element.querySelectorAll?.('img[alt]') ?? [])].map(image => image.alt).join(' ').trim();
+        if (!name) issues.push(element.tagName.toLowerCase() + ' has no accessible name');
+        if (/^(INPUT|SELECT|TEXTAREA)$/.test(element.tagName) &&
+            !element.getAttribute('aria-label') && !element.labels?.length) {
+          issues.push(element.tagName.toLowerCase() + ' has no associated label');
+        }
+      }
+      return [...new Set(issues)].slice(0, 12);
+    });
+    if (accessibilityIssues.length) failures.push(`${route}: accessibility smoke check: ${accessibilityIssues.join('; ')}`);
     if (pageErrors.length) failures.push(`${route}: ${pageErrors.join('; ')}`);
     console.log(`${response?.status() === 200 ? 'PASS' : 'FAIL'} ${route} — 320/390/768/1440px`);
     await page.close();
