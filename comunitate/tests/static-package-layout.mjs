@@ -53,7 +53,14 @@ try {
         scrollWidth: document.documentElement.scrollWidth,
       }));
       if (dimensions.scrollWidth > dimensions.width + 1) {
-        failures.push(`${route}: horizontal overflow at ${width}px (${dimensions.scrollWidth}px)`);
+        const offenders = await page.evaluate(() => [...document.querySelectorAll('body *')]
+          .map(element => {
+            const rect = element.getBoundingClientRect();
+            return { tag: element.tagName, id: element.id, className: String(element.className).slice(0, 80),
+              right: Math.round(rect.right), width: Math.round(rect.width),
+              text: (element.textContent ?? '').trim().slice(0, 60) };
+          }).filter(item => item.width > 0 && item.right > innerWidth + 1).slice(0, 8));
+        failures.push(`${route}: horizontal overflow at ${width}px (${dimensions.scrollWidth}px): ${JSON.stringify(offenders)}`);
       }
     }
     if (pageErrors.length) failures.push(`${route}: ${pageErrors.join('; ')}`);
