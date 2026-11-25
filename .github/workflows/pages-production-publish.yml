@@ -1,0 +1,103 @@
+name: INTENTRA GitHub Pages production publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      owner_go:
+        description: Owner has approved the final production release
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: intentra-github-pages-production
+  cancel-in-progress: false
+
+jobs:
+  release-gate:
+    if: github.ref == 'refs/heads/main' && github.actor == 'basescusorin-coder'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pages: read
+    steps:
+      - name: Require the owner's explicit GO
+        env:
+          OWNER_GO: ${{ inputs.owner_go }}
+        run: |
+          if [ "$OWNER_GO" != "true" ]; then
+            echo "Publication stopped: the repository owner did not confirm GO."
+            exit 1
+          fi
+      - name: Require Pages source to be GitHub Actions
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          SOURCE="$(gh api "repos/${GITHUB_REPOSITORY}/pages" --jq '.build_type')"
+          if [ "$SOURCE" != "workflow" ]; then
+            echo "Publication stopped: GitHub Pages source is not GitHub Actions."
+            exit 1
+          fi
+
+  build-and-deploy:
+    needs: release-gate
+    if: github.ref == 'refs/heads/main' && github.actor == 'basescusorin-coder' && inputs.owner_go
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    steps:
+      - name: Check out the approved main release
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Set up Node.js 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: comunitate/package-lock.json
+      - name: Install locked dependencies
+        working-directory: comunitate
+        run: npm ci
+      - name: Run application and configuration tests
+        working-directory: comunitate
+        run: npm test
+      - name: Verify community RLS
+        working-directory: comunitate
+        run: npm run test:rls:wasm
+      - name: Verify Edge Function types
+        working-directory: comunitate
+        run: npm run test:edge
+      - name: Verify Jobs normalizer
+        working-directory: comunitate
+        run: npm run test:jobs
+      - name: Build the production Pages package
+        env:
+          VITE_COMMUNITY_MODE: production
+          VITE_COMMUNITY_PRODUCTION_PROJECT_REF: ${{ vars.COMMUNITY_PROD_PROJECT_REF }}
+          VITE_SUPABASE_URL: ${{ vars.COMMUNITY_PROD_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.COMMUNITY_PROD_ANON_KEY }}
+          VITE_TURNSTILE_SITE_KEY: ${{ vars.COMMUNITY_PROD_TURNSTILE_SITE_KEY }}
+          COMMUNITY_RELEASE_APPROVED: ${{ inputs.owner_go && 'yes' || 'no' }}
+        run: node comunitate/scripts/assemble-site.mjs --production
+      - name: Verify Pages package layout
+        run: |
+          test -s site-release/index.html
+          test -s site-release/comunitate/index.html
+          test -d site-release/comunitate/assets
+          test -s site-release/comunitate/privacy.html
+          test -s site-release/comunitate/rules.html
+          test -s site-release/CNAME
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
+        with:
+          path: site-release/
+      - name: Deploy approved Pages artifact
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
