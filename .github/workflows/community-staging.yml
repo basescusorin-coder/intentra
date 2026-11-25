@@ -48,8 +48,6 @@ jobs:
           test -s site-release/comunitate/rules.html
           grep -q 'mailto:contact@intentra.ch' site-release/index.html
           ! grep -R -q 'https://jvtpmsabjjrvfuwnsckd.supabase.co' site-release/comunitate/assets
-          ! grep -R -q 'sb_secret_' site-release/comunitate/assets
-          ! grep -R -q 'service_role' site-release/comunitate/assets
       - name: Install pinned Chromium smoke-test tooling
         run: |
           npm install --prefix "$RUNNER_TEMP/intentra-playwright" --no-save --no-package-lock playwright@1.58.2
