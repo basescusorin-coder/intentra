@@ -1,23 +1,35 @@
-# INTENTRA Comunitate — stare PROD (2026-11-20)
+# INTENTRA Comunitate — stare PROD (2026-11-28)
 
-## Infrastructură verificată
+## Verdict verificat
 
-- Supabase PROD: `intentra-comunitate-prod`, ref `jvtpmsabjjrvfuwnsckd`, `ACTIVE_HEALTHY`, regiunea `eu-west-1` (Ireland).
-- PROD are schema Comunității instalată: 9 tabele publice, politici RLS, bucket-ul de fotografii și 3 Edge Functions active cu verificarea JWT activată. Migrațiile instalate sunt în istoricul remote Supabase; istoricul curent conține 12 intrări.
-- PROD a fost inițializat fără rânduri de membri, anunțuri, comentarii sau fotografii provenite din DEV. Nicio copie de date DEV nu a fost efectuată.
-- La 2026-11-20, hardening-ul RPC pentru PROD a mutat 8 implementări privilegiate în schema `community_private` și a lăsat în `public` numai wrapper-e `SECURITY INVOKER`. Verificarea catalogului a confirmat că acești wrapper-e nu sunt executabili de `anon`, sunt executabili de `authenticated`, iar avertismentul advisor privind funcții `SECURITY DEFINER` accesibile utilizatorilor autentificați a dispărut.
-- Advisor mai raportează 3 elemente INFO `rls_enabled_no_policy` pentru tabele interne de setări/administrare/limitare. Accesul acestora este intenționat prin funcții controlate; nu reprezintă o constatare de severitate ridicată.
-- Migrația aplicată PROD este păstrată separat, în `supabase/production-migrations/20261120095939_production_rpc_private_hardening.sql`; nu se execută automat în lanțul de migrații DEV.
+**NO-GO pentru publicarea Comunității.** Din browser extern, https://intentra.ch/ se încarcă, iar https://intentra.ch/comunitate/ afișează încă pagina de pregătire; aceasta nu permite înscrierea sau publicarea. PR #10 rămâne Draft, deschis și nemerged. Vercel Preview/READY nu este deploymentul public.
 
-## Ce nu este încă certificat pentru lansare
+## Infrastructură PROD — verificare read-only
 
-- Nu a fost creat un cont real de utilizator în PROD și nu au fost trimise OTP-uri de test; configurarea și livrarea SMTP/OTP, redirect-urile și limitele Auth nu sunt validate end-to-end.
-- Nu a fost validată end-to-end asocierea cheii site Turnstile cu hostname-ul de producție și secretul verificat server-side.
-- Nu au fost rulate în PROD scenariile de publicare, upload/ștergere fotografie, comentarii, ștergerea contului și verificarea RLS între doi utilizatori. Nu se folosesc date DEV pentru aceste teste.
-- Nu există încă bundle-ul public `/comunitate/` configurat și validat pentru proiectul PROD. Preview-ul Vercel este doar mediu de verificare și nu este un deployment public.
-- Documentele juridice rămân proiecte neaprobate și conțin câmpuri lipsă pentru operator, contact, termene de păstrare, furnizori/transferuri, proceduri și versiuni RO/DE/EN.
-- Backup/restore, MFA pentru administrator și procesul complet de raportare/contestație trebuie demonstrate înainte de lansare.
+- Supabase PROD `jvtpmsabjjrvfuwnsckd`: `ACTIVE_HEALTHY`, regiunea `eu-west-1`.
+- 14 migrări instalate; nouă tabele publice au RLS activ.
+- Funcțiile `community-image-upload`, `delete-community-post` și `delete-community-account` sunt ACTIVE v3 cu `verify_jwt=true`.
+- Security Advisor a returnat trei INFO `rls_enabled_no_policy` pentru `community_admins`, `community_rate_limits` și `community_settings`. Nu s-au schimbat granturi sau politici în această verificare.
+- Nicio copie DEV→PROD, migrare nouă ori modificare de date PROD nu a fost executată.
 
-## Decizie
+## Porți PROD încă nevalidate
 
-**NO-GO pentru publicare la 2026-11-20.** Lansarea rămâne condiționată de trecerea verificărilor esențiale PROD și completarea/aprobarea documentelor juridice. Statusul Vercel `READY` nu este criteriu suficient de lansare.
+- SMTP/OTP: interogările logurilor pentru 27 și 28 noiembrie nu au găsit evenimente OTP/535; aceasta nu demonstrează livrarea. Nu a fost observată autentificare reușită în această sesiune.
+- Turnstile pe hostname-ul public, înrolarea TOTP a moderatorului și verificarea AAL2 în PROD nu au o dovadă nouă.
+- Fluxul PROD al unui utilizator: profil, anunț, editare, fotografie, comentariu, raportare/moderare, interdicție între utilizatori, export, ștergere cont și curățarea datelor sintetice nu a fost executat.
+- Supabase advisor și SQL au confirmat structura/protecțiile, dar nu înlocuiesc acceptanța cap-coadă.
+
+## Cod, Jobs și verificări
+
+- Codul de Jobs oferă căutare de criterii și redirecționare către portaluri originale. INTENTRA nu recrutează, nu selectează candidați, nu colectează CV-uri și nu intermediază candidaturi/contracte. Job-uri UGC interne și CV-uri nu sunt disponibile.
+- Documentele RO/DE/EN au fost actualizate în branch-ul PR: identificare operator Sorin Băsescu, contact contact@intentra.ch, reguli de Jobs pentru surse externe și informare privacy fără eroarea SMTP istorică.
+- Workflow-urile CI rulează la fiecare commit al branch-ului. Pentru autorizarea release-ului trebuie folosite rezultatele de pe SHA-ul exact curent din PR #10: aplicație, Jobs, RLS WASM, Edge checks, build, asamblare staging și layout Chromium. Artifactul staging nu se publică.
+- Pagina legală indică criterii de păstrare; configurațiile/termenele exacte ale furnizorilor rămân de verificat înainte de a colecta date de la utilizatori.
+
+## Backup și publicare
+
+- Un MASTER BACKUP restaurabil nu este confirmat. Artifactele staging anterioare nu includ singure baza de date/permisiunile și un restore izolat demonstrat.
+- Settings Pages și variabilele Actions nu au fost citite/modificate prin instrumentele expuse în această sesiune. Workflow-ul oficial nu a fost declanșat.
+- Pagina publică principală rămâne neatinsă; DNS nu a fost modificat.
+
+**Decizie:** păstrează PR Draft și nu declara lansarea până când porțile PROD, backup/restore și verificările de release au dovezi pe exact SHA-ul aprobat.
