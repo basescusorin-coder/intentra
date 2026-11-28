@@ -46,6 +46,7 @@ jobs:
           test -s site-release/joburi/job-normalizer.mjs
           test -s site-release/comunitate/privacy.html
           test -s site-release/comunitate/rules.html
+          test -s site-release/comunitate/terms.html
           grep -q 'mailto:contact@intentra.ch' site-release/index.html
           ! grep -R -q 'https://jvtpmsabjjrvfuwnsckd.supabase.co' site-release/comunitate/assets
       - name: Install pinned Chromium smoke-test tooling

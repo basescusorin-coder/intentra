@@ -23,7 +23,7 @@ if (production) {
     throw new Error('Refusing production build without COMMUNITY_RELEASE_APPROVED=yes.');
   }
   // Do not publish a real member-service with placeholder legal terms.
-  for (const document of ['privacy.html', 'rules.html']) {
+  for (const document of ['privacy.html', 'rules.html', 'terms.html']) {
     const legalPath = join(communityRoot, 'public', document);
     let text;
     try { text = await readFile(legalPath, 'utf8'); }

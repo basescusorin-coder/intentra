@@ -32,12 +32,18 @@ const server = createServer(async (req, res) => {
 });
 
 const routes = ['/', '/comunitate/', '/comunitate/privacy.html',
-  '/comunitate/rules.html', '/comunitate/joburi/', '/contact/', '/joburi/'];
+  '/comunitate/rules.html', '/comunitate/terms.html',
+  '/comunitate/joburi/', '/contact/', '/joburi/'];
 const widths = [320, 390, 768, 1440];
 const failures = [];
 
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launch({
+  headless: true,
+  ...(process.env.PLAYWRIGHT_EXECUTABLE_PATH
+    ? { executablePath: process.env.PLAYWRIGHT_EXECUTABLE_PATH }
+    : {}),
+});
 try {
   const base = `http://127.0.0.1:${server.address().port}`;
   for (const route of routes) {
