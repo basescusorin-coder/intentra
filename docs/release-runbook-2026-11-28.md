@@ -11,8 +11,8 @@ Do not merge or publish until all items are recorded as PASS on the exact releas
 - Turnstile works on the intended public hostname; no bypass or reduced rate limit is used.
 - Moderator TOTP enrollment and AAL2-gated moderation pass.
 - Controlled PROD lifecycle passes: signup/OTP, profile and unique pseudonym, post create/edit, image upload/display, comments, reports/moderation, cross-user denial, deletion, sign-out/sign-in, export/account deletion. Delete only synthetic records and verify database/storage cleanup.
-- Legal RO/DE/EN pages have the approved operator identity, valid service/correspondence address, accurate processors/retention, and no placeholders. Do not publish a private home address or personal phone without explicit approval.
-- Community DEV checks, staging package, regression, RLS WASM, Edge checks, Jobs tests and dependency audit pass on the release head. The owner reviews the evidence and gives the final GO.
+- Legal RO/DE/EN pages identify Sorin Băsescu and contact@intentra.ch, disclose processing/recipients and use retention criteria. FADP Art. 19 requires identity and contact details; it does not expressly require a postal address in every case. Reassess other address obligations if the service starts concluding electronic contracts or charging. Do not publish a private home address or personal phone without explicit approval.
+- Community DEV checks, staging package, regression, RLS WASM, Edge checks, Jobs tests and dependency audit pass on the release head. The owner’s final launch mandate is recorded in the 28 November 2026 instruction. It does not replace the workflow’s required owner actor/input or any technical/legal release gate. Jobs remains an external-source search and redirection directory; do not copy listings or collect CVs.
 
 Record the exact PR head SHA, current main SHA, run URLs, artifact digest, and decision time before merging. Stop if the branch changes after tests; rerun checks on the new head.
 
