@@ -1,37 +1,30 @@
 # INTENTRA Comunitate — gate de lansare pentru /comunitate/
 
-**Actualizat: 28 noiembrie 2026. Verdict curent: NO-GO.** Ruta publică /comunitate/ încă servește pagina de pregătire.
+**Actualizat:** 28 noiembrie 2026.  
+**Commit candidat:** `022eb628ab8d685fa8c51f9022e12adb92810896`.  
+**Stare:** automatizările locale și CI sunt verzi; gate-urile server-side și adresa de corespondență rămân deschise.
 
-## Model Jobs aprobat
+## Model Jobs aprobat și implementat
 
-- Pagina Jobs funcționează ca instrument de căutare, informare și redirecționare către surse externe originale.
-- Utilizatorul verifică oferta și aplică independent la angajator/portal.
-- INTENTRA nu recrutează, selectează candidați, colectează/transmite CV-uri, negociază contracte, pune în legătură candidați și angajatori sau percepe comisioane de recrutare.
-- Nu se importă feeduri sau texte integrale fără permisiune. Publicarea internă de job ads și candidaturi/CV-uri rămâne în afara funcțiilor actuale; aceasta nu dezactivează directorul extern Jobs.
-- SECO indică autorizare pentru activitate regulată, contra cost, care conectează candidați și angajatori. AVV art. 1 are definiții mai largi, inclusiv publicații speciale și liste de adrese, iar art. 1a include internetul ca mediu. Încadrarea se face după funcția reală. Modelul actual de director/link extern este o inferență de risc redus, nu o excludere oficială garantată.
+- Pagina Joburi este activă ca instrument gratuit de căutare a surselor, informare și redirecționare către site-uri externe.
+- Utilizatorul inspectează oferta originală și aplică direct la angajator/portal.
+- INTENTRA nu recrutează, selectează, colectează/transmite CV-uri, negociază contracte, expune candidați angajatorilor sau percepe comisioane. Nu importă integral anunțuri sau baze de date fără drept.
+- Funcțiile interne de job ads, profiluri de candidat, candidaturi și transmitere de date rămân dezactivate; această limită nu dezactivează directorul de surse.
+- SECO/AVV tratează funcționalitatea reală ca determinantă: platformele care reunesc candidați și angajatori, inclusiv prin conturi și vizibilitatea reciprocă a datelor, pot fi Arbeitsvermittlung. Clasificarea actualului director-only ca în afara funcțiilor de matching este o inferență, nu o decizie SECO. Orice monetizare sau funcție nouă de anunțuri/matching/contact cere o nouă verificare înainte de lansarea acelei funcții.
 
-Surse: [SECO](https://www.seco.admin.ch/de/private-arbeitsvermittlung-und-personalverleih), [AVV art. 1 și 1a](https://www.fedlex.admin.ch/eli/cc/1991/408_408_408/de), [interpretarea SECO 2026](https://www.aim.arbeit.swiss/api/media/fileservice/sdweb-docs-prod-arbeitswiss-files/files/2026/05/25/6100561c-c357-4fc0-8a2f-f97c09f09b0d.pdf).
+## Rezultate candidate curente
 
-## Rezultate read-only confirmate
+- `npm ci`: PASS; `npm test`: 29/29; `npm run test:jobs`: 9/9; `npm run test:rls:wasm`: 1/1; `npm run build`: PASS; `node comunitate/scripts/assemble-site.mjs --production`: PASS cu valori publice PROD.
+- CI pe exact SHA include succes pentru JS, Jobs, DEV/Edge și staging package; staging layout a rulat în Chromium pe mobil și desktop.
+- PROD catalog read-only: 22 relations, 77 coloane publice, 23 politici RLS, 22 trigger-e, 37 rutine, 74 constrângeri, 5 extensii, bucket foto privat; 0 utilizatori/postări/comentarii/rapoarte/imagini la verificarea capturată.
+- MASTER BACKUP și restaurarea izolată sunt finalizate și testate pentru cod/schema; fără rânduri utilizator sau secrete.
+- Variabilele repository Actions necesare PROD au fost adăugate (ref, URL, anon/public key, Turnstile site key). Pages rămâne branch/root până la închiderea porților.
 
-- Site root se încarcă extern; /comunitate/ nu este lansată.
-- PR #10 este Draft, nemerged.
-- Supabase PROD este ACTIVE_HEALTHY, 14 migrări, 9 tabele cu RLS, 3 Edge Functions active cu JWT obligatoriu.
-- Security Advisor: 3 constatări INFO privind tabele interne RLS fără politici; nicio permisiune nu a fost lărgită.
-- CI la release HEAD trebuie verificat după toate modificările; run-urile staging nu publică.
-- Nu s-au scris date PROD, nu s-au copiat date DEV, DNS a rămas neschimbat.
+## Porți încă obligatorii
 
-## Gate-uri obligatorii înainte de workflow-ul public
+1. Reconcilierea dovezilor PROD pentru OTP/SMTP, Turnstile pe intentra.ch, TOTP/AAL2 și flux controlat cu izolare între utilizatori, export și ștergere. Logurile consultate arată ultima eroare OTP `535` din 24 noiembrie și nicio verificare OTP în 25–28 noiembrie. Nu s-au inserat date de test în PROD.
+2. Decizie documentată privind o adresă de corespondență publicabilă ori concluzie juridică individualizată asupra UWG art. 3(1)(s). Domiciliul personal nu se publică fără consimțământ.
+3. Exact SHA aprobat să rămână nemodificat după verificare. Până la îndeplinirea celorlalte porți, PR #10 nu se integrează și workflow-ul Pages de producție nu se declanșează.
+4. La finalizarea porților: Pages source GitHub Actions, workflow dispatch numai pe `main` și verificare externă independentă a root-ului existent și `/comunitate/`. DNS rămâne neschimbat.
 
-1. Autentificare OTP reală pe intentra.ch confirmată, fără regenerarea nejustificată a parolei SMTP.
-2. Turnstile pe hostname-ul public, MFA TOTP și AAL2 trecute în PROD.
-3. Test sintetic complet PROD cu izolare între doi utilizatori și ștergere verificată a datelor proprii.
-4. Privacy/rules/contact RO/DE/EN corecte pentru operator, scopuri, destinatari, transferuri și criterii de retenție; fără placeholder-e. FADP art. 19 cere identitatea și datele de contact ale operatorului. Nu indică expres o adresă poștală universală; pentru activități comerciale sau contracte electronice se reanalizează obligațiile aplicabile. Nu se publică domiciliul fără acord.
-5. MASTER BACKUP incluzând cod, versiunea anterioară, schema/migrări/politici/functii și proceduri, plus restore izolat verificat.
-6. Workflow-urile npm ci, npm test, test:jobs, test:rls:wasm, test:edge, build, assemble-site --production și layout final trec pe exact SHA release; artifact PROD inspectat pentru endpoint/key și fișierele site root.
-7. Settings GitHub Pages confirmă sursa GitHub Actions, variabilele PROD valide și hostname păstrat. Nicio cheie secretă în bundle.
-8. Integrare PR #10 și workflow-ul oficial de producție, apoi verificare externă a paginii principale și /comunitate/.
-
-## Siguranță și rollback
-
-Nu relaxa CAPTCHA, JWT, RLS ori limitările. Nu copia DEV în PROD și nu șterge date reale. La defect critic după publicare, revino frontend-ul la versiunea anterioară prin revert Git; nu restaura baza de date fără procedură de restore testată.
+Detaliile juridice și sursele oficiale sunt în [`docs/legal-audit-2026-11-28.md`](../docs/legal-audit-2026-11-28.md). Procedura de publicare/rollback este în [`docs/release-runbook-2026-11-28.md`](../docs/release-runbook-2026-11-28.md).

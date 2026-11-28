@@ -1,35 +1,29 @@
-# INTENTRA Comunitate — stare PROD (2026-11-28)
+# INTENTRA Comunitate — stare PROD
 
-## Verdict verificat
+**Verificat:** 28 noiembrie 2026.  
+**Commit candidat:** `022eb628ab8d685fa8c51f9022e12adb92810896`.  
+**Stare publică:** pagina principală existentă răspunde; `/comunitate/` încă afișează pagina de pregătire.
 
-**NO-GO pentru publicarea Comunității.** Din browser extern, https://intentra.ch/ se încarcă, iar https://intentra.ch/comunitate/ afișează încă pagina de pregătire; aceasta nu permite înscrierea sau publicarea. PR #10 rămâne Draft, deschis și nemerged. Vercel Preview/READY nu este deploymentul public.
+## Operațiuni efectuate în această sesiune
 
-## Infrastructură PROD — verificare read-only
+- Documente Privacy, Rules și Terms RO/DE/EN actualizate; pagina separată de termeni adăugată; contactul public este contact@intentra.ch, fără domiciliu sau telefon personal.
+- Joburi păstrat activ ca director de căutare/redirecționare către portaluri originale; fără candidaturi, CV-uri sau matching intern.
+- Patru variabile repository Actions de producție au fost create și citite în UI; includ doar endpoint/project ref și chei publice Supabase/Turnstile.
+- PR #10 conține commitul candidat. CI pe exact SHA a trecut: Jobs DEV tests, Community DEV checks (inclusiv Edge checks), Community staging package (inclusiv Chromium 320/390/mobile și desktop) și JS checks.
+- Local pe SHA: `npm ci`, `npm test` (29/29), `npm run test:jobs` (9/9), `npm run test:rls:wasm` (1/1), `npm run build` și asamblarea explicită `--production` au trecut. Pachetul a fost generat local fără deployment.
+- MASTER BACKUP conține istoric Git, sursa candidatului, sursa publică anterioară, catalogul PROD și tipurile DB, configurația fără secrete și instrucțiuni rollback/restore. Verificarea bundle-ului, clonarea izolată la SHA candidat, `npm ci` și testul RLS WASM au trecut. Nu conține rânduri personale sau secrete; nu este dump de date Supabase.
 
-- Supabase PROD `jvtpmsabjjrvfuwnsckd`: `ACTIVE_HEALTHY`, regiunea `eu-west-1`.
-- 14 migrări instalate; nouă tabele publice au RLS activ.
-- Funcțiile `community-image-upload`, `delete-community-post` și `delete-community-account` sunt ACTIVE v3 cu `verify_jwt=true`.
-- Security Advisor a returnat trei INFO `rls_enabled_no_policy` pentru `community_admins`, `community_rate_limits` și `community_settings`. Nu s-au schimbat granturi sau politici în această verificare.
-- Nicio copie DEV→PROD, migrare nouă ori modificare de date PROD nu a fost executată.
+## Dovezi server-side și protecții
 
-## Porți PROD încă nevalidate
+- Supabase PROD `jvtpmsabjjrvfuwnsckd` este ACTIVE_HEALTHY, 14 migrări, 9 tabele publice cu RLS și trei Edge Functions ACTIVE v3 cu `verify_jwt=true`.
+- Ultimul auth log vizibil pentru OTP este SMTP `535`/HTTP 500 din 24 noiembrie; în intervalele consultate 25–28 noiembrie nu au fost evenimente OTP. Logurile consultate nu demonstrează livrarea OTP, Turnstile pe hostname-ul public, MFA/AAL2 sau fluxul CRUD complet. Confirmarea anterioară a proprietarului este reținută, dar nu a putut fi asociată cu o dovadă server-side nouă în această sesiune. Nu s-au creat date sintetice și nu s-a schimbat PROD.
+- Security Advisor are trei constatări INFO `rls_enabled_no_policy` pentru tabele interne fără granturi publice relevante; niciun grant/policy nu a fost relaxat.
+- Cloudflare dashboard necesită autentificare suplimentară; hostname-urile validate anterior nu au putut fi reexaminate din UI în această sesiune.
 
-- SMTP/OTP: interogările logurilor pentru 27 și 28 noiembrie nu au găsit evenimente OTP/535; aceasta nu demonstrează livrarea. Nu a fost observată autentificare reușită în această sesiune.
-- Turnstile pe hostname-ul public, înrolarea TOTP a moderatorului și verificarea AAL2 în PROD nu au o dovadă nouă.
-- Fluxul PROD al unui utilizator: profil, anunț, editare, fotografie, comentariu, raportare/moderare, interdicție între utilizatori, export, ștergere cont și curățarea datelor sintetice nu a fost executat.
-- Supabase advisor și SQL au confirmat structura/protecțiile, dar nu înlocuiesc acceptanța cap-coadă.
+## Blocaje reale rămase înainte de publicare
 
-## Cod, Jobs și verificări
+1. Lipsesc dovezi server-side accesibile pentru OTP reușit, Turnstile public, MFA/TOTP+AAL2 și traseul controlat PROD cu ștergere verificată. OTP nu a fost retrimis și nu s-au făcut scrieri în PROD.
+2. Auditul juridic identifică o întrebare deschisă privind adresa de corespondență: FADP art. 19 permite identificarea/contactul prin date de contact, dar UWG art. 3(1)(s) și ghidul SECO pentru e-commerce pot cere adresă de contact completă. Nu există o adresă publicabilă verificată, iar domiciliul nu va fi expus.
+3. PR #10 rămâne deschis până la rezolvarea porților; Pages este încă configurat pe branch/root. Schimbarea la GitHub Actions și workflow-ul producție nu au fost declanșate pentru a evita o publicare fără aceste porți.
 
-- Codul de Jobs oferă căutare de criterii și redirecționare către portaluri originale. INTENTRA nu recrutează, nu selectează candidați, nu colectează CV-uri și nu intermediază candidaturi/contracte. Job-uri UGC interne și CV-uri nu sunt disponibile.
-- Documentele RO/DE/EN au fost actualizate în branch-ul PR: identificare operator Sorin Băsescu, contact contact@intentra.ch, reguli de Jobs pentru surse externe și informare privacy fără eroarea SMTP istorică.
-- Workflow-urile CI rulează la fiecare commit al branch-ului. Pentru autorizarea release-ului trebuie folosite rezultatele de pe SHA-ul exact curent din PR #10: aplicație, Jobs, RLS WASM, Edge checks, build, asamblare staging și layout Chromium. Artifactul staging nu se publică.
-- Pagina legală indică criterii de păstrare; configurațiile/termenele exacte ale furnizorilor rămân de verificat înainte de a colecta date de la utilizatori.
-
-## Backup și publicare
-
-- Un MASTER BACKUP restaurabil nu este confirmat. Artifactele staging anterioare nu includ singure baza de date/permisiunile și un restore izolat demonstrat.
-- Settings Pages și variabilele Actions nu au fost citite/modificate prin instrumentele expuse în această sesiune. Workflow-ul oficial nu a fost declanșat.
-- Pagina publică principală rămâne neatinsă; DNS nu a fost modificat.
-
-**Decizie:** păstrează PR Draft și nu declara lansarea până când porțile PROD, backup/restore și verificările de release au dovezi pe exact SHA-ul aprobat.
+**Verdict:** no-go pentru publicarea publică în această stare. Acest lucru descrie lipsa dovezilor/deciziei de adresă, nu un eșec al testelor automatizate sau al Joburi.
