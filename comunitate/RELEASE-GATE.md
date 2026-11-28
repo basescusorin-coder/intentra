@@ -1,7 +1,7 @@
 # INTENTRA Comunitate — gate de lansare pentru /comunitate/
 
 **Actualizat:** 28 noiembrie 2026.  
-**Commit candidat:** `022eb628ab8d685fa8c51f9022e12adb92810896`.  
+**Commit candidat verificat:** `9c799bcac407ef03f8378701c2bd7e4c31036fd7` (acest update sincronizează documentația, fără schimbări de aplicație).
 **Stare:** automatizările locale și CI sunt verzi; gate-urile server-side și adresa de corespondență rămân deschise.
 
 ## Model Jobs aprobat și implementat

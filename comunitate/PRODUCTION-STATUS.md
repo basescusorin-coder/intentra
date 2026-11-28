@@ -1,17 +1,17 @@
 # INTENTRA Comunitate — stare PROD
 
 **Verificat:** 28 noiembrie 2026.  
-**Commit candidat:** `022eb628ab8d685fa8c51f9022e12adb92810896`.  
+**Commit candidat verificat:** `9c799bcac407ef03f8378701c2bd7e4c31036fd7` (acest update sincronizează documentația, fără schimbări de aplicație).
 **Stare publică:** pagina principală existentă răspunde; `/comunitate/` încă afișează pagina de pregătire.
 
 ## Operațiuni efectuate în această sesiune
 
 - Documente Privacy, Rules și Terms RO/DE/EN actualizate; pagina separată de termeni adăugată; contactul public este contact@intentra.ch, fără domiciliu sau telefon personal.
 - Joburi păstrat activ ca director de căutare/redirecționare către portaluri originale; fără candidaturi, CV-uri sau matching intern.
-- Patru variabile repository Actions de producție au fost create și citite în UI; includ doar endpoint/project ref și chei publice Supabase/Turnstile.
+- Patru variabile repository Actions de producție au fost create și reverificate în UI; includ project ref, URL și chei publice Supabase/Turnstile. Niciun secret de server nu este inclus.
 - PR #10 conține commitul candidat. CI pe exact SHA a trecut: Jobs DEV tests, Community DEV checks (inclusiv Edge checks), Community staging package (inclusiv Chromium 320/390/mobile și desktop) și JS checks.
 - Local pe SHA: `npm ci`, `npm test` (29/29), `npm run test:jobs` (9/9), `npm run test:rls:wasm` (1/1), `npm run build` și asamblarea explicită `--production` au trecut. Pachetul a fost generat local fără deployment.
-- MASTER BACKUP conține istoric Git, sursa candidatului, sursa publică anterioară, catalogul PROD și tipurile DB, configurația fără secrete și instrucțiuni rollback/restore. Verificarea bundle-ului, clonarea izolată la SHA candidat, `npm ci` și testul RLS WASM au trecut. Nu conține rânduri personale sau secrete; nu este dump de date Supabase.
+- MASTER BACKUP conține istoric Git, sursa candidatului, sursa publică anterioară, catalogul PROD și tipurile DB, configurația fără secrete și instrucțiuni rollback/restore. Tarballul de 7,445,930 bytes are SHA-256 `ba8d6a48482aa66acc009a965066521fe91881ce291a5cc7bbd3f3653fcda7dd`; manifestul intern a fost verificat. Clonarea izolată la SHA candidat, `npm ci` și testul RLS WASM au trecut. Nu conține rânduri personale sau secrete; nu este dump de date Supabase.
 
 ## Dovezi server-side și protecții
 
