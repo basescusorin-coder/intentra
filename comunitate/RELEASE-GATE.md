@@ -1,39 +1,37 @@
 # INTENTRA Comunitate — gate de lansare pentru /comunitate/
 
-Status la 2026-11-20: **NO-GO pentru publicare PROD**.
+**Actualizat: 28 noiembrie 2026. Verdict curent: NO-GO.** Ruta publică /comunitate/ încă servește pagina de pregătire.
 
-## Arhitectură și schimbări confirmate
+## Model Jobs aprobat
 
-- Site-ul public `intentra.ch` este GitHub Pages din branch `main`; aplicația Comunitate este sursă Vite sub `comunitate/`.
-- `node comunitate/scripts/assemble-site.mjs` pregătește pachetul `site-release/`; nu publică automat.
-- Supabase PROD `jvtpmsabjjrvfuwnsckd` are schema instalată și migrația de hardening RPC aplicată separat. Nu s-au copiat date DEV.
-- Preview Vercel READY este numai preview; nu certifică OTP, Turnstile, operațiile aplicației sau PROD.
-- În această verificare, frontend-ul a respins un PNG valid de 83 bytes înainte de request, deoarece browserul nu a furnizat tip MIME acceptat. Validatorul a fost modificat să accepte MIME gol/octet-stream numai pentru extensiile JPEG/PNG/WebP permise; Edge Function continuă să verifice semnătura și să re-encodeze fișierul. Commituri: `cca73c6b237c2cf5c39a75bd283c32a9d06e07e2` și `d39f69dd0ed67576e050314b38e882470c0e7a7d`. Testul real post-fix încă nu a rulat: preview-ul cere autentificare și fluxul Turnstile trebuie activat/testat.
+- Pagina Jobs funcționează ca instrument de căutare, informare și redirecționare către surse externe originale.
+- Utilizatorul verifică oferta și aplică independent la angajator/portal.
+- INTENTRA nu recrutează, selectează candidați, colectează/transmite CV-uri, negociază contracte, pune în legătură candidați și angajatori sau percepe comisioane de recrutare.
+- Nu se importă feeduri sau texte integrale fără permisiune. Publicarea internă de job ads și candidaturi/CV-uri rămâne în afara funcțiilor actuale; aceasta nu dezactivează directorul extern Jobs.
+- SECO indică autorizare pentru activitate regulată, contra cost, care conectează candidați și angajatori. AVV art. 1 are definiții mai largi, inclusiv publicații speciale și liste de adrese, iar art. 1a include internetul ca mediu. Încadrarea se face după funcția reală. Modelul actual de director/link extern este o inferență de risc redus, nu o excludere oficială garantată.
 
-## PASS confirmate anterior
+Surse: [SECO](https://www.seco.admin.ch/de/private-arbeitsvermittlung-und-personalverleih), [AVV art. 1 și 1a](https://www.fedlex.admin.ch/eli/cc/1991/408_408_408/de), [interpretarea SECO 2026](https://www.aim.arbeit.swiss/api/media/fileservice/sdweb-docs-prod-arbeitswiss-files/files/2026/05/25/6100561c-c357-4fc0-8a2f-f97c09f09b0d.pdf).
 
-- Teste unitare site/Comunitate, RLS WASM, build și staging la commitul verificat anterior au trecut.
-- Interfața principală a fost testată RO/DE/EN și căutările în cele șase categorii; nu se repetă acum fără un nou defect observat.
+## Rezultate read-only confirmate
 
-## Constatare PROD actuală
+- Site root se încarcă extern; /comunitate/ nu este lansată.
+- PR #10 este Draft, nemerged.
+- Supabase PROD este ACTIVE_HEALTHY, 14 migrări, 9 tabele cu RLS, 3 Edge Functions active cu JWT obligatoriu.
+- Security Advisor: 3 constatări INFO privind tabele interne RLS fără politici; nicio permisiune nu a fost lărgită.
+- CI la release HEAD trebuie verificat după toate modificările; run-urile staging nu publică.
+- Nu s-au scris date PROD, nu s-au copiat date DEV, DNS a rămas neschimbat.
 
-- Auth Email este activ cu confirmare obligatorie; am setat și redeschis configurația pentru a confirma OTP de 6 cifre cu expirare 600 secunde. **SMTP custom este OFF** în dashboard; livrarea OTP către utilizatori externi nu este PASS. Adresa contact@intentra.ch funcționează pentru corespondență, dar SMTP nu este configurat în Supabase.
-- În Supabase Auth > Attack Protection, **CAPTCHA protection este Disabled** la momentul verificării. Turnstile PROD nu este PASS și nu este sigur să se deschidă signup-ul public.
-- Nu am introdus ori expus credențiale. Infomaniak SMTP: host `mail.infomaniak.com`, port `587` cu STARTTLS, username adresa completă; parola trebuie introdusă direct de operator în dashboard. Activarea custom SMTP poate modifica limitele de trimitere Supabase.
-- Corecția PNG este încă NEVALIDATĂ end-to-end pe noul preview. Vechiul test s-a oprit în browser înainte de orice request Supabase. Nicio înregistrare de test nu a fost creată.
-- Funcțiile de publicare/comentarii/ștergere nu au fost rulate în acest nou preview/proiect PROD în această sesiune; datele de test existente nu au fost șterse.
-- Documentul privacy a fost actualizat cu furnizorii/locațiile și retenția observabilă. Rămân obligatorii identificarea legală a operatorului, intervalele necontrolate de aplicație și aprobarea juridică a versiunilor RO/DE/EN.
+## Gate-uri obligatorii înainte de workflow-ul public
 
-## Gate-uri încă obligatorii înainte de publicare
+1. Autentificare OTP reală pe intentra.ch confirmată, fără regenerarea nejustificată a parolei SMTP.
+2. Turnstile pe hostname-ul public, MFA TOTP și AAL2 trecute în PROD.
+3. Test sintetic complet PROD cu izolare între doi utilizatori și ștergere verificată a datelor proprii.
+4. Privacy/rules/contact RO/DE/EN corecte pentru operator, scopuri, destinatari, transferuri și criterii de retenție; fără placeholder-e. FADP art. 19 cere identitatea și datele de contact ale operatorului. Nu indică expres o adresă poștală universală; pentru activități comerciale sau contracte electronice se reanalizează obligațiile aplicabile. Nu se publică domiciliul fără acord.
+5. MASTER BACKUP incluzând cod, versiunea anterioară, schema/migrări/politici/functii și proceduri, plus restore izolat verificat.
+6. Workflow-urile npm ci, npm test, test:jobs, test:rls:wasm, test:edge, build, assemble-site --production și layout final trec pe exact SHA release; artifact PROD inspectat pentru endpoint/key și fișierele site root.
+7. Settings GitHub Pages confirmă sursa GitHub Actions, variabilele PROD valide și hostname păstrat. Nicio cheie secretă în bundle.
+8. Integrare PR #10 și workflow-ul oficial de producție, apoi verificare externă a paginii principale și /comunitate/.
 
-1. Configurați și testați SMTP OTP în PROD, cu parola de mailbox introdusă numai direct în Supabase dashboard; confirmați livrarea, expirarea OTP și redirect-ul.
-2. Activați CAPTCHA/Turnstile cu site key pentru `intentra.ch` și secret în setarea server-side; testați fluxul fără ocolirea challenge-ului.
-3. După sesiune autentificată și Turnstile validat, testați într-o secvență controlată postare → fotografie upload/afișare/ștergere → comentariu → ștergere postare/cont, apoi confirmați curățarea strict a datelor de test proprii. Rulați testele efective în PROD numai după configurarea acesteia.
-4. Confirmați URL redirect, origin CORS exact `https://intentra.ch`, chei client PROD și separarea completă DEV/PROD.
-5. Demonstrați backup/restore și procedură de rollback; nu copiați date DEV.
-6. Înainte de publicare juridică: completați numele/identitatea legală a operatorului și o adresă poștală de serviciu conformă, definiți retenția pentru raportări/loguri și obțineți aprobarea juridică RO/DE/EN. Nu publica domiciliul sau telefonul personal. Contact email singur poate fi insuficient pentru cerințele de identificare.
-7. Build distinct cu config PROD, inspectarea artifactului, PASS la testele esențiale și doar apoi integrare/publicare `/comunitate/` pe `main`.
+## Siguranță și rollback
 
-## Date și rollback
-
-Nu copia membri, sesiuni OTP, anunțuri, fotografii sau comentarii din DEV în PROD. Folosește exclusiv date temporare noi, identificabile ca test, și curăță numai rândurile/obiectele create de test după verificarea rezultatului. Dacă o rută publicată nu trece smoke check, retrage ruta Comunității fără a face rollback neanalizat al schemei PROD.
+Nu relaxa CAPTCHA, JWT, RLS ori limitările. Nu copia DEV în PROD și nu șterge date reale. La defect critic după publicare, revino frontend-ul la versiunea anterioară prin revert Git; nu restaura baza de date fără procedură de restore testată.
