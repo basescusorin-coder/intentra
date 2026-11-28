@@ -66,4 +66,33 @@ test("uses direct original platform search links with the user's query", () => {
   const job = new URL(api.searchUrl("jobs.ch", "https://fallback.example/", "Pflegefachfrau Muri"));
   assert.equal(job.origin, "https://www.jobs.ch");
   assert.equal(job.searchParams.get("term"), "Pflegefachfrau Muri");
+
+  for (const [name, domain] of [["Homegate", "www.homegate.ch"], ["ImmoScout24", "www.immoscout24.ch"], ["Flatfox", "flatfox.ch"], ["tutti.ch", "www.tutti.ch"], ["anibis.ch", "www.anibis.ch"]]) {
+    const url = new URL(api.searchUrl(name, "https://fallback.example/", "Wohnung Zürich"));
+    assert.equal(url.origin, "https://www.google.com", `${name} fallback should open a query-focused search`);
+    assert.equal(url.searchParams.get("q"), `site:${domain} Wohnung Zürich`, `${name} query should be scoped to its portal`);
+  }
+
+  assert.equal(api.searchUrl("Unknown", "https://fallback.example/", "test"), "https://fallback.example/");
+});
+
+test("keeps exactly one accessible three-language selector in the primary interface", () => {
+  assert.equal((html.match(/class="languages"/g) || []).length, 1);
+  assert.equal((html.match(/data-lang="(?:ro|de|en)"/g) || []).length, 3);
+  assert.match(html, /languageLabel:"Alege limba"/);
+  assert.match(html, /languageLabel:"Sprache wählen"/);
+  assert.match(html, /languageLabel:"Choose language"/);
+});
+
+
+test("publishes contact and three-language legal routes without personal address data", () => {
+  const contact = fs.readFileSync(path.join(__dirname, "..", "contact", "index.html"), "utf8");
+  const privacy = fs.readFileSync(path.join(__dirname, "..", "comunitate", "public", "privacy.html"), "utf8");
+  const rules = fs.readFileSync(path.join(__dirname, "..", "comunitate", "public", "rules.html"), "utf8");
+  for (const source of [html, contact, privacy, rules]) assert.match(source, /mailto:contact@intentra\.ch/);
+  for (const page of [contact, privacy, rules]) {
+    for (const locale of ["ro", "de", "en"]) assert.match(page, new RegExp('lang="' + locale + '"'));
+    assert.doesNotMatch(page, /Lerchenweg|077 998 05 69/);
+  }
+  for (const link of ["/contact/", "/comunitate/privacy.html", "/comunitate/rules.html"]) assert.ok(html.includes(link));
 });

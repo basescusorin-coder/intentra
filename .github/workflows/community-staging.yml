@@ -1,0 +1,66 @@
+name: INTENTRA Community staging package
+
+on:
+  push:
+    branches:
+      - feature/comunitate-mvp
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  prepare-community-release:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out DEV branch
+        uses: actions/checkout@v4
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: comunitate/package-lock.json
+      - name: Install pinned dependencies
+        working-directory: comunitate
+        run: npm ci
+      - name: Run application and configuration tests
+        working-directory: comunitate
+        run: npm test
+      - name: Verify community database RLS in isolated WASM tests
+        working-directory: comunitate
+        run: npm run test:rls:wasm
+      - name: Verify public jobs normalizer
+        working-directory: comunitate
+        run: npm run test:jobs
+      - name: Assemble staging artifact without production credentials
+        run: node comunitate/scripts/assemble-site.mjs
+      - name: Verify compiled /comunitate route
+        run: |
+          test -s site-release/index.html
+          test -s site-release/comunitate/index.html
+          test -d site-release/comunitate/assets
+          test -s site-release/contact/index.html
+          test -s site-release/assets/swiss.webp
+          test -s site-release/joburi/index.html
+          test -s site-release/joburi/job-normalizer.mjs
+          test -s site-release/comunitate/privacy.html
+          test -s site-release/comunitate/rules.html
+          test -s site-release/comunitate/terms.html
+          grep -q 'mailto:contact@intentra.ch' site-release/index.html
+          ! grep -R -q 'https://jvtpmsabjjrvfuwnsckd.supabase.co' site-release/comunitate/assets
+      - name: Install pinned Chromium smoke-test tooling
+        run: |
+          npm install --prefix "$RUNNER_TEMP/intentra-playwright" --no-save --no-package-lock playwright@1.58.2
+          "$RUNNER_TEMP/intentra-playwright/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Check staging layout in Chromium at mobile and desktop widths
+        env:
+          PLAYWRIGHT_PACKAGE: ${{ runner.temp }}/intentra-playwright/node_modules/playwright
+        run: node comunitate/tests/static-package-layout.mjs
+      - name: Upload staging artifact (NOT deployed)
+        uses: actions/upload-artifact@v4
+        with:
+          name: intentra-community-staging-site
+          path: site-release/
+          if-no-files-found: error
+          retention-days: 7

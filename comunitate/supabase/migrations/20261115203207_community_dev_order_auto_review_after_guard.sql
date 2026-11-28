@@ -1,0 +1,1 @@
+drop trigger if exists community_auto_review_posts on public.posts; create trigger zzz_community_auto_review_posts before insert or update of title,body,category,city,canton,price_chf,status on public.posts for each row execute function community_private.community_auto_review_post();
